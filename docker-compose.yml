@@ -1,0 +1,69 @@
+version: '2'
+services:
+  builder:
+    build: .
+    entrypoint: /usr/local/go/bin/go
+    command: build -v
+    volumes:
+      - ./output:/go/src/github.com/cyberark/conjur-cli-go/output
+    environment:
+      GOOS:
+      GOARCH:
+
+  postgres:
+    image: postgres:9.3
+
+  conjur:
+    image: cyberark/conjur:0.8.1-stable
+    command: server -a cucumber
+    environment:
+      DATABASE_URL: postgres://postgres@postgres/postgres
+      CONJUR_DATA_KEY: 'WMfApcDBtocRWV+ZSUP3Tjr5XNU+Z2FdBb6BEezejIs='
+    depends_on:
+      - postgres
+
+  cuke-master:
+    image: registry.tld/conjur-appliance-cuke-master:4.9-stable
+    security_opt:
+      - seccomp:unconfined # --security-opt seccomp=unconfined
+    ports:
+      - 443
+
+  test:
+    build: .
+    ports:
+        - "8080"
+    depends_on:
+      - conjur
+    entrypoint: /bin/bash
+    command: './test-entrypoint.sh'
+    volumes:
+      - ./output:/go/src/github.com/cyberark/conjur-cli-go/output
+    environment:
+      CONJUR_APPLIANCE_URL: http://conjur
+      CONJUR_ACCOUNT:
+      CONJUR_AUTHN_LOGIN:
+      CONJUR_AUTHN_API_KEY:
+
+  cli5:
+    image: cyberark/conjur-cli:5
+    environment:
+      CONJUR_APPLIANCE_URL: http://conjur
+      CONJUR_ACCOUNT: cucumber
+        
+  dev:
+    privileged: true            # to allow debugging
+    build: .
+    ports:
+        - "8080"
+    depends_on:
+      - conjur
+    entrypoint: sleep infinity
+    volumes:
+      - .:/go/src/github.com/cyberark/conjur-cli-go
+      
+    environment:
+      CONJUR_APPLIANCE_URL: http://conjur
+      CONJUR_ACCOUNT:
+      CONJUR_AUTHN_LOGIN:
+      CONJUR_AUTHN_API_KEY:
