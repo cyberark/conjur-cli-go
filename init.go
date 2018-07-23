@@ -4,7 +4,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-var InitCommands = cli.Command{
+// InitCommand contains the definition of the command for initialization.
+var InitCommand = cli.Command{
 	Name:  "init",
 	Usage: "Initialize the Conjur configuration",
 	Flags: []cli.Flag{

@@ -4,6 +4,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// AuthnCommands contains the definitions of the commands related to authentication.
 var AuthnCommands = cli.Command{
 	Name:  "authn",
 	Usage: "Login and logout",

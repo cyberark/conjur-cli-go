@@ -4,6 +4,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// ResourceCommands contains the definitions of commands related to Conjur resources.
 var ResourceCommands = []cli.Command{
 	{
 		Name:  "list",

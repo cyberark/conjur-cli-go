@@ -5,12 +5,11 @@ import (
 )
 
 var loadContext struct {
-	delete   bool
-	replace  bool
-	policy   string
-	filename string
+	delete  bool
+	replace bool
 }
 
+// PolicyCommands contains the definitions of the commands related to policies.
 var PolicyCommands = cli.Command{
 	Name:  "policy",
 	Usage: "Manage policies",
