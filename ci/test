@@ -1,0 +1,8 @@
+#!/bin/bash -ex
+
+set -o pipefail
+
+go clean -i
+go install
+
+go test -v ./... | tee /dev/stderr | go-junit-report > output/junit.xml

@@ -35,8 +35,7 @@ services:
         - "8080"
     depends_on:
       - conjur
-    entrypoint: /bin/bash
-    command: './test-entrypoint.sh'
+    command: ci/test
     volumes:
       - ./output:/go/src/github.com/cyberark/conjur-cli-go/output
     environment:
