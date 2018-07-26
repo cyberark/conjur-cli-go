@@ -13,7 +13,7 @@ func TestValue(t *testing.T) {
 	defer ctrl.Finish()
 
 	expected := string("value")
-	mockClient := mocks.NewMockVariableClient(ctrl)
+	mockClient := mocks.NewMockConjurClient(ctrl)
 	mockClient.EXPECT().RetrieveSecret("var").Return([]byte(expected), nil)
 
 	value, err := action.Variable{Name: "var"}.Value(mockClient)
@@ -31,7 +31,7 @@ func TestValuesAdd(t *testing.T) {
 
 	new_value := "value"
 
-	mockClient := mocks.NewMockVariableClient(ctrl)
+	mockClient := mocks.NewMockConjurClient(ctrl)
 	mockClient.EXPECT().AddSecret("var", new_value).Return(nil)
 
 	err := action.Variable{Name: "var"}.ValuesAdd(mockClient, new_value)
