@@ -10,28 +10,30 @@ var loadContext struct {
 }
 
 // PolicyCommands contains the definitions of the commands related to policies.
-var PolicyCommands = cli.Command{
-	Name:  "policy",
-	Usage: "Manage policies",
-	Subcommands: []cli.Command{
-		{
-			Name:      "load",
-			Usage:     "Load a policy",
-			ArgsUsage: "POLICY FILENAME",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:        "delete",
-					Usage:       "Allow explicit deletion statements in the policy.",
-					Destination: &loadContext.delete,
+var PolicyCommands = []cli.Command{
+	{
+		Name:  "policy",
+		Usage: "Manage policies",
+		Subcommands: []cli.Command{
+			{
+				Name:      "load",
+				Usage:     "Load a policy",
+				ArgsUsage: "POLICY FILENAME",
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name:        "delete",
+						Usage:       "Allow explicit deletion statements in the policy.",
+						Destination: &loadContext.delete,
+					},
+					cli.BoolFlag{
+						Name:        "replace",
+						Usage:       "Fully replace the existing policy, deleting any data that is not declared in the new policy.",
+						Destination: &loadContext.replace,
+					},
 				},
-				cli.BoolFlag{
-					Name:        "replace",
-					Usage:       "Fully replace the existing policy, deleting any data that is not declared in the new policy.",
-					Destination: &loadContext.replace,
+				Action: func(c *cli.Context) error {
+					return nil
 				},
-			},
-			Action: func(c *cli.Context) error {
-				return nil
 			},
 		},
 	},

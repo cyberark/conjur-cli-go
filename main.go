@@ -15,12 +15,20 @@ func AppClient(app *cli.App) action.ConjurClient {
 	return app.Metadata["api"].(action.ConjurClient)
 }
 
+var commands = [][]cli.Command{
+	AuthnCommands,
+	InitCommands,
+	PolicyCommands,
+	VariableCommands,
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Version = "0.0.1"
 	app.Usage = "A CLI for Conjur"
 
 	log.SetLevel(log.InfoLevel)
+	log.SetFormatter(&log.TextFormatter{DisableTimestamp: true, DisableLevelTruncation: true})
 
 	config := conjurapi.LoadConfig()
 
@@ -32,13 +40,9 @@ func main() {
 	app.Metadata = make(map[string]interface{})
 	app.Metadata["api"] = action.ConjurClient(client)
 
-	app.Commands = []cli.Command{
-		AuthnCommands,
-		InitCommand,
-		PolicyCommands,
-		VariableCommands,
+	for _, cmds := range commands {
+		app.Commands = append(app.Commands, cmds...)
 	}
-	app.Commands = append(app.Commands, ResourceCommands...)
 
 	sort.Sort(cli.CommandsByName(app.Commands))
 
