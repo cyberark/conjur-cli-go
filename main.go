@@ -7,12 +7,18 @@ import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/action"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"github.com/urfave/cli"
 )
 
 // AppClient retrieves the Conjur client from the App's metadata.
 func AppClient(app *cli.App) action.ConjurClient {
 	return app.Metadata["api"].(action.ConjurClient)
+}
+
+// AppFs retrieves the afero Fs instance to use for filesystem access
+func AppFs(app *cli.App) afero.Fs {
+	return app.Metadata["fs"].(afero.Fs)
 }
 
 var commands = [][]cli.Command{
@@ -39,6 +45,7 @@ func main() {
 	}
 	app.Metadata = make(map[string]interface{})
 	app.Metadata["api"] = action.ConjurClient(client)
+	app.Metadata["fs"] = afero.NewOsFs()
 
 	for _, cmds := range commands {
 		app.Commands = append(app.Commands, cmds...)

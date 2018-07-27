@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/cyberark/conjur-cli-go/action"
 	"github.com/urfave/cli"
 )
 
@@ -32,6 +35,13 @@ var PolicyCommands = []cli.Command{
 					},
 				},
 				Action: func(c *cli.Context) error {
+					policyID := c.Args().Get(0)
+					filename := c.Args().Get(1)
+					resp, err := action.Policy{PolicyID: policyID}.Load(AppClient(c.App), filename, loadContext.delete, loadContext.delete)
+					if err != nil {
+						return err
+					}
+					fmt.Println(resp)
 					return nil
 				},
 			},
