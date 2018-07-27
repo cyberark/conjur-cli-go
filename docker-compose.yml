@@ -35,8 +35,7 @@ services:
         - "8080"
     depends_on:
       - conjur
-    entrypoint: /bin/bash
-    command: './test-entrypoint.sh'
+    command: ci/test
     volumes:
       - ./output:/go/src/github.com/cyberark/conjur-cli-go/output
     environment:
@@ -50,6 +49,8 @@ services:
     environment:
       CONJUR_APPLIANCE_URL: http://conjur
       CONJUR_ACCOUNT: cucumber
+      CONJUR_AUTHN_LOGIN:
+      CONJUR_AUTHN_API_KEY:
         
   dev:
     privileged: true            # to allow debugging

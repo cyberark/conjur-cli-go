@@ -5,12 +5,21 @@ import (
 	"sort"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/conjur-cli-go/action"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
-func Api(app *cli.App) *conjurapi.Client {
-	return app.Metadata["api"].(*conjurapi.Client)
+// AppClient retrieves the Conjur client from the App's metadata.
+func AppClient(app *cli.App) action.ConjurClient {
+	return app.Metadata["api"].(action.ConjurClient)
+}
+
+var commands = [][]cli.Command{
+	AuthnCommands,
+	InitCommands,
+	PolicyCommands,
+	VariableCommands,
 }
 
 func main() {
@@ -18,30 +27,26 @@ func main() {
 	app.Version = "0.0.1"
 	app.Usage = "A CLI for Conjur"
 
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.InfoLevel)
+	log.SetFormatter(&log.TextFormatter{DisableTimestamp: true, DisableLevelTruncation: true})
 
 	config := conjurapi.LoadConfig()
 
-	api, err := conjurapi.NewClientFromEnvironment(config)
+	client, err := conjurapi.NewClientFromEnvironment(config)
 	if err != nil {
 		log.Errorf("Failed creating a Conjur client: %s\n", err.Error())
 		os.Exit(1)
 	}
 	app.Metadata = make(map[string]interface{})
-	app.Metadata["api"] = api
+	app.Metadata["api"] = action.ConjurClient(client)
 
-	app.Commands = []cli.Command{
-		AuthnCommands,
-		InitCommands,
-		PolicyCommands,
-		VariableCommands,
+	for _, cmds := range commands {
+		app.Commands = append(app.Commands, cmds...)
 	}
-	app.Commands = append(app.Commands, ResourceCommands...)
 
 	sort.Sort(cli.CommandsByName(app.Commands))
 
-	err = app.Run(os.
-		Args)
+	err = app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
 	}

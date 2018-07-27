@@ -1,3 +1,6 @@
 /vendor/
 /output/
+/action/mocks/*.go
 conjur-cli-go
+junit.xml
+key.txt
