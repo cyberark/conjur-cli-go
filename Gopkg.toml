@@ -27,7 +27,8 @@
 
 [[constraint]]
   name = "github.com/cyberark/conjur-api-go"
-  version = "0.3.0"
+#  version = "0.3.0"
+  branch = "json-fixes_20180726"
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"
@@ -41,3 +42,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/spf13/afero"
+  version = "1.1.1"
