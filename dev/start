@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -x
+#!/usr/bin/env bash -ex
 
 # function finish {
 #   echo 'Removing environment'
@@ -26,7 +26,7 @@ function runDevelopment() {
   local ssl_cert_v4="$(getCert)"
 
   export CONJUR_AUTHN_API_KEY="$api_key"
-  docker-compose up -d --no-deps cli
+  docker-compose run -d --no-deps cli
 
   docker-compose build --pull dev
   

@@ -44,8 +44,10 @@ services:
       CONJUR_AUTHN_LOGIN:
       CONJUR_AUTHN_API_KEY:
 
-  cli5:
+  cli:
     image: cyberark/conjur-cli:5
+    entrypoint: /bin/bash
+    command: sleep inifinty
     environment:
       CONJUR_APPLIANCE_URL: http://conjur
       CONJUR_ACCOUNT: cucumber
