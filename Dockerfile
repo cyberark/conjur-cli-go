@@ -16,7 +16,7 @@ COPY Gopkg.toml Gopkg.lock ./
 RUN dep ensure --vendor-only
 
 COPY . .
-RUN mockgen -package mocks -destination action/mocks/client.go github.com/cyberark/conjur-cli-go/action ConjurClient
+RUN ./generate-mocks
 
 ENV GOOS=linux
 ENV GOARCH=amd64
