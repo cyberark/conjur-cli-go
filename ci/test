@@ -3,6 +3,12 @@
 set -o pipefail
 
 go clean -i
+go build
+
+pkgs="$(go list ./...)"
+go vet $pkgs
+golint -set_exit_status $pkgs
+
 go install
 
-go test -v ./... | tee /dev/stderr | go-junit-report > output/junit.xml
+go test -v $pkgs | tee /dev/stderr | go-junit-report > output/junit.xml
