@@ -10,8 +10,7 @@
   revision = "9fd32a8b3d3d3f9d43c341bfe098430e07609480"
 
 [[projects]]
-  branch = "json-fixes_20180726"
-  digest = "1:53aa1666d3b63d790290f9cd3cfce5fe7999b0e1773aefa432bb36f5515fdaec"
+  digest = "1:a54622d57ada911e49460f564f76b5d9e4525c7f01132a21c1ca4d66ecc1e6ff"
   name = "github.com/cyberark/conjur-api-go"
   packages = [
     "conjurapi",
@@ -19,7 +18,8 @@
     "conjurapi/response",
   ]
   pruneopts = "UT"
-  revision = "1902038fc28c536b65a7968ddcb42e77caf70c80"
+  revision = "fc11334077dd0b550c8f589ad9f3102ff9420738"
+  version = "v0.3.3"
 
 [[projects]]
   digest = "1:bc38c7c481812e178d85160472e231c5e1c9a7f5845d67e23ee4e706933c10d8"
