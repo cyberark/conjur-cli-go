@@ -6,7 +6,7 @@ startConjur() {
 
 exec_on() {
   local container=$1; shift
-  docker exec $(docker-compose ps -q $container) "$@"
+  docker exec -i $(docker-compose ps -q $container) "$@"
 }
 
 
@@ -17,8 +17,10 @@ initEnvironment() {
   exec_on cuke-master /opt/conjur/evoke/bin/wait_for_conjur
 
   exec_on cuke-master conjur authn login -u admin -p secret
-  exec_on cuke-master conjur variable create existent-variable-with-undefined-value
-  exec_on cuke-master conjur variable create existent-variable-with-defined-value
+  echo -e '
+- !variable existent-variable-with-undefined-value
+- !variable existent-variable-with-defined-value
+' | exec_on cuke-master env GLI_DEBUG=true conjur policy load --as-group security_admin /dev/stdin
   exec_on cuke-master conjur variable values add existent-variable-with-defined-value existent-variable-defined-value
 }
 

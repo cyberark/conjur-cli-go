@@ -10,7 +10,7 @@
   revision = "9fd32a8b3d3d3f9d43c341bfe098430e07609480"
 
 [[projects]]
-  digest = "1:1953b3f5969a5c372fc81eb307d969249803cb1536aa999daa6ab4642f699683"
+  digest = "1:a54622d57ada911e49460f564f76b5d9e4525c7f01132a21c1ca4d66ecc1e6ff"
   name = "github.com/cyberark/conjur-api-go"
   packages = [
     "conjurapi",
@@ -18,8 +18,8 @@
     "conjurapi/response",
   ]
   pruneopts = "UT"
-  revision = "d898aeb85c063297ac346411f91e6207a526e4e9"
-  version = "v0.3.2"
+  revision = "fc11334077dd0b550c8f589ad9f3102ff9420738"
+  version = "v0.3.3"
 
 [[projects]]
   digest = "1:bc38c7c481812e178d85160472e231c5e1c9a7f5845d67e23ee4e706933c10d8"
@@ -35,6 +35,17 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "5d60369ef3a5c165e66ece9cdebb2d4177729d84"
+
+[[projects]]
+  digest = "1:37ace7f35375adec11634126944bdc45a673415e2fcc07382d03b75ec76ea94c"
+  name = "github.com/spf13/afero"
+  packages = [
+    ".",
+    "mem",
+  ]
+  pruneopts = "UT"
+  revision = "787d034dfe70e44075ccc060d346146ef53270ad"
+  version = "v1.1.1"
 
 [[projects]]
   digest = "1:b24d38b282bacf9791408a080f606370efa3d364e4b5fd9ba0f7b87786d3b679"
@@ -72,6 +83,21 @@
   revision = "e072cadbbdc8dd3d3ffa82b8b4b9304c261d9311"
 
 [[projects]]
+  digest = "1:038003d098ffc345c4c5c6d47bcc6920b2649ee0c0d557162e54e75c76cadf8b"
+  name = "golang.org/x/text"
+  packages = [
+    "internal/gen",
+    "internal/triegen",
+    "internal/ucd",
+    "transform",
+    "unicode/cldr",
+    "unicode/norm",
+  ]
+  pruneopts = "UT"
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
+
+[[projects]]
   branch = "v1"
   digest = "1:4384086c0f7f9e662c2ae8e900af35dc75ff262205b362597bb65af2fd8a21c9"
   name = "gopkg.in/yaml.v1"
@@ -86,6 +112,7 @@
     "github.com/cyberark/conjur-api-go/conjurapi",
     "github.com/golang/mock/gomock",
     "github.com/sirupsen/logrus",
+    "github.com/spf13/afero",
     "github.com/urfave/cli",
   ]
   solver-name = "gps-cdcl"

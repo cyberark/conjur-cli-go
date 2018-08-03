@@ -1,8 +1,22 @@
-# v0.0.2
+# Changelog
+All notable changes to this project will be documented in this file.
 
-* Implement `variable value` and `variable values add`
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-# v0.0.1
+## [Unreleased]
 
-* Initial commit
+### Added
 
+* `policy load` subcommand.
+* `variable value` and `variable values add` subcommands.
+
+### Changed
+
+* New and improved changelog.
+
+## 0.0.1 - 2018-07-22
+
+* Initial commit of an outline of a Conjur CLI written in GO.
+
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v0.0.1...HEAD

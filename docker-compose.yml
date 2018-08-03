@@ -14,7 +14,7 @@ services:
     image: postgres:9.3
 
   conjur:
-    image: cyberark/conjur:0.8.1-stable
+    image: cyberark/conjur:1.1.0-stable
     command: server -a cucumber
     environment:
       DATABASE_URL: postgres://postgres@postgres/postgres
@@ -23,7 +23,7 @@ services:
       - postgres
 
   cuke-master:
-    image: registry.tld/conjur-appliance-cuke-master:4.9-stable
+    image: registry2.itci.conjur.net/conjur-appliance-cuke-master:4.9-stable
     security_opt:
       - seccomp:unconfined # --security-opt seccomp=unconfined
     ports:
@@ -44,8 +44,10 @@ services:
       CONJUR_AUTHN_LOGIN:
       CONJUR_AUTHN_API_KEY:
 
-  cli5:
+  cli:
     image: cyberark/conjur-cli:5
+    entrypoint: /bin/bash
+    command: sleep inifinty
     environment:
       CONJUR_APPLIANCE_URL: http://conjur
       CONJUR_ACCOUNT: cucumber

@@ -29,12 +29,12 @@ func TestValuesAdd(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	new_value := "value"
+	newValue := "value"
 
 	mockClient := mocks.NewMockConjurClient(ctrl)
-	mockClient.EXPECT().AddSecret("var", new_value).Return(nil)
+	mockClient.EXPECT().AddSecret("var", newValue).Return(nil)
 
-	err := action.Variable{Name: "var"}.ValuesAdd(mockClient, new_value)
+	err := action.Variable{Name: "var"}.ValuesAdd(mockClient, newValue)
 	if err != nil {
 		t.Fatalf("ValuesAdd failed, %v", err)
 	}
