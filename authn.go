@@ -11,15 +11,22 @@ var AuthnCommands = []cli.Command{
 		Usage: "Login and logout",
 		Subcommands: []cli.Command{
 			{
+				Name:  "authenticate",
+				Usage: "Obtains an authentication token using the current logged-in user",
+				Action: func(c *cli.Context) error {
+					return nil
+				},
+			},
+			{
 				Name:  "login",
-				Usage: "log in to Conjur",
+				Usage: "Logs in and caches credentials to netrc",
 				Action: func(c *cli.Context) error {
 					return nil
 				},
 			},
 			{
 				Name:  "whoami",
-				Usage: "show current Conjur account and username",
+				Usage: "Prints out the current logged in username",
 				Action: func(c *cli.Context) error {
 					return nil
 				},
