@@ -41,7 +41,7 @@ func (p Policy) readFrom(filename string) (body []byte, err error) {
 }
 
 // Load uses the Conjur API to load a policy.
-func (p Policy) Load(client PolicyClient, filename string, delete, replace bool) (policyResp string, err error) {
+func (p Policy) Load(client PolicyClient, filename string, delete, replace bool) (policyResp []byte, err error) {
 	mode := conjurapi.PolicyModePost
 	switch {
 	case delete:
@@ -60,11 +60,5 @@ func (p Policy) Load(client PolicyClient, filename string, delete, replace bool)
 		return
 	}
 
-	jsonResp, err := json.MarshalIndent(resp, "", "  ")
-	if err != nil {
-		return
-	}
-
-	policyResp = string(jsonResp)
-	return
+	return json.MarshalIndent(resp, "", "  ")
 }

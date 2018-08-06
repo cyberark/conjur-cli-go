@@ -34,9 +34,8 @@ func TestLoad(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed marshaling policy response, %v", err)
 	}
-	expectedJSON := string(marshaledResponse)
 
-	if jsonResponse != expectedJSON {
+	if string(jsonResponse) != string(marshaledResponse) {
 		t.Fatalf("LoadPolicy returned the wrong response")
 	}
 }
