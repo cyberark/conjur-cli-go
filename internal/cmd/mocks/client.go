@@ -60,9 +60,9 @@ func (mr *MockConjurClientMockRecorder) LoadPolicy(arg0, arg1, arg2 interface{})
 }
 
 // Resource mocks base method
-func (m *MockConjurClient) Resource(arg0 string) ([]byte, error) {
+func (m *MockConjurClient) Resource(arg0 string) (map[string]interface{}, error) {
 	ret := m.ctrl.Call(m, "Resource", arg0)
-	ret0, _ := ret[0].([]byte)
+	ret0, _ := ret[0].(map[string]interface{})
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -73,9 +73,9 @@ func (mr *MockConjurClientMockRecorder) Resource(arg0 interface{}) *gomock.Call 
 }
 
 // Resources mocks base method
-func (m *MockConjurClient) Resources(arg0 conjurapi.ResourceFilter) ([]byte, error) {
+func (m *MockConjurClient) Resources(arg0 *conjurapi.ResourceFilter) ([]map[string]interface{}, error) {
 	ret := m.ctrl.Call(m, "Resources", arg0)
-	ret0, _ := ret[0].([]byte)
+	ret0, _ := ret[0].([]map[string]interface{})
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

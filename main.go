@@ -34,6 +34,7 @@ func main() {
 		AuthnCommands,
 		InitCommands,
 		PolicyCommands,
+		ResourceCommands,
 		VariableCommands,
 	}
 
