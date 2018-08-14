@@ -5,35 +5,19 @@ import (
 	"sort"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-cli-go/action"
+	"github.com/cyberark/conjur-cli-go/internal/cmd"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/urfave/cli"
 )
 
-// AppClient retrieves the Conjur client from the App's metadata.
-func AppClient(app *cli.App) action.ConjurClient {
-	return app.Metadata["api"].(action.ConjurClient)
-}
-
-// AppFs retrieves the afero Fs instance to use for filesystem access
-func AppFs(app *cli.App) afero.Fs {
-	return app.Metadata["fs"].(afero.Fs)
-}
-
-var commands = [][]cli.Command{
-	AuthnCommands,
-	InitCommands,
-	PolicyCommands,
-	VariableCommands,
-}
+type CommandFactory func(api cmd.ConjurClient, fs afero.Fs) []cli.Command
 
 func main() {
 	app := cli.NewApp()
 	app.Version = "0.0.1"
 	app.Usage = "A CLI for Conjur"
 
-	log.SetLevel(log.InfoLevel)
 	log.SetFormatter(&log.TextFormatter{DisableTimestamp: true, DisableLevelTruncation: true})
 
 	config := conjurapi.LoadConfig()
@@ -43,12 +27,18 @@ func main() {
 		log.Errorf("Failed creating a Conjur client: %s\n", err.Error())
 		os.Exit(1)
 	}
-	app.Metadata = make(map[string]interface{})
-	app.Metadata["api"] = action.ConjurClient(client)
-	app.Metadata["fs"] = afero.NewOsFs()
 
-	for _, cmds := range commands {
-		app.Commands = append(app.Commands, cmds...)
+	api := cmd.ConjurClient(client)
+	fs := afero.NewOsFs()
+	commandFactories := []CommandFactory{
+		AuthnCommands,
+		InitCommands,
+		PolicyCommands,
+		VariableCommands,
+	}
+
+	for _, factory := range commandFactories {
+		app.Commands = append(app.Commands, factory(api, fs)...)
 	}
 
 	sort.Sort(cli.CommandsByName(app.Commands))

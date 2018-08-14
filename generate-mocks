@@ -1,3 +1,3 @@
 #!/bin/bash -ex
 
-mockgen -package mocks -destination action/mocks/client.go github.com/cyberark/conjur-cli-go/action ConjurClient
+mockgen -package mocks -destination internal/cmd/mocks/client.go github.com/cyberark/conjur-cli-go/internal/cmd ConjurClient
