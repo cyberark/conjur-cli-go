@@ -27,7 +27,9 @@
 
 [[constraint]]
   name = "github.com/cyberark/conjur-api-go"
-  version = "0.3.3"
+  #  version = "0.3.3"
+  # use the tip of master until the next release of the api
+  branch = "master"
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"

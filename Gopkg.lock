@@ -10,16 +10,17 @@
   revision = "9fd32a8b3d3d3f9d43c341bfe098430e07609480"
 
 [[projects]]
-  digest = "1:a54622d57ada911e49460f564f76b5d9e4525c7f01132a21c1ca4d66ecc1e6ff"
+  branch = "master"
+  digest = "1:a105bee29e6f114f9c43429ff28748c3c7d2ae64e0d00a62a6bd406e37fc6e18"
   name = "github.com/cyberark/conjur-api-go"
   packages = [
     "conjurapi",
     "conjurapi/authn",
+    "conjurapi/logging",
     "conjurapi/response",
   ]
   pruneopts = "UT"
-  revision = "fc11334077dd0b550c8f589ad9f3102ff9420738"
-  version = "v0.3.3"
+  revision = "e558ab28a93b7e044ac169b860ee5a19e41b70c1"
 
 [[projects]]
   digest = "1:bc38c7c481812e178d85160472e231c5e1c9a7f5845d67e23ee4e706933c10d8"
@@ -37,7 +38,7 @@
   revision = "5d60369ef3a5c165e66ece9cdebb2d4177729d84"
 
 [[projects]]
-  digest = "1:37ace7f35375adec11634126944bdc45a673415e2fcc07382d03b75ec76ea94c"
+  digest = "1:bd1ae00087d17c5a748660b8e89e1043e1e5479d0fea743352cda2f8dd8c4f84"
   name = "github.com/spf13/afero"
   packages = [
     ".",
@@ -61,7 +62,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "c126467f60eb25f8f27e5a981f32a87e3965053f"
+  revision = "f027049dab0ad238e394a753dba2d14753473a04"
 
 [[projects]]
   branch = "master"
@@ -69,21 +70,21 @@
   name = "golang.org/x/net"
   packages = ["context"]
   pruneopts = "UT"
-  revision = "3673e40ba22529d22c3fd7c93e97b0ce50fa7bdd"
+  revision = "f9ce57c11b242f0f1599cf25c89d8cb02c45295a"
 
 [[projects]]
   branch = "master"
-  digest = "1:e939662205f1272f205543e5d0b28d8f4170213af3a2cd82a7d5a1a69c05b2e1"
+  digest = "1:2455630696ece2771aab91b25300a375df10b948d43d1b565feda5d89afd2bde"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "e072cadbbdc8dd3d3ffa82b8b4b9304c261d9311"
+  revision = "acbc56fc7007d2a01796d5bde54f39e3b3e95945"
 
 [[projects]]
-  digest = "1:038003d098ffc345c4c5c6d47bcc6920b2649ee0c0d557162e54e75c76cadf8b"
+  digest = "1:8029e9743749d4be5bc9f7d42ea1659471767860f0cdc34d37c3111bd308a295"
   name = "golang.org/x/text"
   packages = [
     "internal/gen",
