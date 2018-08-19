@@ -4,11 +4,13 @@ import (
 	"os"
 	"sort"
 
-	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-cli-go/internal/cmd"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/urfave/cli"
+
+	"github.com/cyberark/conjur-api-go/conjurapi"
+
+	"github.com/cyberark/conjur-cli-go/internal/cmd"
 )
 
 type commandFactory func(api cmd.ConjurClient, fs afero.Fs) []cli.Command

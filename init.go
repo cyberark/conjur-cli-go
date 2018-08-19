@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/cyberark/conjur-cli-go/internal/cmd"
 	"github.com/spf13/afero"
 	"github.com/urfave/cli"
+
+	"github.com/cyberark/conjur-cli-go/internal/cmd"
 )
 
 // InitCommands contains the definition of the command for initialization.

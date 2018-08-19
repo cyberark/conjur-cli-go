@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/cyberark/conjur-cli-go/internal/cmd"
 	"github.com/spf13/afero"
 	"github.com/urfave/cli"
+
+	"github.com/cyberark/conjur-cli-go/internal/cmd"
 )
 
 // PolicyCommands contains the definitions of the commands related to policies.

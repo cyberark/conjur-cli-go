@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-cli-go/internal/cmd"
-	"github.com/cyberark/conjur-cli-go/internal/cmd/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/afero"
+
+	"github.com/cyberark/conjur-api-go/conjurapi"
+
+	"github.com/cyberark/conjur-cli-go/internal/cmd"
+	"github.com/cyberark/conjur-cli-go/internal/cmd/mocks"
 )
 
 func TestLoad(t *testing.T) {

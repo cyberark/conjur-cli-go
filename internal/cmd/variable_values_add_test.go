@@ -3,9 +3,10 @@ package cmd_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
+
 	"github.com/cyberark/conjur-cli-go/internal/cmd"
 	"github.com/cyberark/conjur-cli-go/internal/cmd/mocks"
-	"github.com/golang/mock/gomock"
 )
 
 func TestValuesAdd(t *testing.T) {

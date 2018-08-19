@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
+
 	"github.com/cyberark/conjur-cli-go/internal/cmd"
 )
 
