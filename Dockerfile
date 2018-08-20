@@ -1,7 +1,9 @@
 FROM golang:1.10
 MAINTAINER Conjur Inc
 
-RUN apt-get update && apt-get install -y jq less 
+RUN apt-get update &&\
+    apt-get install -y jq less vim
+    
 RUN go get -u \
   github.com/jstemmer/go-junit-report \
   github.com/golang/dep/cmd/dep \
