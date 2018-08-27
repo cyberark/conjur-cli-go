@@ -28,8 +28,7 @@
 [[constraint]]
   name = "github.com/cyberark/conjur-api-go"
   #  version = "0.3.3"
-  # use the tip of master until the next release of the api
-  branch = "master"
+  branch = "authn_20180813"
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"
@@ -47,3 +46,7 @@
 [[constraint]]
   name = "github.com/spf13/afero"
   version = "1.1.1"
+
+[[constraint]]
+  name = "gopkg.in/yaml.v2"
+  version = "2.2.1"

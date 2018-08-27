@@ -10,8 +10,8 @@
   revision = "9fd32a8b3d3d3f9d43c341bfe098430e07609480"
 
 [[projects]]
-  branch = "master"
-  digest = "1:a105bee29e6f114f9c43429ff28748c3c7d2ae64e0d00a62a6bd406e37fc6e18"
+  branch = "authn_20180813"
+  digest = "1:91f9c6d1b3e024396c462ae8497202d2745bc85a4cb00e533fe15ed03613a8bd"
   name = "github.com/cyberark/conjur-api-go"
   packages = [
     "conjurapi",
@@ -20,7 +20,7 @@
     "conjurapi/response",
   ]
   pruneopts = "UT"
-  revision = "e558ab28a93b7e044ac169b860ee5a19e41b70c1"
+  revision = "e645305090b1f22fbb2561ebe0a6622613cb433e"
 
 [[projects]]
   digest = "1:bc38c7c481812e178d85160472e231c5e1c9a7f5845d67e23ee4e706933c10d8"
@@ -62,7 +62,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "f027049dab0ad238e394a753dba2d14753473a04"
+  revision = "614d502a4dac94afa3a6ce146bd1736da82514c6"
 
 [[projects]]
   branch = "master"
@@ -70,18 +70,18 @@
   name = "golang.org/x/net"
   packages = ["context"]
   pruneopts = "UT"
-  revision = "f9ce57c11b242f0f1599cf25c89d8cb02c45295a"
+  revision = "8a410e7b638dca158bf9e766925842f6651ff828"
 
 [[projects]]
   branch = "master"
-  digest = "1:2455630696ece2771aab91b25300a375df10b948d43d1b565feda5d89afd2bde"
+  digest = "1:0dafafed83f125cdc945a014b2dec15e5b5d8cd2d77a2d1e3763120b08ab381b"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "acbc56fc7007d2a01796d5bde54f39e3b3e95945"
+  revision = "4910a1d54f876d7b22162a85f4d066d3ee649450"
 
 [[projects]]
   digest = "1:8029e9743749d4be5bc9f7d42ea1659471767860f0cdc34d37c3111bd308a295"
@@ -99,12 +99,12 @@
   version = "v0.3.0"
 
 [[projects]]
-  branch = "v1"
-  digest = "1:4384086c0f7f9e662c2ae8e900af35dc75ff262205b362597bb65af2fd8a21c9"
-  name = "gopkg.in/yaml.v1"
+  digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
+  name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "9f9df34309c04878acc86042b16630b0f696e1de"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -115,6 +115,7 @@
     "github.com/sirupsen/logrus",
     "github.com/spf13/afero",
     "github.com/urfave/cli",
+    "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
