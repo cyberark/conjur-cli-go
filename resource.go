@@ -10,8 +10,11 @@ import (
 )
 
 // ResourceCommands contains the definitions of commands related to Conjur resources.
-var ResourceCommands = func(client cmd.ConjurClient, fs afero.Fs) []cli.Command {
+var ResourceCommands = func(initFunc cli.BeforeFunc, fs afero.Fs) []cli.Command {
 	var listOptions cmd.ResourceListOptions
+	getClient := func(ctx *cli.Context) cmd.ResourceClient {
+		return ctx.App.Metadata["client"].(cmd.ResourceClient)
+	}
 
 	return []cli.Command{
 		{
@@ -49,8 +52,9 @@ var ResourceCommands = func(client cmd.ConjurClient, fs afero.Fs) []cli.Command 
 					Usage: "Full-text search on resource id and annotation values",
 				},
 			},
+			Before: initFunc,
 			Action: func(c *cli.Context) error {
-				lister := cmd.NewResourceLister(client.(cmd.ResourceClient))
+				lister := cmd.NewResourceLister(getClient(c))
 
 				resp, err := lister.Do(listOptions)
 				if err != nil {
@@ -62,14 +66,15 @@ var ResourceCommands = func(client cmd.ConjurClient, fs afero.Fs) []cli.Command 
 			},
 		},
 		{
-			Name:  "show",
-			Usage: "Show an object",
+			Name:   "show",
+			Usage:  "Show an object",
+			Before: initFunc,
 			Action: func(c *cli.Context) error {
 				showOptions := cmd.ResourceShowOptions{
 					ResourceID: c.Args().Get(0),
 				}
 
-				shower := cmd.NewResourceShower(client.(cmd.ResourceClient))
+				shower := cmd.NewResourceShower(getClient(c))
 
 				resp, err := shower.Do(showOptions)
 				if err != nil {

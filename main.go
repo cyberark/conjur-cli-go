@@ -9,11 +9,9 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
-
-	"github.com/cyberark/conjur-cli-go/internal/cmd"
 )
 
-type commandFactory func(api cmd.ConjurClient, fs afero.Fs) []cli.Command
+type commandFactory func(initFunc cli.BeforeFunc, fs afero.Fs) []cli.Command
 
 func run() (err error) {
 	app := cli.NewApp()
@@ -22,15 +20,6 @@ func run() (err error) {
 
 	logrus.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true, DisableLevelTruncation: true})
 
-	config := conjurapi.LoadConfig()
-
-	client, err := conjurapi.NewClientFromEnvironment(config)
-	if err != nil {
-		return
-	}
-
-	api := cmd.ConjurClient(client)
-	fs := afero.NewOsFs()
 	commandFactories := []commandFactory{
 		AuthnCommands,
 		InitCommands,
@@ -39,8 +28,23 @@ func run() (err error) {
 		VariableCommands,
 	}
 
+	initFunc := func(c *cli.Context) error {
+		config := conjurapi.LoadConfig()
+		if client, err := conjurapi.NewClientFromEnvironment(config); err == nil {
+			c.App.Metadata["client"] = client
+		} else {
+			// No defer funcs should be set to run yet, so it's ok to call
+			// logrus.Fatal here. Also, returning an error from a BeforeFunc
+			// causes urfave/cli to print the help text, which doesn't make
+			// sense if initialization fails.
+			logrus.Fatal(err)
+		}
+
+		return nil
+	}
+	fs := afero.NewOsFs()
 	for _, factory := range commandFactories {
-		app.Commands = append(app.Commands, factory(api, fs)...)
+		app.Commands = append(app.Commands, factory(initFunc, fs)...)
 	}
 
 	sort.Sort(cli.CommandsByName(app.Commands))

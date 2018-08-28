@@ -10,8 +10,11 @@ import (
 )
 
 // PolicyCommands contains the definitions of the commands related to policies.
-var PolicyCommands = func(client cmd.ConjurClient, fs afero.Fs) []cli.Command {
+var PolicyCommands = func(initFunc cli.BeforeFunc, fs afero.Fs) []cli.Command {
 	var options cmd.PolicyLoadOptions
+	getClient := func(ctx *cli.Context) cmd.PolicyClient {
+		return ctx.App.Metadata["client"].(cmd.PolicyClient)
+	}
 
 	return []cli.Command{
 		{
@@ -34,11 +37,12 @@ var PolicyCommands = func(client cmd.ConjurClient, fs afero.Fs) []cli.Command {
 							Destination: &options.Replace,
 						},
 					},
+					Before: initFunc,
 					Action: func(c *cli.Context) error {
 						options.PolicyID = c.Args().Get(0)
 						options.Filename = c.Args().Get(1)
 
-						loader := cmd.NewPolicyLoader(client.(cmd.PolicyClient), fs)
+						loader := cmd.NewPolicyLoader(getClient(c), fs)
 
 						resp, err := loader.Do(options)
 						if err != nil {
