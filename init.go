@@ -8,7 +8,7 @@ import (
 )
 
 // InitCommands contains the definition of the command for initialization.
-var InitCommands = func(api cmd.ConjurClient, fs afero.Fs) []cli.Command {
+var InitCommands = func(initFunc cli.BeforeFunc, fs afero.Fs) []cli.Command {
 	var options cmd.InitOptions
 
 	return []cli.Command{
@@ -42,6 +42,7 @@ var InitCommands = func(api cmd.ConjurClient, fs afero.Fs) []cli.Command {
 					Destination: &options.URL,
 				},
 			},
+			// don't set Before: here, we're writing the API configuration
 			Action: func(c *cli.Context) error {
 				initer := cmd.NewIniter(fs)
 
