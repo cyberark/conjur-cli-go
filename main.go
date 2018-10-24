@@ -33,8 +33,6 @@ func run() (err error) {
 		if err != nil {
 			return err
 		}
-		c.App.Metadata["config"] = config
-		logrus.Infof("%v", c.App.Metadata["config"])
 
 		if client, err := conjurapi.NewClientFromEnvironment(config); err == nil {
 			c.App.Metadata["client"] = client

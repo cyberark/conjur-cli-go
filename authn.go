@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/afero"
@@ -28,8 +29,13 @@ var AuthnCommands = func(initFunc cli.BeforeFunc, fs afero.Fs) []cli.Command {
 					Action: func(c *cli.Context) (err error) {
 						client := getClient(c)
 
-						if err = client.RefreshToken(); err == nil {
-							fmt.Println(client.GetAuthToken())
+						err = client.RefreshToken()
+						if err != nil {
+							return
+						}
+
+						if resp, err := json.MarshalIndent(client.GetAuthToken(), "", ""); err == nil {
+							fmt.Println(string(resp))
 						}
 
 						return

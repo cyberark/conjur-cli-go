@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/bgentry/go-netrc/netrc"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
@@ -39,9 +38,7 @@ func (l loginerImpl) Do(options AuthnLoginOptions) (err error) {
 		return
 	}
 
-	config := options.Config
-	logrus.Infof("%v", config)
-
+	config := l.GetConfig()
 	rc := new(netrc.Netrc)
 	if rcFile, err := l.Open(config.NetRCPath); err == nil {
 		defer rcFile.Close()
