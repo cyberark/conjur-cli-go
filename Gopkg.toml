@@ -27,8 +27,8 @@
 
 [[constraint]]
   name = "github.com/cyberark/conjur-api-go"
-  #  version = "0.3.3"
-  branch = "authn_20180813"
+  #  version = "0.3.3"  
+  branch = "login_20181024"
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"
