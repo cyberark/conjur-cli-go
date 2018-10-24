@@ -6,6 +6,11 @@ import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
 )
 
+// AuthnClient specifies the Conjur API methods required to implement the authentication actions.
+type AuthnClient interface {
+	Login(username, password string) ([]byte, error)
+}
+
 // PolicyClient specifies the Conjur API methods required to implement the policy actions.
 type PolicyClient interface {
 	LoadPolicy(mode conjurapi.PolicyMode, policyID string, policy io.Reader) (*conjurapi.PolicyResponse, error)
@@ -26,6 +31,7 @@ type VariableClient interface {
 
 // ConjurClient is the composition of all the Conjur API interfaces used by the individual action clients.
 type ConjurClient interface {
+	AuthnClient
 	PolicyClient
 	ResourceClient
 	VariableClient
