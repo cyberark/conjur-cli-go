@@ -67,7 +67,14 @@ var AuthnCommands = func(initFunc cli.BeforeFunc, fs afero.Fs) []cli.Command {
 					Name:   "whoami",
 					Usage:  "Prints out the current logged in username",
 					Before: initFunc,
-					Action: func(c *cli.Context) error {
+					Action: func(c *cli.Context) (err error) {
+						whoamier := cmd.NewWhoAmIer(getClient(c))
+
+						resp, err := whoamier.Do()
+						if err != nil {
+							return err
+						}
+						fmt.Println(string(resp))
 						return nil
 					},
 				},
