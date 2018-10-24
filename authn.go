@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/spf13/afero"
 	"github.com/urfave/cli"
-
-	"github.com/cyberark/conjur-api-go/conjurapi"
 
 	"github.com/cyberark/conjur-cli-go/internal/cmd"
 )
@@ -25,8 +25,14 @@ var AuthnCommands = func(initFunc cli.BeforeFunc, fs afero.Fs) []cli.Command {
 					Name:   "authenticate",
 					Usage:  "Obtains an authentication token using the current logged-in user",
 					Before: initFunc,
-					Action: func(c *cli.Context) error {
-						return nil
+					Action: func(c *cli.Context) (err error) {
+						client := getClient(c)
+
+						if err = client.RefreshToken(); err == nil {
+							fmt.Println(client.GetAuthToken())
+						}
+
+						return
 					},
 				},
 				{
@@ -48,7 +54,6 @@ var AuthnCommands = func(initFunc cli.BeforeFunc, fs afero.Fs) []cli.Command {
 					Action: func(c *cli.Context) error {
 						loginer := cmd.NewAuthnLoginer(getClient(c), fs)
 
-						loginOptions.Config = c.App.Metadata["config"].(conjurapi.Config)
 						return loginer.Do(loginOptions)
 					},
 				},

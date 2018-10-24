@@ -4,10 +4,14 @@ import (
 	"io"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/conjur-api-go/conjurapi/authn"
 )
 
 // AuthnClient specifies the Conjur API methods required to implement the authentication actions.
 type AuthnClient interface {
+	GetConfig() conjurapi.Config
+	GetAuthToken() authn.AuthnToken
+	RefreshToken() error
 	Login(username, password string) ([]byte, error)
 }
 
