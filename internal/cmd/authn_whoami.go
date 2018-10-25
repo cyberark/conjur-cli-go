@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 )
 
+// WhoAmIResponse is the response of WhoAmI command.
 type WhoAmIResponse struct {
 	Account string `json:"account"`
 }

@@ -9,16 +9,19 @@ import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
 )
 
+// AuthnLoginOptions are the options used to authentification.
 type AuthnLoginOptions struct {
 	Config   conjurapi.Config
 	Username string
 	Password string
 }
 
+// AuthnLoginer performs the operations necessary to authentification as described by options.
 type AuthnLoginer interface {
 	Do(options AuthnLoginOptions) error
 }
 
+// NewAuthnLoginer returns a AuthnLoginer that uses client to Authentification.
 func NewAuthnLoginer(client AuthnClient, fs afero.Fs) AuthnLoginer {
 	return loginerImpl{
 		AuthnClient: client,
