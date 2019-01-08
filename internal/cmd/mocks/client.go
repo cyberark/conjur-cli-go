@@ -37,6 +37,7 @@ func (m *MockConjurClient) EXPECT() *MockConjurClientMockRecorder {
 
 // AddSecret mocks base method
 func (m *MockConjurClient) AddSecret(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddSecret", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -44,11 +45,13 @@ func (m *MockConjurClient) AddSecret(arg0, arg1 string) error {
 
 // AddSecret indicates an expected call of AddSecret
 func (mr *MockConjurClientMockRecorder) AddSecret(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSecret", reflect.TypeOf((*MockConjurClient)(nil).AddSecret), arg0, arg1)
 }
 
 // GetAuthToken mocks base method
 func (m *MockConjurClient) GetAuthToken() authn.AuthnToken {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAuthToken")
 	ret0, _ := ret[0].(authn.AuthnToken)
 	return ret0
@@ -56,11 +59,13 @@ func (m *MockConjurClient) GetAuthToken() authn.AuthnToken {
 
 // GetAuthToken indicates an expected call of GetAuthToken
 func (mr *MockConjurClientMockRecorder) GetAuthToken() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthToken", reflect.TypeOf((*MockConjurClient)(nil).GetAuthToken))
 }
 
 // GetConfig mocks base method
 func (m *MockConjurClient) GetConfig() conjurapi.Config {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetConfig")
 	ret0, _ := ret[0].(conjurapi.Config)
 	return ret0
@@ -68,11 +73,13 @@ func (m *MockConjurClient) GetConfig() conjurapi.Config {
 
 // GetConfig indicates an expected call of GetConfig
 func (mr *MockConjurClientMockRecorder) GetConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfig", reflect.TypeOf((*MockConjurClient)(nil).GetConfig))
 }
 
 // LoadPolicy mocks base method
 func (m *MockConjurClient) LoadPolicy(arg0 conjurapi.PolicyMode, arg1 string, arg2 io.Reader) (*conjurapi.PolicyResponse, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoadPolicy", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*conjurapi.PolicyResponse)
 	ret1, _ := ret[1].(error)
@@ -81,11 +88,13 @@ func (m *MockConjurClient) LoadPolicy(arg0 conjurapi.PolicyMode, arg1 string, ar
 
 // LoadPolicy indicates an expected call of LoadPolicy
 func (mr *MockConjurClientMockRecorder) LoadPolicy(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadPolicy", reflect.TypeOf((*MockConjurClient)(nil).LoadPolicy), arg0, arg1, arg2)
 }
 
 // Login mocks base method
 func (m *MockConjurClient) Login(arg0, arg1 string) ([]byte, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Login", arg0, arg1)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
@@ -94,11 +103,13 @@ func (m *MockConjurClient) Login(arg0, arg1 string) ([]byte, error) {
 
 // Login indicates an expected call of Login
 func (mr *MockConjurClientMockRecorder) Login(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockConjurClient)(nil).Login), arg0, arg1)
 }
 
 // RefreshToken mocks base method
 func (m *MockConjurClient) RefreshToken() error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RefreshToken")
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -106,11 +117,13 @@ func (m *MockConjurClient) RefreshToken() error {
 
 // RefreshToken indicates an expected call of RefreshToken
 func (mr *MockConjurClientMockRecorder) RefreshToken() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshToken", reflect.TypeOf((*MockConjurClient)(nil).RefreshToken))
 }
 
 // Resource mocks base method
 func (m *MockConjurClient) Resource(arg0 string) (map[string]interface{}, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Resource", arg0)
 	ret0, _ := ret[0].(map[string]interface{})
 	ret1, _ := ret[1].(error)
@@ -119,11 +132,13 @@ func (m *MockConjurClient) Resource(arg0 string) (map[string]interface{}, error)
 
 // Resource indicates an expected call of Resource
 func (mr *MockConjurClientMockRecorder) Resource(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Resource", reflect.TypeOf((*MockConjurClient)(nil).Resource), arg0)
 }
 
 // Resources mocks base method
 func (m *MockConjurClient) Resources(arg0 *conjurapi.ResourceFilter) ([]map[string]interface{}, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Resources", arg0)
 	ret0, _ := ret[0].([]map[string]interface{})
 	ret1, _ := ret[1].(error)
@@ -132,11 +147,13 @@ func (m *MockConjurClient) Resources(arg0 *conjurapi.ResourceFilter) ([]map[stri
 
 // Resources indicates an expected call of Resources
 func (mr *MockConjurClientMockRecorder) Resources(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Resources", reflect.TypeOf((*MockConjurClient)(nil).Resources), arg0)
 }
 
 // RetrieveSecret mocks base method
 func (m *MockConjurClient) RetrieveSecret(arg0 string) ([]byte, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RetrieveSecret", arg0)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
@@ -145,5 +162,6 @@ func (m *MockConjurClient) RetrieveSecret(arg0 string) ([]byte, error) {
 
 // RetrieveSecret indicates an expected call of RetrieveSecret
 func (mr *MockConjurClientMockRecorder) RetrieveSecret(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RetrieveSecret", reflect.TypeOf((*MockConjurClient)(nil).RetrieveSecret), arg0)
 }
