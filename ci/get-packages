@@ -1,0 +1,14 @@
+#!/bin/bash -ex
+
+go get -u \
+  github.com/jstemmer/go-junit-report \
+  github.com/golang/dep/cmd/dep \
+  github.com/golang/mock/gomock \
+  github.com/smartystreets/goconvey \
+  golang.org/x/lint/golint \
+  github.com/derekparker/delve/cmd/dlv
+
+go install \
+  github.com/golang/mock/mockgen \
+  golang.org/x/lint/golint
+
