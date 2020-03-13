@@ -11,10 +11,12 @@ services:
       GOARCH:
 
   postgres:
-    image: postgres:9.3
+    image: postgres:9.4
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
 
   conjur:
-    image: cyberark/conjur:1.1.0-stable
+    image: cyberark/conjur:latest
     command: server -a cucumber
     environment:
       DATABASE_URL: postgres://postgres@postgres/postgres
