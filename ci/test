@@ -3,7 +3,7 @@
 set -o pipefail
 
 go clean -i
-go build
+go build cmd/conjur-cli/main.go
 
 pkgs="$(go list ./...)"
 go vet $pkgs
