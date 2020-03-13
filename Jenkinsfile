@@ -9,6 +9,12 @@ pipeline {
   }
 
   stages {
+    stage('Check Changelog') {
+      steps {
+        sh './bin/check_changelog'
+      }
+    }
+
     stage('Run tests') {
       steps {
         sh './test'
