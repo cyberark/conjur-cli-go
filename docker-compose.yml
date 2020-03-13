@@ -1,4 +1,4 @@
-version: '2'
+version: "3"
 services:
   builder:
     build: .
@@ -53,7 +53,7 @@ services:
       CONJUR_ACCOUNT: cucumber
       CONJUR_AUTHN_LOGIN:
       CONJUR_AUTHN_API_KEY:
-        
+
   dev:
     privileged: true            # to allow debugging
     build: .
@@ -64,7 +64,7 @@ services:
     entrypoint: sleep infinity
     volumes:
       - .:/go/src/github.com/cyberark/conjur-cli-go
-      
+
     environment:
       CONJUR_APPLIANCE_URL: http://conjur
       CONJUR_ACCOUNT:
