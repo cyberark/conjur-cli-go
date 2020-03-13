@@ -18,7 +18,11 @@ pipeline {
     stage('Run tests') {
       steps {
         sh './test'
-        junit 'output/junit.xml'
+      }
+      post {
+        always {
+          junit 'output/junit.xml'
+        }
       }
     }
   }
