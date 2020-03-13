@@ -23,5 +23,3 @@ RUN go mod download
 
 COPY . .
 RUN ./generate-mocks
-
-EXPOSE 8080
