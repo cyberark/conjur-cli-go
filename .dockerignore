@@ -1,3 +1,2 @@
-vendor/
 output/
 action/mocks/*.go
