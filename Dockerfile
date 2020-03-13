@@ -1,5 +1,5 @@
-FROM golang:1.13
-MAINTAINER Conjur Inc
+FROM golang:1.13-stretch
+MAINTAINER Conjur Inc.
 
 RUN apt-get update && \
     apt-get install -y jq less vim
