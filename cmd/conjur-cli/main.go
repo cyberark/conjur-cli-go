@@ -10,6 +10,7 @@ import (
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 
+	cliCommands "github.com/cyberark/conjur-cli-go/internal/cli"
 	"github.com/cyberark/conjur-cli-go/internal/cmd"
 )
 
@@ -32,11 +33,11 @@ func run() (err error) {
 	api := cmd.ConjurClient(client)
 	fs := afero.NewOsFs()
 	commandFactories := []commandFactory{
-		AuthnCommands,
-		InitCommands,
-		PolicyCommands,
-		ResourceCommands,
-		VariableCommands,
+		cliCommands.AuthnCommands,
+		cliCommands.InitCommands,
+		cliCommands.PolicyCommands,
+		cliCommands.ResourceCommands,
+		cliCommands.VariableCommands,
 	}
 
 	for _, factory := range commandFactories {
