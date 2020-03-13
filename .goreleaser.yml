@@ -1,0 +1,94 @@
+project_name: conjur-cli-go
+
+builds:
+- &conjur-cli-build
+  id: conjur-cli-linux
+  main: ./cmd/conjur-cli/main.go
+  binary: conjur-cli-go
+  env:
+  - CGO_ENABLED=1
+  # Tag 'netgo' is a Go build tag that ensures a pure Go networking stack
+  # in the resulting binary instead of using the default host's stack to
+  # ensure a fully static artifact that has no dependencies.
+  flags:
+  - -tags=netgo
+  goos:
+  - linux
+  goarch:
+  - amd64
+  # The `Tag` override is there to provide the git commit information in the
+  # final binary. See `Static long version tags` in the `Building` section
+  # of `CONTRIBUTING.md` for more information.
+  ldflags:
+    - -s
+    - -w
+    - -linkmode external
+    - -extldflags "-static"
+
+- <<: *conjur-cli-build
+  id: conjur-cli-osx
+  env:
+  - CGO_ENABLED=1
+  - CC=o64-clang
+  - CXX=o64-clang++
+  goos:
+  - darwin
+  goarch:
+  - amd64
+  # Building for OSX with -extldflags "-static" results in the error:
+  # ld: library not found for -lcrt0.o
+  # This is because static builds are only possible if all libraries
+  # (including libgcc.a) have also been compiled with -static.
+  # A static version of crt0.o is not provided
+  # with the OSX SDK
+  ldflags:
+    - -s
+    - -w
+    - -linkmode external
+
+archives:
+  - id: conjur-cli-archive
+    files:
+      - CHANGELOG.md
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}_{{.Arch}}"
+    wrap_in_directory: true
+
+checksum:
+  name_template: 'SHA256SUMS.txt'
+
+dist: ./dist/goreleaser
+
+brews:
+  - description: CyberArk Conjur command line interface (Golang)
+    homepage: https://conjur.org
+    url_template: https://github.com/cyberark/conjur-cli-go/releases/download/v{{.Version}}/conjur-cli-go_{{.Version}}_{{.Os}}_{{.Arch}}.tar.gz
+    install: |
+      bin.install "onjur-cli-go"
+    test: |
+      system "#{bin}/conjur-cli-go", "-version"
+    github:
+      owner: cyberark
+      name: homebrew-tools
+    skip_upload: true
+
+nfpms:
+  - bindir: /usr/bin
+    description: CyberArk Conjur command line interface (Golang)
+    formats:
+    - deb
+    - rpm
+    homepage: https://conjur.org
+    license: "Apache 2.0"
+    maintainer: CyberArk Maintainers <conj_maintainers@cyberark.com>
+    name_template: "{{.ProjectName}}_{{.Version}}_{{.Arch}}"
+    vendor: CyberArk
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+release:
+  disable: true
+  prerelease: auto

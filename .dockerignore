@@ -1,4 +1,7 @@
+dev/
+dist/
 internal/cmd/mocks/
 Jenkinsfile
-dev/
 output/
+
+**/*.sw[po]
