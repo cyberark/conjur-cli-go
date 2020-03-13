@@ -1,2 +1,4 @@
+internal/cmd/mocks/
+Jenkinsfile
+dev/
 output/
-action/mocks/*.go
