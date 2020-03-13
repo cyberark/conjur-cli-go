@@ -16,18 +16,21 @@ import (
 
 type commandFactory func(api cmd.ConjurClient, fs afero.Fs) []cli.Command
 
-func run() (err error) {
+func run() error {
 	app := cli.NewApp()
 	app.Version = "0.0.1"
 	app.Usage = "A CLI for Conjur"
 
 	logrus.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true, DisableLevelTruncation: true})
 
-	config := conjurapi.LoadConfig()
+	config, err := conjurapi.LoadConfig()
+	if err != nil {
+		return err
+	}
 
 	client, err := conjurapi.NewClientFromEnvironment(config)
 	if err != nil {
-		return
+		return err
 	}
 
 	api := cmd.ConjurClient(client)

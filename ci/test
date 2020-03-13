@@ -3,12 +3,12 @@
 set -o pipefail
 
 go clean -i
-go build cmd/conjur-cli/main.go
 
 pkgs="$(go list ./...)"
 go vet $pkgs
 golint -set_exit_status $pkgs
 
-go install
+go build -o conjur-cli-go cmd/conjur-cli/main.go
+mv conjur-cli-go /usr/bin
 
 go test -v $pkgs | tee /dev/stderr | go-junit-report > output/junit.xml
