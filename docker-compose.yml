@@ -1,7 +1,9 @@
 version: "3"
 services:
   builder:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.test
     entrypoint: /usr/local/go/bin/go
     command: build -v
     volumes:
@@ -32,7 +34,9 @@ services:
       - 443
 
   test:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.test
     ports:
         - "8080"
     depends_on:
@@ -57,8 +61,10 @@ services:
       CONJUR_AUTHN_API_KEY:
 
   dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
     privileged: true            # to allow debugging
-    build: .
     ports:
         - "8080"
     depends_on:
