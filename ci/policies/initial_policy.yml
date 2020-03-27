@@ -1,0 +1,3 @@
+- !variable one/password
+- !variable existent-variable-with-undefined-value
+- !variable existent-variable-with-defined-value

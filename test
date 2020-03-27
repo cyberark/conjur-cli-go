@@ -1,40 +1,78 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
-export CONJUR_ACCOUNT=cucumber
+if [[ ! -z "$DEBUG" ]]; then
+  set -x
+fi
+
+export CONJUR_ACCOUNT=dev
 export CONJUR_AUTHN_LOGIN=admin
-
-source functions.sh
 
 function finish {
   docker-compose down -v
 }
 trap finish EXIT
 
-function runTests() {
-  local keys=( $(getKeys) )
-  local api_key=${keys[0]}
-  local api_key_v4=${keys[1]}
-  local ssl_cert_v4="$(getCert)"
-  local service=test
+function exec_on() {
+  local container=$1; shift
+  docker exec -i $(docker-compose ps -q $container) "$@"
+}
 
-  docker-compose build --pull "$service"
+function get_admin_api_key() {
+  exec_on conjur conjurctl role retrieve-key "$CONJUR_ACCOUNT:user:admin"
+}
+
+function init_env() {
+  # Delay to allow time for Conjur to come up. We run this multiple
+  # times since the instance may need to restart if PG isn't up yet.
+  # TODO: remove this once we have HEALTHCHECK in place
+
+  for i in 1 2 3 4; do
+    echo "Waiting for Conjur..."
+    if exec_on conjur conjurctl wait; then
+      break
+    fi
+
+    if [[ i -gt 3 ]]; then
+      echo "ERROR: Could not start Conjur!"
+      exit 1
+    fi
+
+    echo "Sleeping for 1 second..."
+    sleep 1
+  done
+
+  echo "Conjur is running!"
+
+  echo "Setting variable values..."
+  exec_on conjur-cli conjur authn login -u admin -p "$(get_admin_api_key)"
+  exec_on conjur-cli conjur variable values add existent-variable-with-defined-value existent-variable-defined-value
+}
+
+function run_tests() {
+  local api_key=$(get_admin_api_key)
+  local ssl_cert=$(cat ./ci/https/ca.crt)
+
+  echo "Building test container..."
+  docker-compose build --pull "test"
 
   docker-compose run --rm \
     -e CONJUR_AUTHN_API_KEY="$api_key" \
-    -e CONJUR_V4_AUTHN_API_KEY="$api_key_v4" \
-    -e CONJUR_V4_SSL_CERTIFICATE="$ssl_cert_v4" \
-    $service
+    -e CONJUR_SSL_CERTIFICATE="$ssl_cert" \
+    test
 }
 
 function main() {
+  echo "Ensuring clean start..."
+  docker-compose down -v --remove-orphans || true
+
   echo "Starting Conjur..."
-  startConjur
+  docker-compose up -d conjur-https conjur-cli
 
   echo "Initializing environment..."
-  initEnvironment
+  init_env
 
   echo "Running tests..."
-  runTests
+  run_tests
 
   echo "Tests complete!"
 }
