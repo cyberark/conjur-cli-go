@@ -11,4 +11,4 @@ pkgs="$(go list ./...)"
 go build -o conjur-cli-go cmd/conjur-cli/main.go
 mv conjur-cli-go /usr/bin
 
-go test -coverprofile=c.out -v $pkgs | tee /dev/stderr | go-junit-report > output/junit.xml
+go test -coverprofile=output/c.out -v $pkgs | tee /dev/stderr | go-junit-report > output/junit.xml

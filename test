@@ -74,6 +74,9 @@ function main() {
   echo "Running tests..."
   run_tests
 
+  echo "Copying test artifacts to host..."
+  cp output/c.out .
+
   echo "Tests complete!"
 }
 
