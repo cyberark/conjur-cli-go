@@ -8,9 +8,6 @@ services:
     command: build -v
     volumes:
       - ./output:/go/src/github.com/cyberark/conjur-cli-go/output
-    environment:
-      GOOS:
-      GOARCH:
 
   postgres:
     image: postgres:9.4
@@ -19,19 +16,30 @@ services:
 
   conjur:
     image: cyberark/conjur:latest
-    command: server -a cucumber
+    command: server -a dev -f /policy/initial_policy.yml
     environment:
       DATABASE_URL: postgres://postgres@postgres/postgres
       CONJUR_DATA_KEY: 'WMfApcDBtocRWV+ZSUP3Tjr5XNU+Z2FdBb6BEezejIs='
+      RAILS_ENV: development
+    volumes:
+      - ./ci/policies:/policy:ro
     depends_on:
       - postgres
+    restart: on-failure
 
-  cuke-master:
-    image: registry2.itci.conjur.net/conjur-appliance-cuke-master:4.9-stable
-    security_opt:
-      - seccomp:unconfined # --security-opt seccomp=unconfined
+  conjur-https:
+    image: nginx:alpine
     ports:
       - 443
+    volumes:
+      - ./ci/https/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ci/https/conjur.conf:/etc/nginx/sites-enabled/conjur.conf:ro
+      - ./ci/https/dhparams.pem:/etc/nginx/dhparams.pem:ro
+      - ./ci/https/conjur.crt:/cert/tls.crt:ro
+      - ./ci/https/conjur.key:/cert/tls.key:ro
+      - ./ci/https/ca.crt:/ca/tls.crt:ro
+    depends_on:
+      - conjur
 
   test:
     build:
@@ -50,15 +58,17 @@ services:
       CONJUR_AUTHN_LOGIN:
       CONJUR_AUTHN_API_KEY:
 
-  cli:
+  conjur-cli:
     image: cyberark/conjur-cli:5
-    entrypoint: /bin/bash
-    command: sleep inifinty
+    entrypoint: [ "bash", "-c" ]
+    command: [ "sleep 999d" ]
     environment:
       CONJUR_APPLIANCE_URL: http://conjur
-      CONJUR_ACCOUNT: cucumber
-      CONJUR_AUTHN_LOGIN:
-      CONJUR_AUTHN_API_KEY:
+      CONJUR_ACCOUNT: dev
+    depends_on:
+      - conjur
+      - conjur-https
+
 
   dev:
     build:
@@ -72,7 +82,6 @@ services:
     entrypoint: sleep infinity
     volumes:
       - .:/go/src/github.com/cyberark/conjur-cli-go
-
     environment:
       CONJUR_APPLIANCE_URL: http://conjur
       CONJUR_ACCOUNT:

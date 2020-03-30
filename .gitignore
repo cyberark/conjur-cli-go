@@ -1,6 +1,8 @@
 action/mocks/*.go
-dist/
+c.out
 conjur-cli-go
 junit.xml
 key.txt
+
+dist/
 output/

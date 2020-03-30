@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+if ! command -v golint; then
+  echo "Missing golint. Installing it..."
+  go get -u golang.org/x/lint/golint
+fi
+
+echo "Running golint..."
+golint -set_exit_status ./...
+
+echo "Running go vet..."
+go vet ./...

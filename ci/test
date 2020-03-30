@@ -4,11 +4,11 @@ set -o pipefail
 
 go clean -i
 
+./bin/check_linting
+
 pkgs="$(go list ./...)"
-go vet $pkgs
-golint -set_exit_status $pkgs
 
 go build -o conjur-cli-go cmd/conjur-cli/main.go
 mv conjur-cli-go /usr/bin
 
-go test -v $pkgs | tee /dev/stderr | go-junit-report > output/junit.xml
+go test -coverprofile=output/c.out -v $pkgs | tee /dev/stderr | go-junit-report > output/junit.xml
