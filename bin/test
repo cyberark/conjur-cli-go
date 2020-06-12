@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+CURRENT_DIR="$(dirname $BASH_SOURCE)"
+
 if [[ ! -z "$DEBUG" ]]; then
   set -x
 fi
@@ -62,22 +64,24 @@ function run_tests() {
 }
 
 function main() {
-  echo "Ensuring clean start..."
-  docker-compose down -v --remove-orphans || true
+  pushd "$CURRENT_DIR/.." >/dev/null
+    echo "Ensuring clean start..."
+    docker-compose down -v --remove-orphans || true
 
-  echo "Starting Conjur..."
-  docker-compose up -d conjur-https conjur-cli
+    echo "Starting Conjur..."
+    docker-compose up -d conjur-https conjur-cli
 
-  echo "Initializing environment..."
-  init_env
+    echo "Initializing environment..."
+    init_env
 
-  echo "Running tests..."
-  run_tests
+    echo "Running tests..."
+    run_tests
 
-  echo "Copying test artifacts to host..."
-  cp output/c.out .
+    echo "Copying test artifacts to host..."
+    cp output/c.out .
 
-  echo "Tests complete!"
+    echo "Tests complete!"
+  popd >/dev/null
 }
 
 main
