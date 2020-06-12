@@ -17,7 +17,7 @@ pipeline {
 
     stage('Run tests') {
       steps {
-        sh './test'
+        sh './bin/test'
       }
       post {
         always {

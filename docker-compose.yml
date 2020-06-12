@@ -12,13 +12,13 @@ services:
   postgres:
     image: postgres:9.4
     environment:
-      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_PASSWORD: SuperSecret
 
   conjur:
     image: cyberark/conjur:latest
     command: server -a dev -f /policy/initial_policy.yml
     environment:
-      DATABASE_URL: postgres://postgres@postgres/postgres
+      DATABASE_URL: postgres://postgres:SuperSecret@postgres/postgres
       CONJUR_DATA_KEY: 'WMfApcDBtocRWV+ZSUP3Tjr5XNU+Z2FdBb6BEezejIs='
       RAILS_ENV: development
     volumes:

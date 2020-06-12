@@ -12,13 +12,14 @@ import (
 
 	cliCommands "github.com/cyberark/conjur-cli-go/internal/cli"
 	"github.com/cyberark/conjur-cli-go/internal/cmd"
+	"github.com/cyberark/conjur-cli-go/pkg/version"
 )
 
 type commandFactory func(api cmd.ConjurClient, fs afero.Fs) []cli.Command
 
 func run() error {
 	app := cli.NewApp()
-	app.Version = "0.0.1"
+	app.Version = version.FullVersionName
 	app.Usage = "A CLI for Conjur"
 
 	logrus.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true, DisableLevelTruncation: true})

@@ -1,0 +1,11 @@
+#!/bin/bash -ex
+
+CURRENT_DIR="$(dirname $BASH_SOURCE)"
+
+pushd "$CURRENT_DIR/.." >/dev/null
+  mockgen \
+    -package mocks \
+    -destination internal/cmd/mocks/client.go \
+    github.com/cyberark/conjur-cli-go/internal/cmd \
+    ConjurClient
+popd >/dev/null

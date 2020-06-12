@@ -2,21 +2,17 @@
 
 CURRENT_DIR=$("$(dirname "$0")/abspath")
 
-# xgo because it allows cross-compilation
-GORELEASER_IMAGE="cyberark/goreleaser:latest-xgo"
+GORELEASER_IMAGE="goreleaser/goreleaser"
 
 GORELEASER_ARGS=("--rm-dist")
-if [[ "${SNAPSHOT}" == "true" ]]; then
+if [ "${SNAPSHOT}" != "false" ] && [ "${SNAPSHOT}" != "" ]; then
   GORELEASER_ARGS+=("--snapshot")
 fi
 
 echo "Current dir: $CURRENT_DIR"
 
-# TODO: the image cyberark/goreleaser:latest-xgo will need to be pushed
-# TODO: to Dockerhub, and the command below should become
-# TODO: docker pull cyberark/goreleaser:latest-xgo
-# NOTE: Piping the Dockerfile sends an empty context to docker build
-docker build -t "${GORELEASER_IMAGE}" - < "$CURRENT_DIR/Dockerfile.releaser"
+echo "Current dir: $CURRENT_DIR"
+docker pull "${GORELEASER_IMAGE}"
 
 docker run --rm -t \
   --volume "$CURRENT_DIR/..:/conjur-cli" \
