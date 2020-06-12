@@ -1,50 +1,39 @@
 project_name: conjur-cli-go
 
 builds:
-- &conjur-cli-build
-  id: conjur-cli-linux
+- id: conjur-cli
   main: ./cmd/conjur-cli/main.go
   binary: conjur-cli-go
   env:
-  - CGO_ENABLED=1
+  - CGO_ENABLED=0
   # Tag 'netgo' is a Go build tag that ensures a pure Go networking stack
   # in the resulting binary instead of using the default host's stack to
   # ensure a fully static artifact that has no dependencies.
   flags:
   - -tags=netgo
+  - -a
   goos:
   - linux
+  - darwin
+  - windows
   goarch:
   - amd64
   # The `Tag` override is there to provide the git commit information in the
   # final binary. See `Static long version tags` in the `Building` section
   # of `CONTRIBUTING.md` for more information.
   ldflags:
-    - -s
     - -w
-    - -linkmode external
-    - -extldflags "-static"
-
-- <<: *conjur-cli-build
-  id: conjur-cli-osx
-  env:
-  - CGO_ENABLED=1
-  - CC=o64-clang
-  - CXX=o64-clang++
-  goos:
-  - darwin
-  goarch:
-  - amd64
-  # Building for OSX with -extldflags "-static" results in the error:
-  # ld: library not found for -lcrt0.o
-  # This is because static builds are only possible if all libraries
-  # (including libgcc.a) have also been compiled with -static.
-  # A static version of crt0.o is not provided
-  # with the OSX SDK
-  ldflags:
-    - -s
-    - -w
-    - -linkmode external
+    - -X "github.com/cyberark/conjur-cli-go/pkg/version.Tag={{ .ShortCommit }}"
+  hooks:
+    post:
+      # Copy the binary out into the <dist> path, and give the copy the name we want
+      # in the release <extra_files>.
+      # e.g. Suppose a windows amd64 build generates a binary at
+      # path/to/secretless-broker.exe. This will be copied to
+      # path/to/../secretless-broker-windows_amd64.exe. The copy path can then be added to
+      # the release <extra_files> and will result in a release artifact with the name
+      # secretless-broker-windows_amd64.exe.
+      - cp "{{ .Path }}" "{{ dir .Path }}/../conjur-cli-go_{{ .Target }}{{ .Ext }}"
 
 archives:
   - id: conjur-cli-archive
@@ -66,7 +55,7 @@ brews:
     homepage: https://conjur.org
     url_template: https://github.com/cyberark/conjur-cli-go/releases/download/v{{.Version}}/conjur-cli-go_{{.Version}}_{{.Os}}_{{.Arch}}.tar.gz
     install: |
-      bin.install "onjur-cli-go"
+      bin.install "conjur-cli-go"
     test: |
       system "#{bin}/conjur-cli-go", "-version"
     github:
@@ -77,13 +66,13 @@ brews:
 nfpms:
   - bindir: /usr/bin
     description: CyberArk Conjur command line interface (Golang)
+    file_name_template: "{{.ProjectName}}_{{.Version}}_{{.Arch}}"
     formats:
     - deb
     - rpm
     homepage: https://conjur.org
     license: "Apache 2.0"
     maintainer: CyberArk Maintainers <conj_maintainers@cyberark.com>
-    name_template: "{{.ProjectName}}_{{.Version}}_{{.Arch}}"
     vendor: CyberArk
 
 snapshot:
@@ -91,4 +80,9 @@ snapshot:
 
 release:
   disable: true
-  prerelease: auto
+  draft: true
+  extra_files:
+    - glob: CHANGELOG.md
+    - glob: dist/goreleaser/conjur-cli-go_darwin
+    - glob: dist/goreleaser/conjur-cli-go_linux
+    - glob: dist/goreleaser/conjur-cli-go_windows
