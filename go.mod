@@ -8,6 +8,7 @@ require (
 	github.com/golang/mock v1.4.1
 	github.com/sirupsen/logrus v1.0.6-0.20180619013235-5d60369ef3a5
 	github.com/spf13/afero v1.1.1
+	github.com/stretchr/testify v1.6.1
 	github.com/urfave/cli v1.20.0
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	golang.org/x/net v0.0.0-20190311183353-d8887717615a
