@@ -7,7 +7,7 @@ services:
     entrypoint: /usr/local/go/bin/go
     command: build -v
     volumes:
-      - ./output:/go/src/github.com/cyberark/conjur-cli-go/output
+      - ./output:/conjur-cli-go/output
 
   postgres:
     image: postgres:9.4
