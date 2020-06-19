@@ -6,6 +6,7 @@ Golang-based CLI for [Conjur OSS v5+](https://cyberark.github.io/conjur) and
 **THIS REPO IS UNDER DEVELOPMENT AND CODE MAY CHANGE SIGNIFFICANTY**
 
 #### This repo's metrics:
+![Certification Level](https://img.shields.io/badge/Certification%20Level-Community-28A745)
 ![Tests](https://github.com/cyberark/conjur-oss-suite-release/workflows/Tests/badge.svg)
 
 ## Quick start
