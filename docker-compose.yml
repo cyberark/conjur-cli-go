@@ -51,7 +51,7 @@ services:
       - conjur
     command: ci/test
     volumes:
-      - ./output:/go/src/github.com/cyberark/conjur-cli-go/output
+      - ./output:/conjur-cli-go/output
     environment:
       CONJUR_APPLIANCE_URL: http://conjur
       CONJUR_ACCOUNT:
@@ -81,7 +81,7 @@ services:
       - conjur
     entrypoint: sleep infinity
     volumes:
-      - .:/go/src/github.com/cyberark/conjur-cli-go
+      - .:/conjur-cli-go
     environment:
       CONJUR_APPLIANCE_URL: http://conjur
       CONJUR_ACCOUNT:
