@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"errors"
+
 	"github.com/spf13/afero"
 	"github.com/urfave/cli"
 
@@ -36,7 +38,7 @@ var InitCommands = func(api cmd.ConjurClient, fs afero.Fs) []cli.Command {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				return nil
+				return errors.New("not yet implemented")
 			},
 		},
 	}

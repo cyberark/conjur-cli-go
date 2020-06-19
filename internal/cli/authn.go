@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"errors"
+
 	"github.com/spf13/afero"
 	"github.com/urfave/cli"
 
@@ -18,21 +20,21 @@ var AuthnCommands = func(api cmd.ConjurClient, fs afero.Fs) []cli.Command {
 					Name:  "authenticate",
 					Usage: "Obtains an authentication token using the current logged-in user",
 					Action: func(c *cli.Context) error {
-						return nil
+						return errors.New("not yet implemented")
 					},
 				},
 				{
 					Name:  "login",
 					Usage: "Logs in and caches credentials to netrc",
 					Action: func(c *cli.Context) error {
-						return nil
+						return errors.New("not yet implemented")
 					},
 				},
 				{
 					Name:  "whoami",
 					Usage: "Prints out the current logged in username",
 					Action: func(c *cli.Context) error {
-						return nil
+						return errors.New("not yet implemented")
 					},
 				},
 			},
