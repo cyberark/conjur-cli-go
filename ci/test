@@ -2,7 +2,7 @@
 
 set -o pipefail
 
-go clean -i
+go clean -modcache
 
 ./bin/check_linting
 

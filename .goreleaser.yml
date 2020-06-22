@@ -39,6 +39,8 @@ archives:
   - id: conjur-cli-archive
     files:
       - CHANGELOG.md
+      - LICENSE
+      - README.md
     format_overrides:
       - goos: windows
         format: zip
@@ -83,6 +85,8 @@ release:
   draft: true
   extra_files:
     - glob: CHANGELOG.md
+    - glob: LICENSE
+    - glob: README.md
     - glob: dist/goreleaser/conjur-cli-go_darwin
     - glob: dist/goreleaser/conjur-cli-go_linux
     - glob: dist/goreleaser/conjur-cli-go_windows
