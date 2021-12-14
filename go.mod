@@ -11,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/urfave/cli v1.20.0
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
-	golang.org/x/net v0.0.0-20190311183353-d8887717615a
-	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a
-	golang.org/x/text v0.3.0
+	golang.org/x/net v0.0.0-20211209124913-491a49abca63
+	golang.org/x/sys v0.0.0-20210423082822-04245dca01da
+	golang.org/x/text v0.3.6
 )
