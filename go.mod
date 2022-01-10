@@ -4,9 +4,9 @@ go 1.17
 
 require (
 	github.com/cyberark/conjur-api-go v0.8.1
-	github.com/golang/mock v1.6.0
+	github.com/golang/mock v1.6.1-0.20220110162003-3d14d676542b
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/afero v1.6.0
+	github.com/spf13/afero v1.8.0
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli v1.22.5
 )
