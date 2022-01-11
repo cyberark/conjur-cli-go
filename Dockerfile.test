@@ -6,7 +6,7 @@ RUN apt-get update && \
 WORKDIR /conjur-cli-go
 
 RUN go get -u \
-  github.com/derekparker/delve/cmd/dlv \
+  github.com/go-delve/delve/cmd/dlv \
   github.com/golang/mock/gomock \
   github.com/golang/mock/mockgen \
   github.com/jstemmer/go-junit-report \
