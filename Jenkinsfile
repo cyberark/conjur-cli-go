@@ -13,6 +13,10 @@ pipeline {
   }
 
   stages {
-
+    stage('Run Unit Tests') {
+      steps {
+        sh './bin/test_unit'
+      }
+    }
   }
 }
