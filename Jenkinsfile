@@ -1,35 +1,22 @@
-#!/usr/bin/env groovy
-
 pipeline {
   agent { label 'executor-v2' }
 
   options {
     timestamps()
     buildDiscarder(logRotator(numToKeepStr: '30'))
+    timeout(time: 2, unit: 'HOURS')
+  }
+
+  environment {
+    // Sets the MODE to the specified or autocalculated value as appropriate
+    MODE = release.canonicalizeMode()
   }
 
   stages {
-    stage('Check Changelog') {
+    stage('Run Unit Tests') {
       steps {
-        sh './bin/check_changelog'
+        sh './bin/test_unit'
       }
-    }
-
-    stage('Run tests') {
-      steps {
-        sh './bin/test'
-      }
-      post {
-        always {
-          junit 'output/junit.xml'
-        }
-      }
-    }
-  }
-
-  post {
-    always {
-      cleanupAndNotify(currentBuild.currentResult)
     }
   }
 }
