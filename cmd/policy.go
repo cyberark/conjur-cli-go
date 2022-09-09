@@ -61,7 +61,7 @@ func init() {
 	rootCmd.AddCommand(policyCmd)
 
 	policyCmd.PersistentFlags().StringP("branch", "b", "", "The parent policy branch")
-        policyCmd.PersistentFlags().StringP("filepath", "f", "", "The policy file to load")
+	policyCmd.PersistentFlags().StringP("filepath", "f", "", "The policy file to load")
 
 	policyCmd.AddCommand(policyLoadCmd)
 	policyCmd.AddCommand(policyAppendCmd)

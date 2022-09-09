@@ -79,11 +79,11 @@ func init() {
 	rootCmd.AddCommand(hostfactoryCmd)
 
 	hostfactoryCmd.AddCommand(hostsCmd)
-        hostsCmd.AddCommand(hostsCreateCmd)
-        
-        hostfactoryCmd.AddCommand(tokensCmd)
-        tokensCmd.AddCommand(tokensCreateCmd)
-        tokensCmd.AddCommand(tokensRevokeCmd)
+	hostsCmd.AddCommand(hostsCreateCmd)
+
+	hostfactoryCmd.AddCommand(tokensCmd)
+	tokensCmd.AddCommand(tokensCreateCmd)
+	tokensCmd.AddCommand(tokensRevokeCmd)
 
 	// Here you will define your flags and configuration settings.
 

@@ -1,7 +1,7 @@
 package cmd
 
 import (
- 	"fmt"
+	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -64,7 +64,7 @@ func init() {
 	authnLoginCmd.Flags().StringP("username", "u", "", "")
 	authnLoginCmd.Flags().StringP("password", "p", "", "")
 
-        authnCmd.AddCommand(authnLogoutCmd)
+	authnCmd.AddCommand(authnLogoutCmd)
 
-        authnCmd.AddCommand(authnWhoamiCmd)
+	authnCmd.AddCommand(authnWhoamiCmd)
 }
