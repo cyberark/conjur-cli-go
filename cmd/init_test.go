@@ -2,11 +2,8 @@ package cmd
 
 import (
 	"testing"
-	// "strings"
 	"bytes"
-	// "fmt"
 	"os"
-	// "errors"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +23,6 @@ func execute(t *testing.T, c *cobra.Command, args ...string) (string, error) {
 }
 
 func TestInitCmd(t *testing.T) {
-	// Temporary 
 	conjurrcInTmpDir := t.TempDir() + "/.conjurrc"
 	defer os.Remove(conjurrcInTmpDir)
 
@@ -47,6 +43,10 @@ func TestInitCmd(t *testing.T) {
 		out:  "Enter the URL of your Conjur service",
 	  },
 	  {
+		args: []string{"--help=false", "-u=https://host" },
+		out:  "Enter your organization account name",
+	  },
+	  {
 		args: []string{"--help=false", "-u=https://host",  "-a=test-account", "-f=" + conjurrcInTmpDir},
 		out:  "Wrote configuration to " + conjurrcInTmpDir,
 	  },
@@ -56,7 +56,7 @@ func TestInitCmd(t *testing.T) {
 	  },
 	}
   
-	cmd := genInitCmd()
+	cmd := NewInitCommand()
   
 	for _, tc := range tt {
 	  out, _ := execute(t, cmd, tc.args...)
