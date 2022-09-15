@@ -4,5 +4,6 @@ conjur-cli-go
 junit.xml
 key.txt
 
+
 dist/
 output/
