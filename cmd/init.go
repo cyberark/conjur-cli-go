@@ -94,12 +94,12 @@ func NewInitCommand() *cobra.Command {
 		SilenceUsage: true,
 		RunE:         runInitCommand,
 	}
-	
+
 	userHomeDir, err := os.UserHomeDir()
 
-        if err != nil {
+	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-                os.Exit(1)
+		os.Exit(1)
 	}
 
 	cmd.PersistentFlags().StringP("account", "a", "", "Conjur organization account name")
