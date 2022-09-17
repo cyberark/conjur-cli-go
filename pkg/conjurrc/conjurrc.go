@@ -1,8 +1,8 @@
 package conjurrc
 
 import (
-	"os"
 	"fmt"
+	"os"
 )
 
 const conjurrcFmt = `---
@@ -15,10 +15,11 @@ func generateConjurrc(account string, applianceUrl string) string {
 	return fmt.Sprintf(conjurrcFmt, account, applianceUrl)
 }
 
+// WriteConjurrc writes Conjur connection info to a file.
 func WriteConjurrc(
-	account string, 
+	account string,
 	applianceUrl string,
-	filePath string, 
+	filePath string,
 	overwriteDecision func(string) error,
 ) error {
 	if _, err := os.Stat(filePath); err == nil {

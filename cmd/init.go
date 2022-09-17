@@ -1,34 +1,34 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
-	"errors"
-	"net/url"
 
 	"github.com/cyberark/conjur-cli/pkg/conjurrc"
 	"github.com/cyberark/conjur-cli/pkg/utils"
 
-	"github.com/spf13/cobra"
 	"github.com/manifoldco/promptui"
+	"github.com/spf13/cobra"
 )
 
 func runInitCommand(cmd *cobra.Command, args []string) error {
 	var err error
 
 	account := cmd.Flag("account").Value.String()
-	applianceUrl := cmd.Flag("url").Value.String()
+	applianceURL := cmd.Flag("url").Value.String()
 	filePath := cmd.Flag("file").Value.String()
 
-	setCommandStreamsOnPrompt := func (prompt *promptui.Prompt) {
+	setCommandStreamsOnPrompt := func(prompt *promptui.Prompt) {
 		prompt.Stdin = utils.NopReadCloser(cmd.InOrStdin())
 		prompt.Stdout = utils.NopWriteCloser(cmd.OutOrStdout())
 	}
 
-	if len(applianceUrl) == 0 {
+	if len(applianceURL) == 0 {
 		prompt := promptui.Prompt{
-			Label:    "Enter the URL of your Conjur service",
+			Label: "Enter the URL of your Conjur service",
 			Validate: func(input string) error {
 				if len(input) == 0 {
 					return errors.New("URL is required")
@@ -40,7 +40,7 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 		}
 		setCommandStreamsOnPrompt(&prompt)
 
-		applianceUrl, err = prompt.Run()
+		applianceURL, err = prompt.Run()
 		if err != nil {
 			return err
 		}
@@ -48,7 +48,7 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 
 	if len(account) == 0 {
 		prompt := promptui.Prompt{
-			Label:    "Enter your organization account name",
+			Label: "Enter your organization account name",
 			Validate: func(input string) error {
 				if len(input) == 0 {
 					return errors.New("Account is required")
@@ -64,7 +64,7 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	err =  conjurrc.WriteConjurrc(account, applianceUrl, filePath, func(filePath string) error {
+	err = conjurrc.WriteConjurrc(account, applianceURL, filePath, func(filePath string) error {
 		prompt := promptui.Prompt{
 			Label:     fmt.Sprintf("File %s exists. Overwrite", filePath),
 			IsConfirm: true,
@@ -78,7 +78,7 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 
 		return nil
 	})
-	if err != nil  {
+	if err != nil {
 		return err
 	}
 
@@ -86,13 +86,13 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// NOTE: There's an opportunity to dependency inject by using this constructor
+// NewInitCommand initializes and configures the 'conjur init' command.
 func NewInitCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "init",
-		Short: "Initialize the Conjur configuration",
+		Use:          "init",
+		Short:        "Initialize the Conjur configuration",
 		SilenceUsage: true,
-		RunE: runInitCommand,
+		RunE:         runInitCommand,
 	}
 
 	// TODO: figure out what to do when getting the user home directory returns an error
