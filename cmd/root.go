@@ -37,6 +37,9 @@ func init() {
 
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.conjur-cli.yaml)")
 
+	// Overwrite default cobra help message
+	rootCmd.Flags().BoolP("help", "h", false, "Help message for the given command")
+
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
