@@ -100,7 +100,6 @@ func NewInitCommand() *cobra.Command {
 
 	cmd.PersistentFlags().StringP("account", "a", "", "Conjur organization account name")
 	cmd.PersistentFlags().StringP("url", "u", "", "URL of the Conjur service")
-	cmd.PersistentFlags().BoolP("help", "h", false, "Help for init command") // TODO: maybe change this for everything
 	cmd.PersistentFlags().StringP("certificate", "c", "", "Conjur SSL certificate (will be obtained from host unless provided by this option)")
 	cmd.PersistentFlags().StringP("file", "f", filepath.Join(userHomeDir, ".conjurrc"), "File to write the configuration to")
 	cmd.PersistentFlags().Bool("force", false, "Force overwrite of existing file")

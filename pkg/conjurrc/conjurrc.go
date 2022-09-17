@@ -11,14 +11,14 @@ plugins: []
 appliance_url: %s
 `
 
-func generateConjurrc(account string, applianceUrl string) string {
-	return fmt.Sprintf(conjurrcFmt, account, applianceUrl)
+func generateConjurrc(account string, applianceURL string) string {
+	return fmt.Sprintf(conjurrcFmt, account, applianceURL)
 }
 
 // WriteConjurrc writes Conjur connection info to a file.
 func WriteConjurrc(
 	account string,
-	applianceUrl string,
+	applianceURL string,
 	filePath string,
 	overwriteDecision func(string) error,
 ) error {
@@ -29,7 +29,7 @@ func WriteConjurrc(
 		}
 	}
 
-	fileContents := generateConjurrc(account, applianceUrl)
+	fileContents := generateConjurrc(account, applianceURL)
 
 	return os.WriteFile(filePath, []byte(fileContents), 0644)
 }
