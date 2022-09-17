@@ -94,9 +94,13 @@ func NewInitCommand() *cobra.Command {
 		SilenceUsage: true,
 		RunE:         runInitCommand,
 	}
+	
+	userHomeDir, err := os.UserHomeDir()
 
-	// TODO: figure out what to do when getting the user home directory returns an error
-	userHomeDir, _ := os.UserHomeDir()
+        if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+                os.Exit(1)
+	}
 
 	cmd.PersistentFlags().StringP("account", "a", "", "Conjur organization account name")
 	cmd.PersistentFlags().StringP("url", "u", "", "URL of the Conjur service")
