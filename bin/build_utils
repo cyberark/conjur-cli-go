@@ -26,7 +26,7 @@ gen_versions() {
   local version=$1
   while [[ $version = *.* ]]; do
     version=${version%.*}
-    echo $version
+    echo "$version"
   done
 }
 

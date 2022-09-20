@@ -41,7 +41,7 @@ function build_docker_junit_image() {
 function run_junit_report() {
   echo "Creating junit report and coverage output XML"
   docker run --rm \
-    -v $PWD/:/test \
+    -v "$PWD"/:/test \
     conjur-cli-go-junit:latest \
     bash -exc "
       cat ./junit.output | go-junit-report > ./junit.xml ;
