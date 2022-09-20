@@ -1,3 +1,5 @@
+#!/usr/bin/env groovy
+
 pipeline {
   agent { label 'executor-v2' }
 
@@ -13,6 +15,12 @@ pipeline {
   }
 
   stages {
+    stage('Validate CHANGELOG') {
+      steps {
+        sh './bin/parse-changelog'
+      }
+    }
+
     stage('Run Unit Tests') {
       steps {
         sh './bin/test_unit'
