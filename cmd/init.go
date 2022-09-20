@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cyberark/conjur-cli/pkg/conjurrc"
-	"github.com/cyberark/conjur-cli/pkg/utils"
+	"github.com/cyberark/conjur-cli-go/pkg/conjurrc"
+	"github.com/cyberark/conjur-cli-go/pkg/utils"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"

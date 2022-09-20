@@ -1,4 +1,4 @@
-module github.com/cyberark/conjur-cli
+module github.com/cyberark/conjur-cli-go
 
 go 1.19
 

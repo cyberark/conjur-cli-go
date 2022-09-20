@@ -35,7 +35,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.conjur-cli.yaml)")
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.conjur.yaml)")
 
 	// Overwrite default cobra help message
 	rootCmd.Flags().BoolP("help", "h", false, "Help message for the given command")

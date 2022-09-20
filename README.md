@@ -1,4 +1,4 @@
-# conjur-cli
+# conjur-cli-go
 
 A CLI for Conjur written in Golang using the [Cobra CLI framework](https://github.com/spf13/cobra).
 
