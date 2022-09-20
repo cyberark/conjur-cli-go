@@ -1,3 +1,5 @@
+#!/usr/bin/env groovy
+
 pipeline {
   agent { label 'executor-v2' }
 
@@ -16,6 +18,22 @@ pipeline {
     stage('Run Unit Tests') {
       steps {
         sh './bin/test_unit'
+
+        junit 'junit.xml'
+
+        cobertura autoUpdateHealth: false,
+          autoUpdateStability: false,
+          coberturaReportFile: 'coverage.xml',
+          conditionalCoverageTargets: '70, 0, 0',
+          failUnhealthy: false,
+          failUnstable: false,
+          maxNumberOfBuilds: 0,
+          lineCoverageTargets: '70, 0, 0',
+          methodCoverageTargets: '70, 0, 0',
+          onlyStable: false,
+          sourceEncoding: 'ASCII',
+          zoomCoverageChart: false
+          ccCoverage("gocov", "--prefix github.com/cyberark/conjur-cli-go")
       }
     }
   }
