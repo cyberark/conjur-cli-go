@@ -1,0 +1,11 @@
+version: '3'
+services:
+  dev:
+    image: golang
+    command: sleep infinity
+    working_dir: ${PWD}
+    restart: on-failure
+    ports:
+      - 8080
+    volumes:
+     - ${PWD}:${PWD}
