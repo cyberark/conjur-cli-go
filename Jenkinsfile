@@ -33,7 +33,7 @@ pipeline {
           onlyStable: false,
           sourceEncoding: 'ASCII',
           zoomCoverageChart: false
-          ccCoverage("gocov", "--prefix github.com/cyberark/secrets-provider-for-k8s")
+          ccCoverage("gocov", "--prefix github.com/cyberark/conjur-cli-go")
       }
     }
   }
