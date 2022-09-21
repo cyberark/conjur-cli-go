@@ -1,19 +1,23 @@
 package conjurrc
 
 import (
-	"fmt"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
-const conjurrcFmt = `---
-account: %s
-plugins: []
-appliance_url: %s
-`
+// conjurrc uses the YAML format
+func generateConjurrc(account string, applianceUrl string) []byte {
+	conjurrcMap := map[string]interface{}{
+		"account": account,
+		"appliance_url": applianceUrl,
+		"plugins": []string{},
+	}
 
-func generateConjurrc(account string, applianceURL string) string {
-	return fmt.Sprintf(conjurrcFmt, account, applianceURL)
+	data, _ := yaml.Marshal(&conjurrcMap)
+	return data
 }
+
 
 // WriteConjurrc writes Conjur connection info to a file.
 func WriteConjurrc(
@@ -31,5 +35,5 @@ func WriteConjurrc(
 
 	fileContents := generateConjurrc(account, applianceURL)
 
-	return os.WriteFile(filePath, []byte(fileContents), 0644)
+	return os.WriteFile(filePath, fileContents, 0644)
 }
