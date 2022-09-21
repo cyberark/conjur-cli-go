@@ -64,6 +64,7 @@ var loginCmd = &cobra.Command{
 		loginPair := authn.LoginPair{Login: username, APIKey: password}
 		data, err := conjurClient.Login(loginPair)
 		if err != nil {
+			// TODO: Ruby CLI hides actual error and simply says "Unable to authenticate with Conjur. Please check your credentials."
 			return err
 		}
 

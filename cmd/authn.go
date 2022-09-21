@@ -115,6 +115,7 @@ func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 		// TODO: maybe have specific struct for login
 		data, err := conjurClient.Login(loginPair)
 		if err != nil {
+			// TODO: Ruby CLI hides actual error and simply says "Unable to authenticate with Conjur. Please check your credentials."
 			return nil, err
 		}
 
