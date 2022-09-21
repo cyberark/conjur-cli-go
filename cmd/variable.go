@@ -92,11 +92,11 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	variableGetCmd.Flags().StringP("id", "i", "", "Provide variable identifier")
-    variableGetCmd.MarkFlagRequired("id")
+	variableGetCmd.MarkFlagRequired("id")
 	variableGetCmd.Flags().StringP("version", "v", "", "Specify the desired version of a single variable value")
 
 	variableSetCmd.Flags().StringP("id", "i", "", "Provide variable identifier")
-    variableSetCmd.MarkFlagRequired("id")
+	variableSetCmd.MarkFlagRequired("id")
 	variableSetCmd.Flags().StringP("value", "v", "", "Set the value of the specified variable")
 	variableSetCmd.MarkFlagRequired("value")
 

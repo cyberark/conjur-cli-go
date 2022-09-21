@@ -7,8 +7,8 @@ import (
 
 type dumpTransport struct {
 	roundTripper http.RoundTripper
-	logRequest func([]byte)
-    logResponse func([]byte)
+	logRequest   func([]byte)
+	logResponse  func([]byte)
 }
 
 func (d *dumpTransport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -40,7 +40,7 @@ func NewDumpTransport(roundTripper http.RoundTripper, logFunc func([]byte)) *dum
 
 	return &dumpTransport{
 		roundTripper: roundTripper,
-		logRequest: logFunc,
-		logResponse: logFunc,
+		logRequest:   logFunc,
+		logResponse:  logFunc,
 	}
 }

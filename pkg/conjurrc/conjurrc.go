@@ -9,15 +9,14 @@ import (
 // conjurrc uses the YAML format
 func generateConjurrc(account string, applianceUrl string) []byte {
 	conjurrcMap := map[string]interface{}{
-		"account": account,
+		"account":       account,
 		"appliance_url": applianceUrl,
-		"plugins": []string{},
+		"plugins":       []string{},
 	}
 
 	data, _ := yaml.Marshal(&conjurrcMap)
 	return data
 }
-
 
 // WriteConjurrc writes Conjur connection info to a file.
 func WriteConjurrc(
