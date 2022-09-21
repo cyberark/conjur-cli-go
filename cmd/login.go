@@ -66,6 +66,9 @@ var loginCmd = &cobra.Command{
 			return err
 		}
 
+		if prettyData, err := utils.PrettyPrintJSON(data); err == nil {
+			data = prettyData
+		}
 		cmd.Println(string(data))
 
 		// TODO: should we be storing this in .netrc for future use ?

@@ -17,6 +17,12 @@ func (d *dumpTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		d.logRequest(dump)
 	}
 	res, err := d.roundTripper.RoundTrip(req)
+	if err != nil {
+		if d.logResponse != nil {
+			d.logResponse([]byte(err.Error()))
+		}
+		return res, err
+	}
 	dump, _ = httputil.DumpResponse(res, true)
 	if d.logResponse != nil {
 		d.logResponse(dump)
