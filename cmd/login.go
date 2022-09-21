@@ -34,11 +34,6 @@ var loginCmd = &cobra.Command{
 			return err
 		}
 
-		username, password, err = requestCredentials(setCommandStreamsOnPrompt, username, password)
-		if err != nil {
-			return err
-		}
-
 		// TODO: I should be able to create a client and unauthenticated client
 		conjurClient, err := conjurapi.NewClient(config)
 		if err != nil {
@@ -60,16 +55,24 @@ var loginCmd = &cobra.Command{
 			)
 		}
 
+		username, password, err = askForCredentials(setCommandStreamsOnPrompt, username, password)
+		if err != nil {
+			return err
+		}
+
+		// TODO: Maybe have a specific struct for logging in?
 		loginPair := authn.LoginPair{Login: username, APIKey: password}
 		data, err := conjurClient.Login(loginPair)
 		if err != nil {
 			return err
 		}
 
-		if prettyData, err := utils.PrettyPrintJSON(data); err == nil {
-			data = prettyData
+		err = storeCredentials(config, username, string(data))
+		if err != nil {
+			return err
 		}
-		cmd.Println(string(data))
+
+		cmd.Println("Logged in")
 
 		// TODO: should we be storing this in .netrc for future use ?
 		return nil

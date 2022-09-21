@@ -7,8 +7,6 @@ github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5P
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 h1:q763qf9huN11kDQavWsoZXJNW3xEE4JJyHa5Q25/sd8=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
-github.com/cyberark/conjur-api-go v0.10.2-0.20220921161402-2084bc6d5e4a h1:ecS8CGFI8f1YFYvFywf3zkmUI3NlavZwONcw0ocTVcw=
-github.com/cyberark/conjur-api-go v0.10.2-0.20220921161402-2084bc6d5e4a/go.mod h1:8+qYC7L6wPY1e56hoZmHSdGa2fHALck8PtS+cUky75Y=
 github.com/cyberark/conjur-api-go v0.10.2-0.20220921204736-eb284b1264ca h1:k6pAMHF7de05iGWILXeybUrCjidN3Zh4FyOO9mxfAbw=
 github.com/cyberark/conjur-api-go v0.10.2-0.20220921204736-eb284b1264ca/go.mod h1:8+qYC7L6wPY1e56hoZmHSdGa2fHALck8PtS+cUky75Y=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

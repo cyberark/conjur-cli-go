@@ -15,7 +15,7 @@ import (
 )
 
 // TODO: whenever this is called we should store to .conjurrc
-func requestConnectionDetails(decoratePrompt decoratePromptFunc, account string, applianceURL string) (string, string, error) {
+func askForConnectionDetails(decoratePrompt decoratePromptFunc, account string, applianceURL string) (string, string, error) {
 	var err error
 
 	if len(applianceURL) == 0 {
@@ -53,7 +53,7 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 	applianceURL := cmd.Flag("url").Value.String()
 	filePath := cmd.Flag("file").Value.String()
 
-	account, applianceURL, err = requestConnectionDetails(setCommandStreamsOnPrompt, account, applianceURL)
+	account, applianceURL, err = askForConnectionDetails(setCommandStreamsOnPrompt, account, applianceURL)
 	if err != nil {
 		return err
 	}
