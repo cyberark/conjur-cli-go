@@ -34,6 +34,10 @@ plugins:
         ruby:
         swift:
         typescript:
+    checks:
+      Similar code:
+        # Kept triggering on package names in Golang so I'm disabling
+        enabled: false
 
   fixme: # Flags any FIXME, TODO, BUG, XXX, HACK comments so they can be fixed
     enabled: true
