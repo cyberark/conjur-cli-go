@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -73,8 +74,8 @@ func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 			httpClient.Transport = utils.NewDumpTransport(
 				transport,
 				func(dump []byte) {
-					cmd.Println(string(dump))
-					cmd.Println()
+					cmd.PrintErrln(string(dump))
+					cmd.PrintErrln()
 				},
 			)
 		}
@@ -86,6 +87,14 @@ func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 	config, err := conjurapi.LoadConfig()
 	if err != nil {
 		return nil, err
+	}
+
+	if config.ApplianceURL == "" {
+		return nil, fmt.Errorf("%s", "Missing required configuration for Conjur API URL")
+	}
+
+	if config.Account == "" {
+		return nil, fmt.Errorf("%s", "Missing required configuation for Conjur account")
 	}
 
 	var authenticator conjurapi.Authenticator

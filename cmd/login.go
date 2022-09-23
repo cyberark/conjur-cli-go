@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
@@ -34,6 +35,14 @@ var loginCmd = &cobra.Command{
 			return err
 		}
 
+		if config.ApplianceURL == "" {
+			return fmt.Errorf("%s", "Missing required configuration for Conjur API URL")
+		}
+
+		if config.Account == "" {
+			return fmt.Errorf("%s", "Missing required configuation for Conjur account")
+		}
+
 		// TODO: I should be able to create a client and unauthenticated client
 		conjurClient, err := conjurapi.NewClient(config)
 		if err != nil {
@@ -49,8 +58,8 @@ var loginCmd = &cobra.Command{
 			httpClient.Transport = utils.NewDumpTransport(
 				transport,
 				func(dump []byte) {
-					cmd.Println(string(dump))
-					cmd.Println()
+					cmd.PrintErrln(string(dump))
+					cmd.PrintErrln()
 				},
 			)
 		}
