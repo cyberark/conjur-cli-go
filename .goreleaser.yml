@@ -1,9 +1,14 @@
 project_name: conjur-cli-go
 
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+    # you may remove this if you don't need go generate
+    - go generate ./...
 builds:
-- id: conjur-cli
-  main: ./cmd/conjur-cli/main.go
-  binary: conjur-cli-go
+- main: ./main.go
+  binary: conjur
   env:
   - CGO_ENABLED=0
   # Tag 'netgo' is a Go build tag that ensures a pure Go networking stack
@@ -16,8 +21,8 @@ builds:
   - linux
   - darwin
   - windows
-  goarch:
-  - amd64
+  goamd64: 
+   - v1
   # The `Tag` override is there to provide the git commit information in the
   # final binary. See `Static long version tags` in the `Building` section
   # of `CONTRIBUTING.md` for more information.
@@ -29,11 +34,12 @@ builds:
       # Copy the binary out into the <dist> path, and give the copy the name we want
       # in the release <extra_files>.
       # e.g. Suppose a windows amd64 build generates a binary at
-      # path/to/secretless-broker.exe. This will be copied to
-      # path/to/../secretless-broker-windows_amd64.exe. The copy path can then be added to
+      # path/to/binary.exe. This will be copied to
+      # path/to/../binary-windows_amd64.exe. The copy path can then be added to
       # the release <extra_files> and will result in a release artifact with the name
-      # secretless-broker-windows_amd64.exe.
-      - cp "{{ .Path }}" "{{ dir .Path }}/../conjur-cli-go_{{ .Target }}{{ .Ext }}"
+      # binary-windows_amd64.exe.
+      - mkdir -p "{{ dir .Path }}/../binaries"
+      - cp "{{ .Path }}" "{{ dir .Path }}/../binaries/conjur_{{ .Target }}{{ .Ext }}"
 
 archives:
   - id: conjur-cli-archive
@@ -50,8 +56,6 @@ archives:
 checksum:
   name_template: 'SHA256SUMS.txt'
 
-dist: ./dist/goreleaser
-
 brews:
   - description: CyberArk Conjur command line interface (Golang)
     homepage: https://conjur.org
@@ -60,9 +64,9 @@ brews:
       bin.install "conjur-cli-go"
     test: |
       system "#{bin}/conjur-cli-go", "-version"
-    github:
-      owner: cyberark
-      name: homebrew-tools
+    # github:
+    #   owner: cyberark
+    #   name: homebrew-tools
     skip_upload: true
 
 nfpms:
@@ -87,6 +91,5 @@ release:
     - glob: CHANGELOG.md
     - glob: LICENSE
     - glob: README.md
-    - glob: dist/goreleaser/conjur-cli-go_darwin
-    - glob: dist/goreleaser/conjur-cli-go_linux
-    - glob: dist/goreleaser/conjur-cli-go_windows
+    - glob: dist/binaries
+
