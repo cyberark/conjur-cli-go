@@ -5,15 +5,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var whoamiCmd = &cobra.Command{
-	Use:   "whoami",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+var authenticateCmd = &cobra.Command{
+	Use:          "authenticate",
+	Short:        "A brief description of your command",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		conjurClient, err := authenticatedConjurClientForCommand(cmd)
@@ -23,7 +17,7 @@ to quickly create a Cobra application.`,
 		// TODO: If there's no credentials then login before storing and authenticating
 
 		//  TODO: Once again I should be able to create an unauthenticated client, and then try to authenticate them using whatever is available!
-		data, err := conjurClient.WhoAmI()
+		data, err := conjurClient.InternalAuthenticate()
 		if err != nil {
 			return err
 		}
@@ -38,5 +32,5 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	rootCmd.AddCommand(whoamiCmd)
+	rootCmd.AddCommand(authenticateCmd)
 }

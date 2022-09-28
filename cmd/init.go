@@ -14,41 +14,52 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TODO: whenever this is called we should store to .conjurrc
+func askForConnectionDetails(decoratePrompt decoratePromptFunc, account string, applianceURL string) (string, string, error) {
+	var err error
+
+	if len(applianceURL) == 0 {
+		prompt := decoratePrompt(newApplianceURLPrompt())
+		applianceURL, err = runPrompt(prompt)
+
+		if err != nil {
+			return "", "", err
+		}
+	}
+
+	if len(account) == 0 {
+		prompt := decoratePrompt(newAccountPrompt())
+		account, err = runPrompt(prompt)
+
+		if err != nil {
+			return "", "", err
+		}
+	}
+
+	return account, applianceURL, err
+}
+
 func runInitCommand(cmd *cobra.Command, args []string) error {
 	var err error
+
+	setCommandStreamsOnPrompt := func(prompt *promptui.Prompt) *promptui.Prompt {
+		prompt.Stdin = utils.NoopReadCloser(cmd.InOrStdin())
+		prompt.Stdout = utils.NoopWriteCloser(cmd.OutOrStdout())
+
+		return prompt
+	}
 
 	account := cmd.Flag("account").Value.String()
 	applianceURL := cmd.Flag("url").Value.String()
 	filePath := cmd.Flag("file").Value.String()
 
-	setCommandStreamsOnPrompt := func(prompt *promptui.Prompt) {
-		prompt.Stdin = utils.NopReadCloser(cmd.InOrStdin())
-		prompt.Stdout = utils.NopWriteCloser(cmd.OutOrStdout())
-	}
-
-	if len(applianceURL) == 0 {
-		prompt := newApplianceURLPrompt()
-		setCommandStreamsOnPrompt(&prompt)
-		applianceURL, err = runPrompt(prompt)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(account) == 0 {
-		prompt := newAccountPrompt()
-		setCommandStreamsOnPrompt(&prompt)
-		account, err = runPrompt(prompt)
-
-		if err != nil {
-			return err
-		}
+	account, applianceURL, err = askForConnectionDetails(setCommandStreamsOnPrompt, account, applianceURL)
+	if err != nil {
+		return err
 	}
 
 	err = conjurrc.WriteConjurrc(account, applianceURL, filePath, func(filePath string) error {
-		prompt := newFileExistsPrompt(filePath)
-		setCommandStreamsOnPrompt(&prompt)
+		prompt := setCommandStreamsOnPrompt(newFileExistsPrompt(filePath))
 		_, err = runPrompt(prompt)
 
 		if err != nil {
@@ -65,8 +76,10 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func newApplianceURLPrompt() promptui.Prompt {
-	return promptui.Prompt{
+type decoratePromptFunc func(*promptui.Prompt) *promptui.Prompt
+
+func newApplianceURLPrompt() *promptui.Prompt {
+	return &promptui.Prompt{
 		Label: "Enter the URL of your Conjur service",
 		Validate: func(input string) error {
 			if len(input) == 0 {
@@ -79,8 +92,8 @@ func newApplianceURLPrompt() promptui.Prompt {
 	}
 }
 
-func newAccountPrompt() promptui.Prompt {
-	return promptui.Prompt{
+func newAccountPrompt() *promptui.Prompt {
+	return &promptui.Prompt{
 		Label: "Enter your organization account name",
 		Validate: func(input string) error {
 			if len(input) == 0 {
@@ -91,14 +104,14 @@ func newAccountPrompt() promptui.Prompt {
 	}
 }
 
-func newFileExistsPrompt(filePath string) promptui.Prompt {
-	return promptui.Prompt{
+func newFileExistsPrompt(filePath string) *promptui.Prompt {
+	return &promptui.Prompt{
 		Label:     fmt.Sprintf("File %s exists. Overwrite", filePath),
 		IsConfirm: true,
 	}
 }
 
-func runPrompt(prompt promptui.Prompt) (userInput string, err error) {
+func runPrompt(prompt *promptui.Prompt) (userInput string, err error) {
 	userInput, err = prompt.Run()
 	if err != nil {
 		return "", err
