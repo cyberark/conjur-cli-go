@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/cyberark/conjur-cli-go/pkg/authn"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
 
 	"github.com/spf13/cobra"
@@ -11,7 +12,7 @@ type whoamiClient interface {
 }
 
 func whoamiClientFactory(cmd *cobra.Command) (whoamiClient, error) {
-	return authenticatedConjurClientForCommand(cmd)
+	return authn.AuthenticatedConjurClientForCommand(cmd)
 }
 
 // NewWhoamiCommand creates a Command instance with injected dependencies.

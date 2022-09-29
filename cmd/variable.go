@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/cyberark/conjur-cli-go/pkg/authn"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +30,7 @@ to quickly create a Cobra application.`,
 			return err
 		}
 
-		conjurClient, err := authenticatedConjurClientForCommand(cmd)
+		conjurClient, err := authn.AuthenticatedConjurClientForCommand(cmd)
 		if err != nil {
 			return err
 		}
@@ -66,7 +67,7 @@ to quickly create a Cobra application.`,
 			return err
 		}
 
-		conjurClient, err := authenticatedConjurClientForCommand(cmd)
+		conjurClient, err := authn.AuthenticatedConjurClientForCommand(cmd)
 		if err != nil {
 			return err
 		}

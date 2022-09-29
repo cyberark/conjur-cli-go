@@ -5,7 +5,8 @@ import (
 	"net/http"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-api-go/conjurapi/authn"
+	api_authn "github.com/cyberark/conjur-api-go/conjurapi/authn"
+	"github.com/cyberark/conjur-cli-go/pkg/authn"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -27,8 +28,8 @@ var loginCmd = &cobra.Command{
 
 		// TODO: extract this common code for gathering configuring into a seperate package
 		// Some of the code is in conjur-api-go and needs to be made configurable so that you can pass a custom path to .conjurrc
-		username := mightString(cmd.Flags().GetString("username"))
-		password := mightString(cmd.Flags().GetString("password"))
+		username := utils.MightString(cmd.Flags().GetString("username"))
+		password := utils.MightString(cmd.Flags().GetString("password"))
 
 		config, err := conjurapi.LoadConfig()
 		if err != nil {
@@ -49,7 +50,7 @@ var loginCmd = &cobra.Command{
 			return err
 		}
 
-		if mightBool(cmd.Flags().GetBool("verbose")) {
+		if utils.MightBool(cmd.Flags().GetBool("verbose")) {
 			httpClient := conjurClient.GetHttpClient()
 			transport := httpClient.Transport
 			if transport == nil {
@@ -64,20 +65,20 @@ var loginCmd = &cobra.Command{
 			)
 		}
 
-		username, password, err = askForCredentials(setCommandStreamsOnPrompt, username, password)
+		username, password, err = authn.AskForCredentials(setCommandStreamsOnPrompt, username, password)
 		if err != nil {
 			return err
 		}
 
 		// TODO: Maybe have a specific struct for logging in?
-		loginPair := authn.LoginPair{Login: username, APIKey: password}
+		loginPair := api_authn.LoginPair{Login: username, APIKey: password}
 		data, err := conjurClient.Login(loginPair)
 		if err != nil {
 			// TODO: Ruby CLI hides actual error and simply says "Unable to authenticate with Conjur. Please check your credentials."
 			return err
 		}
 
-		err = storeCredentials(config, username, string(data))
+		err = authn.StoreCredentials(config, username, string(data))
 		if err != nil {
 			return err
 		}

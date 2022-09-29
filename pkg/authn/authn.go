@@ -1,4 +1,4 @@
-package cmd
+package authn
 
 import (
 	"errors"
@@ -29,23 +29,7 @@ func newUsernamePrompt() *promptui.Prompt {
 	}
 }
 
-func mightString(v string, e error) string {
-	if e != nil {
-		return ""
-	}
-
-	return v
-}
-
-func mightBool(v bool, e error) bool {
-	if e != nil {
-		return false
-	}
-
-	return v
-}
-
-func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client, error) {
+func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client, error) {
 	var err error
 
 	setCommandStreamsOnPrompt := func(prompt *promptui.Prompt) *promptui.Prompt {
@@ -59,7 +43,7 @@ func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 	// temporary Conjur client being created at that point in time. We should really not be creating so many Conjur clients
 	decorateConjurClient := func(conjurClient *conjurapi.Client) {}
 
-	if mightBool(cmd.Flags().GetBool("verbose")) {
+	if utils.MightBool(cmd.Flags().GetBool("verbose")) {
 		decorateConjurClient = func(conjurClient *conjurapi.Client) {
 			if conjurClient == nil {
 				return
@@ -106,8 +90,8 @@ func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 		cmd.Printf("warn: %s\n", err)
 	}
 
-	if authenticator == nil {
-		username, password, err := askForCredentials(setCommandStreamsOnPrompt, "", "")
+	if authenticator == nil && (config.AuthnType == "" || config.AuthnType == "authn") {
+		username, password, err := AskForCredentials(setCommandStreamsOnPrompt, "", "")
 		if err != nil {
 			return nil, err
 		}
@@ -129,7 +113,7 @@ func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 		}
 
 		authenticatePair := authn.LoginPair{Login: username, APIKey: string(data)}
-		err = storeCredentials(config, authenticatePair.Login, authenticatePair.APIKey)
+		err = StoreCredentials(config, authenticatePair.Login, authenticatePair.APIKey)
 		if err != nil {
 			return nil, err
 		}
@@ -145,12 +129,12 @@ func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 }
 
 // TODO: whenever this is called we should store to .netrc
-func askForCredentials(decoratePrompt decoratePromptFunc, username string, password string) (string, string, error) {
+func AskForCredentials(decoratePrompt utils.DecoratePromptFunc, username string, password string) (string, string, error) {
 	var err error
 
 	if len(username) == 0 {
 		usernamePrompt := decoratePrompt(newUsernamePrompt())
-		username, err = runPrompt(usernamePrompt)
+		username, err = utils.RunPrompt(usernamePrompt)
 		if err != nil {
 			return "", "", err
 		}
@@ -158,7 +142,7 @@ func askForCredentials(decoratePrompt decoratePromptFunc, username string, passw
 
 	if len(password) == 0 {
 		passwordPrompt := decoratePrompt(newPasswordPrompt())
-		password, err = runPrompt(passwordPrompt)
+		password, err = utils.RunPrompt(passwordPrompt)
 		if err != nil {
 			return "", "", err
 		}
@@ -167,7 +151,7 @@ func askForCredentials(decoratePrompt decoratePromptFunc, username string, passw
 	return username, password, err
 }
 
-func storeCredentials(config conjurapi.Config, login string, apiKey string) error {
+func StoreCredentials(config conjurapi.Config, login string, apiKey string) error {
 	machineName := config.ApplianceURL + "/authn"
 	filePath := config.NetRCPath
 
@@ -209,7 +193,7 @@ func storeCredentials(config conjurapi.Config, login string, apiKey string) erro
 	return ioutil.WriteFile(filePath, data, 0644)
 }
 
-func purgeCredentials(config conjurapi.Config) error {
+func PurgeCredentials(config conjurapi.Config) error {
 	machineName := config.ApplianceURL + "/authn"
 	filePath := config.NetRCPath
 

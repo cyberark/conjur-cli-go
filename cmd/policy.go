@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/conjur-cli-go/pkg/authn"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -31,7 +32,7 @@ func loadPolicyForCommand(policyMode conjurapi.PolicyMode, cmd *cobra.Command, a
 		inputReader = file
 	}
 
-	conjurClient, err := authenticatedConjurClientForCommand(cmd)
+	conjurClient, err := authn.AuthenticatedConjurClientForCommand(cmd)
 	if err != nil {
 		return err
 	}
