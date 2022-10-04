@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Attach to CLI container if running, otherwise start it up.
+if docker ps | grep -q cli; then
+  docker exec -it cli bash
+else
+  ./start
+fi
