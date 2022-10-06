@@ -19,7 +19,7 @@ import (
 func newPasswordPrompt() *promptui.Prompt {
 	return &promptui.Prompt{
 		Label: "Please enter your password (it will not be echoed)",
-		Mask:  '*',
+		Mask:  ' ',
 	}
 }
 
