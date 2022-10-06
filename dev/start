@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Navigate to the repo's root directory (one dir above this script) and use the
+# env to configure docker-compose file location to ensure we can run this script
+# from anywhere.
+cd "$(dirname "$0")/.."
+export COMPOSE_FILE="dev/docker-compose.yml"
+
+main() {
+  export CONJUR_DATA_KEY="Bd4+A1QnELGC1Fb5/KauFlVez981OoYblbyfNOCavuQ="
+
+  echo "Starting Containers"
+  docker-compose up -d
+  docker-compose exec conjur conjurctl wait
+
+  echo "Building CLI executable"
+  docker-compose exec cli go build -o conjur
+
+  echo "Configuring CLI"
+  docker-compose exec cli ./conjur init -u http://conjur -a dev
+
+  apikey=$(docker-compose exec conjur \
+    conjurctl role retrieve-key dev:user:admin | tr -d '\r')
+  apikey_file="dev/apikey"
+  
+  echo "$apikey" > "$apikey_file"
+  echo "Wrote admin API key ($apikey) to file $apikey_file"
+
+  echo "Logging in as admin"
+  docker-compose exec cli ./conjur login -u admin -p "$apikey"
+
+  echo "Entering CLI container"
+  docker exec -it cli bash
+}
+
+main "$@"

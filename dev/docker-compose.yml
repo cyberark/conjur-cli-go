@@ -1,0 +1,33 @@
+version: '3'
+services:
+  pg:
+    image: postgres:10.16
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+
+  conjur:
+    image: cyberark/conjur
+    command: server -a dev
+    environment:
+      DATABASE_URL: postgres://postgres@pg/postgres
+      CONJUR_DATA_KEY:
+
+  cli:
+    image: golang:1.19
+    container_name: cli
+    command: sleep infinity
+    working_dir: ${PWD}
+    restart: on-failure
+    environment:
+      # Allows you to run the CLI as `conjur` instead of `./conjur`. Could clean
+      # this up by building image w/ Dockerfile and modifying PATH in Dockerfile
+      # or by mounting a `.bash_profile` that modifies PATH.
+      PATH: ${PWD}:/go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    ports:
+      - 8080
+    volumes:
+      - ${PWD}:${PWD}
+      - go-modules:/go/pkg/mod # Put modules cache into a separate volume
+
+volumes:
+  go-modules:

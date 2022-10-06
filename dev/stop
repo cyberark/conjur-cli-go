@@ -1,0 +1,11 @@
+#!/bin/bash -ex
+
+# Navigate to the repo's root directory (one dir above this script) and use the
+# env to configure docker-compose file location to ensure we can run this script
+# from anywhere.
+cd "$(dirname "$0")/.."
+export COMPOSE_FILE="dev/docker-compose.yml"
+
+docker-compose down -v
+
+rm -f dev/apikey
