@@ -32,13 +32,6 @@ func newUsernamePrompt() *promptui.Prompt {
 func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client, error) {
 	var err error
 
-	setCommandStreamsOnPrompt := func(prompt *promptui.Prompt) *promptui.Prompt {
-		prompt.Stdin = utils.NoopReadCloser(cmd.InOrStdin())
-		prompt.Stdout = utils.NoopWriteCloser(cmd.OutOrStdout())
-
-		return prompt
-	}
-
 	// TODO: This is called multiple time because each operation potentially uses a new HTTP client bound to the
 	// temporary Conjur client being created at that point in time. We should really not be creating so many Conjur clients
 	decorateConjurClient := func(conjurClient *conjurapi.Client) {}
@@ -90,41 +83,24 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 		cmd.Printf("warn: %s\n", err)
 	}
 
-	if authenticator == nil && (config.AuthnType == "" || config.AuthnType == "authn") {
-		username, password, err := AskForCredentials(setCommandStreamsOnPrompt, "", "")
-		if err != nil {
-			return nil, err
-		}
+	setCommandStreamsOnPrompt := func(prompt *promptui.Prompt) *promptui.Prompt {
+		prompt.Stdin = utils.NoopReadCloser(cmd.InOrStdin())
+		prompt.Stdout = utils.NoopWriteCloser(cmd.OutOrStdout())
 
-		loginPair := authn.LoginPair{Login: username, APIKey: password}
+		return prompt
+	}
 
-		conjurClient, err = conjurapi.NewClient(config)
-		if err != nil {
-			return nil, err
-		}
-
-		decorateConjurClient(conjurClient)
-
-		// TODO: maybe have specific struct for login
-		data, err := conjurClient.Login(loginPair)
-		if err != nil {
-			// TODO: Ruby CLI hides actual error and simply says "Unable to authenticate with Conjur. Please check your credentials."
-			return nil, err
-		}
-
-		authenticatePair := authn.LoginPair{Login: username, APIKey: string(data)}
-		err = StoreCredentials(config, authenticatePair.Login, authenticatePair.APIKey)
-		if err != nil {
-			return nil, err
-		}
-
-		conjurClient, err = conjurapi.NewClientFromKey(config, authenticatePair)
-		decorateConjurClient(conjurClient)
-		if err != nil {
-			return nil, err
+	if authenticator == nil {
+		if config.AuthnType == "" || config.AuthnType == "authn" {
+			conjurClient, err = Login(config, setCommandStreamsOnPrompt, decorateConjurClient)
+		} else if config.AuthnType == "oidc" {
+			conjurClient, err = OidcLogin(config, decorateConjurClient)
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
 	return conjurClient, nil
 }
 
@@ -211,4 +187,41 @@ func PurgeCredentials(config conjurapi.Config) error {
 
 	// TODO: Should we stat and make sure we retain the permissions the file originally had ?
 	return ioutil.WriteFile(filePath, data, 0644)
+}
+
+func Login(config conjurapi.Config, decoratePrompt utils.DecoratePromptFunc, decorateClient func(*conjurapi.Client)) (*conjurapi.Client, error) {
+	username, password, err := AskForCredentials(decoratePrompt, "", "")
+	if err != nil {
+		return nil, err
+	}
+
+	loginPair := authn.LoginPair{Login: username, APIKey: password}
+
+	conjurClient, err := conjurapi.NewClient(config)
+	if err != nil {
+		return nil, err
+	}
+
+	decorateClient(conjurClient)
+
+	// TODO: maybe have specific struct for login
+	data, err := conjurClient.Login(loginPair)
+	if err != nil {
+		// TODO: Ruby CLI hides actual error and simply says "Unable to authenticate with Conjur. Please check your credentials."
+		return nil, err
+	}
+
+	authenticatePair := authn.LoginPair{Login: username, APIKey: string(data)}
+	err = StoreCredentials(config, authenticatePair.Login, authenticatePair.APIKey)
+	if err != nil {
+		return nil, err
+	}
+
+	conjurClient, err = conjurapi.NewClientFromKey(config, authenticatePair)
+	decorateClient(conjurClient)
+	if err != nil {
+		return nil, err
+	}
+
+	return conjurClient, nil
 }
