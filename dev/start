@@ -73,7 +73,7 @@ EOL
 
   echo
   echo 'Setting up Conjur...'
-  docker-compose exec -T conjur bundle exec rake "account:create_with_password[dev,${conjur_admin_password}]"
+  docker-compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${conjur_admin_password}]"
   echo 'Finished setting up Conjur'
 
 
