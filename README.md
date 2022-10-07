@@ -9,13 +9,13 @@ See the [dev](dev/) directory for more details.
 ## Running
 
 ```
-go run main.go
+go run conjur.go
 ```
 
 ## Building
 
 ```
-go build main.go
+go build conjur.go
 ```
 
 ## Adding New Commands

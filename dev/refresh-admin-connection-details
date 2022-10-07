@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Navigate to the dev directory (where this script lives) to ensure we can run this script
+# from anywhere.
+cd "$(dirname "$0")"
+
+admin_api_key_path=./tmp/admin_api_key
+dot_netrc_path=./tmp/.netrc
+dot_conjurrc_path=./tmp/.conjurrc
+
+echo
+echo "Retrieving admin API key"
+docker-compose exec conjur conjurctl role retrieve-key 'dev:user:admin' | \
+    tr -d '\r\n' > "${admin_api_key_path}"
+
+admin_api_key=$(cat ${admin_api_key_path})
+
+echo "Admin API key: ${admin_api_key}"
+
+echo
+echo "Wrote admin API key to file ${admin_api_key_path}"
+
+cat << EOL > "${dot_conjurrc_path}"
+account: dev
+appliance_url: http://conjur
+plugins: []
+EOL
+
+echo "Wrote .conjurrc file to ${dot_conjurrc_path}"
+
+cat << EOL > "${dot_netrc_path}"
+machine http://conjur/authn
+        login admin
+        password ${admin_api_key}
+EOL
+
+echo "Wrote .netrc file to ${dot_netrc_path}"
+
+
