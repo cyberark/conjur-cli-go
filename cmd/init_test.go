@@ -1,26 +1,13 @@
 package cmd
 
 import (
-	"bytes"
 	"os"
 	"testing"
 
-	"github.com/spf13/cobra"
+	"github.com/cyberark/conjur-cli-go/pkg/test"
+
 	"github.com/stretchr/testify/assert"
 )
-
-func execute(t *testing.T, c *cobra.Command, args ...string) (string, error) {
-	t.Helper()
-
-	buf := new(bytes.Buffer)
-	c.SetOut(buf)
-	c.SetErr(buf)
-	c.SetArgs(args)
-
-	err := c.Execute()
-
-	return buf.String(), err
-}
 
 func TestInitCmd(t *testing.T) {
 	conjurrcInTmpDir := t.TempDir() + "/.conjurrc"
@@ -33,10 +20,6 @@ func TestInitCmd(t *testing.T) {
 		{
 			args: []string{"--help"},
 			out:  "Initialize the Conjur configuration",
-		},
-		{
-			args: []string{"--helpx"},
-			out:  "unknown flag: --helpx",
 		},
 		{
 			args: []string{"--help=false"},
@@ -59,7 +42,7 @@ func TestInitCmd(t *testing.T) {
 	cmd := NewInitCommand()
 
 	for _, tc := range tt {
-		out, _ := execute(t, cmd, tc.args...)
+		out, _ := test.Execute(t, cmd, tc.args...)
 
 		assert.Contains(t, out, tc.out)
 	}

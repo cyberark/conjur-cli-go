@@ -1,6 +1,6 @@
 action/mocks/*.go
 c.out
-conjur-cli-go
+conjur
 junit.xml
 key.txt
 
