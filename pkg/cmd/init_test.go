@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cyberark/conjur-cli-go/pkg/test"
+	"github.com/cyberark/conjur-cli-go/pkg/testutils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -42,7 +42,7 @@ func TestInitCmd(t *testing.T) {
 	cmd := NewInitCommand()
 
 	for _, tc := range tt {
-		out, _ := test.Execute(t, cmd, tc.args...)
+		out, _ := testutils.Execute(t, cmd, tc.args...)
 
 		assert.Contains(t, out, tc.out)
 	}

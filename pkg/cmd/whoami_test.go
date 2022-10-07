@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cyberark/conjur-cli-go/pkg/test"
+	"github.com/cyberark/conjur-cli-go/pkg/testutils"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -73,7 +73,7 @@ func TestWhoamiCmd(t *testing.T) {
 			}
 			cmd := NewWhoamiCommand(testWhoamiClientFactory)
 
-			out, _ := test.Execute(t, cmd, tc.args...)
+			out, _ := testutils.Execute(t, cmd, tc.args...)
 			assert.Contains(t, out, tc.out)
 		})
 	}
