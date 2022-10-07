@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/cyberark/conjur-cli-go/cmd"
+	"github.com/cyberark/conjur-cli-go/pkg/cmd"
 )
 
 func main() {

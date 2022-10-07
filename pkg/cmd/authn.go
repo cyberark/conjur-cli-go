@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -45,7 +46,15 @@ func mightBool(v bool, e error) bool {
 	return v
 }
 
-func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client, error) {
+type conjurClient interface {
+	WhoAmI() ([]byte, error)
+	InternalAuthenticate() ([]byte, error)
+	LoadPolicy(mode conjurapi.PolicyMode, policyID string, policy io.Reader) (*conjurapi.PolicyResponse, error)
+	AddSecret(variableID string, secretValue string) error
+	RetrieveSecret(variableID string) ([]byte, error)
+}
+
+func authenticatedConjurClientForCommand(cmd *cobra.Command) (conjurClient, error) {
 	var err error
 
 	setCommandStreamsOnPrompt := func(prompt *promptui.Prompt) *promptui.Prompt {
@@ -57,16 +66,16 @@ func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 
 	// TODO: This is called multiple time because each operation potentially uses a new HTTP client bound to the
 	// temporary Conjur client being created at that point in time. We should really not be creating so many Conjur clients
-	decorateConjurClient := func(conjurClient *conjurapi.Client) {}
+	decorateConjurClient := func(client *conjurapi.Client) {}
 
 	if mightBool(cmd.Flags().GetBool("verbose")) {
-		decorateConjurClient = func(conjurClient *conjurapi.Client) {
-			if conjurClient == nil {
+		decorateConjurClient = func(client *conjurapi.Client) {
+			if client == nil {
 				return
 			}
 			// TODO: check to see if the transport has already been decorated to make this idempotent
 
-			httpClient := conjurClient.GetHttpClient()
+			httpClient := client.GetHttpClient()
 			transport := httpClient.Transport
 			if transport == nil {
 				transport = http.DefaultTransport
@@ -98,10 +107,10 @@ func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 	}
 
 	var authenticator conjurapi.Authenticator
-	conjurClient, err := conjurapi.NewClientFromEnvironment(config)
-	decorateConjurClient(conjurClient)
+	client, err := conjurapi.NewClientFromEnvironment(config)
+	decorateConjurClient(client)
 	if err == nil {
-		authenticator = conjurClient.GetAuthenticator()
+		authenticator = client.GetAuthenticator()
 	} else {
 		cmd.Printf("warn: %s\n", err)
 	}
@@ -114,15 +123,15 @@ func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 
 		loginPair := authn.LoginPair{Login: username, APIKey: password}
 
-		conjurClient, err = conjurapi.NewClient(config)
+		client, err = conjurapi.NewClient(config)
 		if err != nil {
 			return nil, err
 		}
 
-		decorateConjurClient(conjurClient)
+		decorateConjurClient(client)
 
 		// TODO: maybe have specific struct for login
-		data, err := conjurClient.Login(loginPair)
+		data, err := client.Login(loginPair)
 		if err != nil {
 			// TODO: Ruby CLI hides actual error and simply says "Unable to authenticate with Conjur. Please check your credentials."
 			return nil, err
@@ -134,14 +143,14 @@ func authenticatedConjurClientForCommand(cmd *cobra.Command) (*conjurapi.Client,
 			return nil, err
 		}
 
-		conjurClient, err = conjurapi.NewClientFromKey(config, authenticatePair)
-		decorateConjurClient(conjurClient)
+		client, err = conjurapi.NewClientFromKey(config, authenticatePair)
+		decorateConjurClient(client)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return conjurClient, nil
+	return client, nil
 }
 
 // TODO: whenever this is called we should store to .netrc

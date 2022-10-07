@@ -7,7 +7,7 @@ before:
     # you may remove this if you don't need go generate
     - go generate ./...
 builds:
-- main: ./conjur.go
+- main: ./cmd/conjur
   binary: conjur
   env:
   - CGO_ENABLED=0

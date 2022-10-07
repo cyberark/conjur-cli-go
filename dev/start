@@ -6,6 +6,9 @@ set -eo pipefail
 # from anywhere.
 cd "$(dirname "$0")"
 
+# TODO: add a prompt and an -f flag to give the user control over destroying an already existing development environment.
+# It can be such a pain to mistakenly destroy your environment.
+
 # Clean up existing environment
 ./stop
 
@@ -19,15 +22,20 @@ main() {
   echo "Preparing ./tmp files"
   mkdir -p ./tmp
   touch ./tmp/.netrc ./tmp/.conjurrc ./tmp/.bashrc
-  cat << EOL > ./tmp/.bashrc
+  cat <<EOL > ./tmp/.bashrc
 echo "Invoke dev_help to find out about the dev utilities available within this shell" >&2
 
 function dev_help() {
   echo "
 Available dev utilities
+-----------------------
 
-make: Make can be executed against the the Makefile in the root directory of the repository
+make: Make can be executed against the the Makefile in the root directory of the repository.
+
+      Available tasks are: run, build, install, test.
+
 admin_password: Prints the Conjur admin password, cached from the time of creation of the development environment 
+
 admin_api_key: Prints the Conjur API key, cached from the time of creation of the development environment
 "
 }
@@ -48,16 +56,16 @@ EOL
 
   echo
   docker-compose exec -T pg bash -e <<EOL
-  echo 'Waiting for Postgres to be ready...'
-  for i in {1..90}
-  do
-    pg_isready -U postgres 2>&1 > /dev/null && echo ' Postgres is ready!' && exit 0;
-    printf '.'
-    sleep 1
-  done
+echo 'Waiting for Postgres to be ready...'
+for i in {1..90}
+do
+  pg_isready -U postgres 2>&1 > /dev/null && echo ' Postgres is ready!' && exit 0;
+  printf '.'
+  sleep 1
+done
 
-  echo 'Postgres is not ready after 90 seconds'
-  exit 1
+echo 'Postgres is not ready after 90 seconds'
+exit 1
 EOL
 
   echo

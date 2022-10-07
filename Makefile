@@ -1,10 +1,13 @@
+test:
+	go test -count=1 -v ./...
+
 build:
-	go build -o ./dev/tmp/ conjur.go
+	go build -o ./dev/tmp/ ./cmd/conjur
 
 install:
-	go install conjur.go
+	go install ./cmd/conjur
 
 run:
-	go run conjur.go
+	go run ./cmd/conjur
 
 all: build

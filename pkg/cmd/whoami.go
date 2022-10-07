@@ -19,7 +19,6 @@ func NewWhoamiCommand(clientFactory func(*cobra.Command) (whoamiClient, error)) 
 	return &cobra.Command{
 		Use:          "whoami",
 		Short:        "Displays info about the logged in user",
-		Long:         `Displays info about the logged in user`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := clientFactory(cmd)

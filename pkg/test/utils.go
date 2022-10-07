@@ -3,8 +3,9 @@ package test
 import (
 	"bytes"
 
-	"github.com/spf13/cobra"
 	"testing"
+
+	"github.com/spf13/cobra"
 )
 
 // Execute the given command and return its output.
@@ -14,7 +15,7 @@ func Execute(t *testing.T, c *cobra.Command, args ...string) (string, error) {
 	buf := new(bytes.Buffer)
 	c.SetOut(buf)
 	c.SetErr(buf)
-	c.SetArgs(args)
+	c.SetArgs(append([]string{"--help=false"}, args...))
 
 	err := c.Execute()
 
