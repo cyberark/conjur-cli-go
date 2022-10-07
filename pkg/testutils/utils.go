@@ -15,6 +15,7 @@ func Execute(t *testing.T, c *cobra.Command, args ...string) (string, error) {
 	buf := new(bytes.Buffer)
 	c.SetOut(buf)
 	c.SetErr(buf)
+	// The help flag is somehow defaulting to true. The fix is to prepend the args with --help=false.
 	c.SetArgs(append([]string{"--help=false"}, args...))
 
 	err := c.Execute()

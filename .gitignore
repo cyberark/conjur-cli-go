@@ -9,3 +9,8 @@ output/
 dist/
 
 dev/tmp
+
+# CLI binaries
+conjur
+# Exclude binary entrypoint
+!cmd/conjur
