@@ -9,19 +9,19 @@ cd "$(dirname "$0")"
 # TODO: add a prompt and an -f flag to give the user control over destroying an already existing development environment.
 # It can be such a pain to mistakenly destroy your environment.
 
-# Clean up existing environment
-./stop
-
 main() {
+  if docker-compose ps conjur | grep conjur >/dev/null 2>&1; then
+    ./stop
+  fi
   local conjur_account=dev
-  local conjur_admin_password='SuperSecret!!!!123'
-  local admin_password_path=./tmp/admin_password
+  local admin_initial_password='SuperSecret!!!!123'
+  local path_to_admin_initial_password=tmp/admin_initial_password
 
   # Prepare tmp files
   echo
-  echo "Preparing ./tmp files"
+  echo "Preparing dev/tmp files"
   mkdir -p ./tmp
-  touch ./tmp/.netrc ./tmp/.conjurrc ./tmp/.bashrc
+  touch ./tmp/.bashrc
   cat <<EOL > ./tmp/.bashrc
 echo "Invoke dev_help to find out about the dev utilities available within this shell" >&2
 
@@ -34,19 +34,22 @@ make: Make can be executed against the the Makefile in the root directory of the
 
       Available tasks are: run, build, install, test.
 
-admin_password: Prints the Conjur admin password, cached from the time of creation of the development environment 
+admin_initial_password: Prints the initially-set password of the Conjur admin
 
-admin_api_key: Prints the Conjur API key, cached from the time of creation of the development environment
+admin_api_key: Prints the API key of the Conjur admin
 "
 }
 
-function admin_password() {
-  cat ${PWD}/${admin_password_path}
+function admin_initial_password() {
+  cat ${PWD}/${path_to_admin_initial_password}
 }
 
 function admin_api_key() {
-  cat ${PWD}/${admin_password_path}
+  curl -s 'http://conjur/dev?action=retrieve_api_key&role_id=dev:user:admin'
 }
+
+export -f admin_api_key
+export -f admin_initial_password
 EOL
 
   echo
@@ -73,19 +76,23 @@ EOL
 
   echo
   echo 'Setting up Conjur...'
-  docker-compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${conjur_admin_password}]"
+  docker-compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${admin_initial_password}]"
   echo 'Finished setting up Conjur'
 
 
   echo
-  echo "Admin password: ${conjur_admin_password}"
-  echo "${conjur_admin_password}" | tr -d '\r\n' > "${admin_password_path}"
-  echo "Wrote admin password to ${admin_password_path}"
+  echo "Admin password: ${admin_initial_password}"
+  echo "${admin_initial_password}" | tr -d '\r\n' > "${path_to_admin_initial_password}"
+  echo "Wrote admin password to dev/${path_to_admin_initial_password}"
 
-  ./refresh-admin-connection-details
+  docker-compose exec cli-dev ./dev/refresh-admin-connection-details
 
   echo
   echo "Entering CLI container"
+
+  docker-compose exec cli-dev go mod download || true
+
+  echo
   docker-compose exec cli-dev bash
 }
 

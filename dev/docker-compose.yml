@@ -7,13 +7,25 @@ services:
 
   conjur:
     image: cyberark/conjur
-    command: server
+    entrypoint: ""
+    command: |
+      bash -c "
+        # Turn on reloading of application classes to allow developers to modify the dev_controller without restarting the container
+        sed -i 's/cache_classes = true/cache_classes = false/' /opt/conjur-server/config/environments/production.rb
+
+        conjurctl server
+      "
     environment:
       DATABASE_URL: postgres://postgres@pg/postgres
       CONJUR_DATA_KEY: Bd4+A1QnELGC1Fb5/KauFlVez981OoYblbyfNOCavuQ=
+    volumes:
+    # The files add the endpoint /dev to Conjur. This endpoint allows us to carry out typical development tasks such as fetching
+    # any role's API key via an unauthenticated HTTP request to Conjur.
+      - ./conjur-hacks/dev_initializer.rb:/opt/conjur-server/config/initializers/dev_initializer.rb
+      - ./conjur-hacks/dev_controller.rb:/opt/conjur-server/app/controllers/dev_controller.rb
 
   cli-dev:
-    image: golang
+    image: golang:1.19
     command: bash -c "cd ${PWD}/..; make install; sleep infinity"
     working_dir: ${PWD}/..
     restart: on-failure
@@ -21,8 +33,6 @@ services:
       - 8080
     volumes:
       - ${PWD}/..:${PWD}/..
-      - ./tmp/.conjurrc:/root/.conjurrc
-      - ./tmp/.netrc:/root/.netrc
       - ./tmp/.bashrc:/root/.bashrc
       - go-modules:/go/pkg/mod # Put modules cache into a separate volume
 
