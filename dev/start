@@ -2,37 +2,91 @@
 
 set -eo pipefail
 
-# Navigate to the repo's root directory (one dir above this script) and use the
-# env to configure docker-compose file location to ensure we can run this script
+# Navigate to the dev directory (where this script lives) to ensure we can run this script
 # from anywhere.
-cd "$(dirname "$0")/.."
-export COMPOSE_FILE="dev/docker-compose.yml"
+cd "$(dirname "$0")"
+
+# TODO: add a prompt and an -f flag to give the user control over destroying an already existing development environment.
+# It can be such a pain to mistakenly destroy your environment.
+
+# Clean up existing environment
+./stop
 
 main() {
-  export CONJUR_DATA_KEY="Bd4+A1QnELGC1Fb5/KauFlVez981OoYblbyfNOCavuQ="
+  local conjur_account=dev
+  local conjur_admin_password='SuperSecret!!!!123'
+  local admin_password_path=./tmp/admin_password
 
+  # Prepare tmp files
+  echo
+  echo "Preparing ./tmp files"
+  mkdir -p ./tmp
+  touch ./tmp/.netrc ./tmp/.conjurrc ./tmp/.bashrc
+  cat <<EOL > ./tmp/.bashrc
+echo "Invoke dev_help to find out about the dev utilities available within this shell" >&2
+
+function dev_help() {
+  echo "
+Available dev utilities
+-----------------------
+
+make: Make can be executed against the the Makefile in the root directory of the repository.
+
+      Available tasks are: run, build, install, test.
+
+admin_password: Prints the Conjur admin password, cached from the time of creation of the development environment 
+
+admin_api_key: Prints the Conjur API key, cached from the time of creation of the development environment
+"
+}
+
+function admin_password() {
+  cat ${PWD}/${admin_password_path}
+}
+
+function admin_api_key() {
+  cat ${PWD}/${admin_password_path}
+}
+EOL
+
+  echo
   echo "Starting Containers"
   docker-compose up -d
+
+
+  echo
+  docker-compose exec -T pg bash -e <<EOL
+echo 'Waiting for Postgres to be ready...'
+for i in {1..90}
+do
+  pg_isready -U postgres 2>&1 > /dev/null && echo ' Postgres is ready!' && exit 0;
+  printf '.'
+  sleep 1
+done
+
+echo 'Postgres is not ready after 90 seconds'
+exit 1
+EOL
+
+  echo
   docker-compose exec conjur conjurctl wait
 
-  echo "Building CLI executable"
-  docker-compose exec cli go build -o conjur
+  echo
+  echo 'Setting up Conjur...'
+  docker-compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${conjur_admin_password}]"
+  echo 'Finished setting up Conjur'
 
-  echo "Configuring CLI"
-  docker-compose exec cli ./conjur init -u http://conjur -a dev
 
-  apikey=$(docker-compose exec conjur \
-    conjurctl role retrieve-key dev:user:admin | tr -d '\r')
-  apikey_file="dev/apikey"
-  
-  echo "$apikey" > "$apikey_file"
-  echo "Wrote admin API key ($apikey) to file $apikey_file"
+  echo
+  echo "Admin password: ${conjur_admin_password}"
+  echo "${conjur_admin_password}" | tr -d '\r\n' > "${admin_password_path}"
+  echo "Wrote admin password to ${admin_password_path}"
 
-  echo "Logging in as admin"
-  docker-compose exec cli ./conjur login -u admin -p "$apikey"
+  ./refresh-admin-connection-details
 
+  echo
   echo "Entering CLI container"
-  docker exec -it cli bash
+  docker-compose exec cli-dev bash
 }
 
 main "$@"

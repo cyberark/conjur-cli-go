@@ -27,8 +27,15 @@ var loginCmd = &cobra.Command{
 
 		// TODO: extract this common code for gathering configuring into a seperate package
 		// Some of the code is in conjur-api-go and needs to be made configurable so that you can pass a custom path to .conjurrc
-		username := mightString(cmd.Flags().GetString("username"))
-		password := mightString(cmd.Flags().GetString("password"))
+		username, err := cmd.Flags().GetString("username")
+		if err != nil {
+			return err
+		}
+
+		password, err := cmd.Flags().GetString("password")
+		if err != nil {
+			return err
+		}
 
 		config, err := conjurapi.LoadConfig()
 		if err != nil {
@@ -49,7 +56,11 @@ var loginCmd = &cobra.Command{
 			return err
 		}
 
-		if mightBool(cmd.Flags().GetBool("verbose")) {
+		verbose, err := cmd.Flags().GetBool("verbose")
+		if err != nil {
+			return err
+		}
+		if verbose {
 			httpClient := conjurClient.GetHttpClient()
 			transport := httpClient.Transport
 			if transport == nil {

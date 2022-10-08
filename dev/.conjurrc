@@ -1,0 +1,3 @@
+account: dev
+appliance_url: http://conjur
+plugins: []

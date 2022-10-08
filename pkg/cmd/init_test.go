@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cyberark/conjur-cli-go/pkg/test"
+	"github.com/cyberark/conjur-cli-go/pkg/testutils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -22,19 +22,19 @@ func TestInitCmd(t *testing.T) {
 			out:  "Initialize the Conjur configuration",
 		},
 		{
-			args: []string{"--help=false"},
+			args: []string{},
 			out:  "Enter the URL of your Conjur service",
 		},
 		{
-			args: []string{"--help=false", "-u=https://host"},
+			args: []string{"-u=https://host"},
 			out:  "Enter your organization account name",
 		},
 		{
-			args: []string{"--help=false", "-u=https://host", "-a=test-account", "-f=" + conjurrcInTmpDir},
+			args: []string{"-u=https://host", "-a=test-account", "-f=" + conjurrcInTmpDir},
 			out:  "Wrote configuration to " + conjurrcInTmpDir,
 		},
 		{
-			args: []string{"--help=false", "-u=https://host", "-a=test-account", "-f=/no/such/dir/file"},
+			args: []string{"-u=https://host", "-a=test-account", "-f=/no/such/dir/file"},
 			out:  "no such file or directory",
 		},
 	}
@@ -42,7 +42,7 @@ func TestInitCmd(t *testing.T) {
 	cmd := NewInitCommand()
 
 	for _, tc := range tt {
-		out, _ := test.Execute(t, cmd, tc.args...)
+		out, _ := testutils.Execute(t, cmd, tc.args...)
 
 		assert.Contains(t, out, tc.out)
 	}

@@ -2,9 +2,13 @@
 
 set -eo pipefail
 
+# Navigate to the dev directory (where this script lives) to ensure we can run this script
+# from anywhere.
+cd "$(dirname "$0")"
+
 # Attach to CLI container if running, otherwise start it up.
-if docker ps | grep -q cli; then
-  docker exec -it cli bash
+if docker-compose ps cli-dev | grep -q cli-dev; then
+  docker-compose exec cli-dev bash
 else
   ./start
 fi

@@ -1,6 +1,5 @@
 action/mocks/*.go
 c.out
-conjur
 junit.xml
 key.txt
 
@@ -9,4 +8,9 @@ output/
 
 dist/
 
-dev/apikey
+dev/tmp
+
+# CLI binaries
+conjur
+# Exclude binary entrypoint
+!cmd/conjur
