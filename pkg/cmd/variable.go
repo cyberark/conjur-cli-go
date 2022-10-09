@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewVariableCmd(
+func newVariableCmd(
 	getClientFactory variableGetClientFactoryFunc,
 	setClientFactory variableSetClientFactoryFunc,
 ) *cobra.Command {
@@ -14,8 +14,8 @@ func NewVariableCmd(
 		Short: "Use the variable command to manage Conjur variables",
 	}
 
-	variableGetCmd := NewVariableGetCmd(getClientFactory)
-	variableSetCmd := NewVariableSetCmd(setClientFactory)
+	variableGetCmd := newVariableGetCmd(getClientFactory)
+	variableSetCmd := newVariableSetCmd(setClientFactory)
 
 	variableCmd.AddCommand(variableGetCmd)
 	variableCmd.AddCommand(variableSetCmd)
@@ -54,7 +54,7 @@ func variableSetClientFactory(cmd *cobra.Command) (variableSetClient, error) {
 	return clients.AuthenticatedConjurClientForCommand(cmd)
 }
 
-func NewVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Command {
+func newVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
 		Use:          "get",
 		Short:        "Use the get subcommand to get the value of one or more Conjur variables",
@@ -82,7 +82,7 @@ func NewVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Comman
 	}
 }
 
-func NewVariableSetCmd(clientFactory variableSetClientFactoryFunc) *cobra.Command {
+func newVariableSetCmd(clientFactory variableSetClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
 		Use:          "set",
 		Short:        "Use the set subcommand to set the value of a Conjur variable",
@@ -115,7 +115,7 @@ func NewVariableSetCmd(clientFactory variableSetClientFactoryFunc) *cobra.Comman
 }
 
 func init() {
-	variableCmd := NewVariableCmd(variableGetClientFactory, variableSetClientFactory)
+	variableCmd := newVariableCmd(variableGetClientFactory, variableSetClientFactory)
 	rootCmd.AddCommand(variableCmd)
 
 	// Cobra supports local flags which will only run when this command

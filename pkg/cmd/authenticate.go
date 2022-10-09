@@ -16,9 +16,8 @@ var authenticateCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		// TODO: If there's no credentials then login before storing and authenticating
 
-		//  TODO: Once again I should be able to create an unauthenticated client, and then try to authenticate them using whatever is available!
+		//  TODO: I should be able to create an unauthenticated client, and then try to authenticate them using whatever is available!
 		data, err := conjurClient.InternalAuthenticate()
 		if err != nil {
 			return err

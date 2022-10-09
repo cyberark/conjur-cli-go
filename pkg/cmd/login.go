@@ -1,13 +1,10 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
+	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
@@ -17,13 +14,6 @@ var loginCmd = &cobra.Command{
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var err error
-
-		setCommandStreamsOnPrompt := func(prompt *promptui.Prompt) *promptui.Prompt {
-			prompt.Stdin = utils.NoopReadCloser(cmd.InOrStdin())
-			prompt.Stdout = utils.NoopWriteCloser(cmd.OutOrStdout())
-
-			return prompt
-		}
 
 		// TODO: extract this common code for gathering configuring into a seperate package
 		// Some of the code is in conjur-api-go and needs to be made configurable so that you can pass a custom path to .conjurrc
@@ -37,17 +27,9 @@ var loginCmd = &cobra.Command{
 			return err
 		}
 
-		config, err := conjurapi.LoadConfig()
+		config, err := clients.LoadAndValidateConjurConfig()
 		if err != nil {
 			return err
-		}
-
-		if config.ApplianceURL == "" {
-			return fmt.Errorf("%s", "Missing required configuration for Conjur API URL")
-		}
-
-		if config.Account == "" {
-			return fmt.Errorf("%s", "Missing required configuation for Conjur account")
 		}
 
 		// TODO: I should be able to create a client and unauthenticated client
@@ -61,17 +43,15 @@ var loginCmd = &cobra.Command{
 			return err
 		}
 		if verbose {
-			clients.VerboseLoggingForClient(cmd, conjurClient)
+			clients.MaybeVerboseLoggingForClient(verbose, cmd, conjurClient)
 		}
 
-		_, err = clients.LoginWithOptionalPrompt(setCommandStreamsOnPrompt, conjurClient, username, password)
+		_, err = clients.LoginWithPromptFallback(prompts.PromptDecoratorForCommand(cmd), conjurClient, username, password)
 		if err != nil {
 			return err
 		}
 
 		cmd.Println("Logged in")
-
-		// TODO: should we be storing this in .netrc for future use ?
 		return nil
 	},
 }

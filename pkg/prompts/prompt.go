@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/cyberark/conjur-cli-go/pkg/utils"
+
 	"github.com/manifoldco/promptui"
+	"github.com/spf13/cobra"
 )
 
 type decoratePromptFunc func(*promptui.Prompt) *promptui.Prompt
@@ -43,6 +46,7 @@ func newFileExistsPrompt(filePath string) *promptui.Prompt {
 	}
 }
 
+// AskToOverwriteFile presents a prompt to get confirmation from a user to overwrite a file
 func AskToOverwriteFile(decoratePrompt decoratePromptFunc, filePath string) error {
 	fileExistsPrompt := decoratePrompt(newFileExistsPrompt(filePath))
 	_, err := runPrompt(fileExistsPrompt)
@@ -70,8 +74,20 @@ func newUsernamePrompt() *promptui.Prompt {
 	}
 }
 
-// TODO: whenever this is called we should store to .netrc
-func AskForCredentials(decoratePrompt decoratePromptFunc, username string, password string) (string, string, error) {
+// PromptDecoratorForCommand redirects the stdin and stdout from the command onto the prompt. This is to
+// ensure that command and prompt stay synchronized
+func PromptDecoratorForCommand(cmd *cobra.Command) func(*promptui.Prompt) *promptui.Prompt {
+	return func(prompt *promptui.Prompt) *promptui.Prompt {
+		prompt.Stdin = utils.NoopReadCloser(cmd.InOrStdin())
+		prompt.Stdout = utils.NoopWriteCloser(cmd.OutOrStdout())
+
+		return prompt
+	}
+
+}
+
+// MaybeAskForCredentials optionally presents a prompt to retrieve missing username and/or password from the user
+func MaybeAskForCredentials(decoratePrompt decoratePromptFunc, username string, password string) (string, string, error) {
 	var err error
 
 	if len(username) == 0 {
@@ -93,8 +109,8 @@ func AskForCredentials(decoratePrompt decoratePromptFunc, username string, passw
 	return username, password, err
 }
 
-// TODO: whenever this is called we should store to .conjurrc
-func AskForConnectionDetails(decoratePrompt decoratePromptFunc, account string, applianceURL string) (string, string, error) {
+// MaybeAskForConnectionDetails presents a prompt to retrieve missing Conjur account and/or URL from the user
+func MaybeAskForConnectionDetails(decoratePrompt decoratePromptFunc, account string, applianceURL string) (string, string, error) {
 	var err error
 
 	if len(applianceURL) == 0 {

@@ -9,7 +9,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func VerboseLoggingForClient(cmd *cobra.Command, client *conjurapi.Client) {
+// MaybeVerboseLoggingForClient optionally carries out verbose logging of HTTP requests and responses on a Conjur client
+func MaybeVerboseLoggingForClient(
+	verbose bool,
+	cmd *cobra.Command,
+	client *conjurapi.Client,
+) {
+	if !verbose {
+		return
+	}
+
 	if client == nil {
 		return
 	}

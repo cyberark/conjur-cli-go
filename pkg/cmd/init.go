@@ -7,27 +7,20 @@ import (
 
 	"github.com/cyberark/conjur-cli-go/pkg/conjurrc"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
 
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
 func runInitCommand(cmd *cobra.Command, args []string) error {
 	var err error
 
-	setCommandStreamsOnPrompt := func(prompt *promptui.Prompt) *promptui.Prompt {
-		prompt.Stdin = utils.NoopReadCloser(cmd.InOrStdin())
-		prompt.Stdout = utils.NoopWriteCloser(cmd.OutOrStdout())
-
-		return prompt
-	}
+	setCommandStreamsOnPrompt := prompts.PromptDecoratorForCommand(cmd)
 
 	account := cmd.Flag("account").Value.String()
 	applianceURL := cmd.Flag("url").Value.String()
 	filePath := cmd.Flag("file").Value.String()
 
-	account, applianceURL, err = prompts.AskForConnectionDetails(setCommandStreamsOnPrompt, account, applianceURL)
+	account, applianceURL, err = prompts.MaybeAskForConnectionDetails(setCommandStreamsOnPrompt, account, applianceURL)
 	if err != nil {
 		return err
 	}

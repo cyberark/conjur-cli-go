@@ -9,8 +9,13 @@ import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
 )
 
+func getMachineName(config conjurapi.Config) string {
+	return config.ApplianceURL + "/authn"
+}
+
+// StoreCredentials stores credentials to the specified .netrc file
 func StoreCredentials(config conjurapi.Config, login string, apiKey string) error {
-	machineName := config.ApplianceURL + "/authn"
+	machineName := getMachineName(config)
 	filePath := config.NetRCPath
 
 	_, err := os.Stat(filePath)
@@ -43,7 +48,6 @@ func StoreCredentials(config conjurapi.Config, login string, apiKey string) erro
 		return err
 	}
 
-	// TODO: Should we stat and make sure we retain the permissions the file originally had ?
 	if data[len(data)-1] != byte('\n') {
 		data = append(data, byte('\n'))
 	}
@@ -51,8 +55,9 @@ func StoreCredentials(config conjurapi.Config, login string, apiKey string) erro
 	return ioutil.WriteFile(filePath, data, 0644)
 }
 
+// PurgeCredentials purges credentials from the specified .netrc file
 func PurgeCredentials(config conjurapi.Config) error {
-	machineName := config.ApplianceURL + "/authn"
+	machineName := getMachineName(config)
 	filePath := config.NetRCPath
 
 	nrc, err := netrc.ParseFile(filePath)
@@ -67,6 +72,8 @@ func PurgeCredentials(config conjurapi.Config) error {
 		return err
 	}
 
-	// TODO: Should we stat and make sure we retain the permissions the file originally had ?
 	return ioutil.WriteFile(filePath, data, 0644)
 }
+
+// TODO: Should we stat for PurgeCredentials and StoreCredentials
+//  and make sure we retain the permissions the file originally had ?

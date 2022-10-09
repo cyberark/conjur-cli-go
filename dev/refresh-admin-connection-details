@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-# Protect against this script running outside a Docker container
+# Protect against this script running outside the cli-dev container
 if [ ! -f /.dockerenv ] || [ -z "${GOPATH}" ]; then
     echo "This script should only be run inside the cli-dev container"
     exit 1
@@ -13,6 +13,7 @@ fi
 cd "$(dirname "$0")"
 
 # Ensure ~/.bashrc has been sourced
+# shellcheck source=/dev/null
 . ~/.bashrc
 
 path_to_dot_netrc=~/.netrc

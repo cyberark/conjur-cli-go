@@ -1,3 +1,10 @@
+# frozen_string_literal: true
+
+# DevController is an add-on controller that powers the /dev endpoint
+# on the Conjur instance used for development of the CLI.
+# This endpoint allows us to easily manage common operations such as
+# retrieving API keys by making HTTP requests to the
+# Conjur endpoint.
 class DevController < ApplicationController
   include BodyParser
 
