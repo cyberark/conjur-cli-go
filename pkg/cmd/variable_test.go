@@ -59,7 +59,15 @@ func TestVariableCmd(t *testing.T) {
 			out: "moo",
 		},
 		{
-			name: "get subcommand missing required flag",
+			name: "get subcommand error",
+			args: []string{"get", "-i", "meow"},
+			get: func(t *testing.T, path string) ([]byte, error) {
+				return nil, fmt.Errorf("%s", "get error")
+			},
+			out: "Error: get error",
+		},
+		{
+			name: "get subcommand missing required flags",
 			args: []string{"get"},
 			out:  "Error: required flag(s) \"id\" not set\n",
 		},
@@ -82,7 +90,15 @@ func TestVariableCmd(t *testing.T) {
 			out: "Value added",
 		},
 		{
-			name: "set subcommand missing required flag",
+			name: "set subcommand error",
+			args: []string{"set", "-i", "meow", "-v", "moo"},
+			set: func(t *testing.T, path, value string) error {
+				return fmt.Errorf("%s", "set error")
+			},
+			out: "Error: set error",
+		},
+		{
+			name: "set subcommand missing required flags",
 			args: []string{"set"},
 			out:  "Error: required flag(s) \"id\", \"value\" not set\n",
 		},
