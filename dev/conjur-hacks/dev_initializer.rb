@@ -16,6 +16,13 @@ Rails.application.configure do
 
   # Allow /dev routes to be accessed without authn/authz
   config.after_initialize do
-    Rails.application.middleware.find { |m| m.name == 'Conjur::Rack::Authenticator' }.args[0][:except].append(%r{^/dev})
+    Rails
+    .application
+    .middleware
+    .find { |m|
+      m.name == 'Conjur::Rack::Authenticator' 
+    }
+    .args[0][:except]
+    .append(%r{^/dev})
   end
 end
