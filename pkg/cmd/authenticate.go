@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
+
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +12,7 @@ var authenticateCmd = &cobra.Command{
 	Short:        "A brief description of your command",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		conjurClient, err := authenticatedConjurClientForCommand(cmd)
+		conjurClient, err := clients.AuthenticatedConjurClientForCommand(cmd)
 		if err != nil {
 			return err
 		}

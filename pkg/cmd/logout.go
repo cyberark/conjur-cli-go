@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/conjur-cli-go/pkg/storage"
+
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +23,7 @@ to quickly create a Cobra application.`,
 			return err
 		}
 
-		err = purgeCredentials(config)
+		err = storage.PurgeCredentials(config)
 		if err != nil {
 			return err
 		}

@@ -6,36 +6,12 @@ import (
 	"path/filepath"
 
 	"github.com/cyberark/conjur-cli-go/pkg/conjurrc"
+	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
-
-// TODO: whenever this is called we should store to .conjurrc
-func askForConnectionDetails(decoratePrompt decoratePromptFunc, account string, applianceURL string) (string, string, error) {
-	var err error
-
-	if len(applianceURL) == 0 {
-		prompt := decoratePrompt(newApplianceURLPrompt())
-		applianceURL, err = runPrompt(prompt)
-
-		if err != nil {
-			return "", "", err
-		}
-	}
-
-	if len(account) == 0 {
-		prompt := decoratePrompt(newAccountPrompt())
-		account, err = runPrompt(prompt)
-
-		if err != nil {
-			return "", "", err
-		}
-	}
-
-	return account, applianceURL, err
-}
 
 func runInitCommand(cmd *cobra.Command, args []string) error {
 	var err error
@@ -51,15 +27,13 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 	applianceURL := cmd.Flag("url").Value.String()
 	filePath := cmd.Flag("file").Value.String()
 
-	account, applianceURL, err = askForConnectionDetails(setCommandStreamsOnPrompt, account, applianceURL)
+	account, applianceURL, err = prompts.AskForConnectionDetails(setCommandStreamsOnPrompt, account, applianceURL)
 	if err != nil {
 		return err
 	}
 
 	err = conjurrc.WriteConjurrc(account, applianceURL, filePath, func(filePath string) error {
-		prompt := setCommandStreamsOnPrompt(newFileExistsPrompt(filePath))
-		_, err = runPrompt(prompt)
-
+		err := prompts.AskToOverwriteFile(setCommandStreamsOnPrompt, filePath)
 		if err != nil {
 			// TODO: make all the errors lowercase to make Go static check happy, then have something higher up that capitalizes the first letter
 			// of errors from commands

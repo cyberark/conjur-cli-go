@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/spf13/cobra"
 )
 
@@ -46,11 +47,11 @@ type variableGetClientFactoryFunc func(*cobra.Command) (variableGetClient, error
 type variableSetClientFactoryFunc func(*cobra.Command) (variableSetClient, error)
 
 func variableGetClientFactory(cmd *cobra.Command) (variableGetClient, error) {
-	return authenticatedConjurClientForCommand(cmd)
+	return clients.AuthenticatedConjurClientForCommand(cmd)
 }
 
 func variableSetClientFactory(cmd *cobra.Command) (variableSetClient, error) {
-	return authenticatedConjurClientForCommand(cmd)
+	return clients.AuthenticatedConjurClientForCommand(cmd)
 }
 
 func NewVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Command {

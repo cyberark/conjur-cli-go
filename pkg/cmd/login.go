@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-api-go/conjurapi/authn"
+	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
+
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
@@ -61,34 +61,10 @@ var loginCmd = &cobra.Command{
 			return err
 		}
 		if verbose {
-			httpClient := conjurClient.GetHttpClient()
-			transport := httpClient.Transport
-			if transport == nil {
-				transport = http.DefaultTransport
-			}
-			httpClient.Transport = utils.NewDumpTransport(
-				transport,
-				func(dump []byte) {
-					cmd.PrintErrln(string(dump))
-					cmd.PrintErrln()
-				},
-			)
+			clients.VerboseLoggingForClient(cmd, conjurClient)
 		}
 
-		username, password, err = askForCredentials(setCommandStreamsOnPrompt, username, password)
-		if err != nil {
-			return err
-		}
-
-		// TODO: Maybe have a specific struct for logging in?
-		loginPair := authn.LoginPair{Login: username, APIKey: password}
-		data, err := conjurClient.Login(loginPair)
-		if err != nil {
-			// TODO: Ruby CLI hides actual error and simply says "Unable to authenticate with Conjur. Please check your credentials."
-			return err
-		}
-
-		err = storeCredentials(config, username, string(data))
+		_, err = clients.LoginWithOptionalPrompt(setCommandStreamsOnPrompt, conjurClient, username, password)
 		if err != nil {
 			return err
 		}

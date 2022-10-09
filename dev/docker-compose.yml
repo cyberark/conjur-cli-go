@@ -7,14 +7,7 @@ services:
 
   conjur:
     image: cyberark/conjur
-    entrypoint: ""
-    command: |
-      bash -c "
-        # Turn on reloading of application classes to allow developers to modify the dev_controller without restarting the container
-        sed -i 's/cache_classes = true/cache_classes = false/' /opt/conjur-server/config/environments/production.rb
-
-        conjurctl server
-      "
+    command: server
     environment:
       DATABASE_URL: postgres://postgres@pg/postgres
       CONJUR_DATA_KEY: Bd4+A1QnELGC1Fb5/KauFlVez981OoYblbyfNOCavuQ=
