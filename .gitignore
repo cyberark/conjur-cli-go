@@ -3,12 +3,10 @@ c.out
 junit.xml
 key.txt
 
-dist/
 output/
-
 dist/
-
 dev/tmp
+build_ca_certificate
 
 # CLI binaries
 conjur

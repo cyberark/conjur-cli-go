@@ -29,22 +29,28 @@ var variableCmdTestCases = []struct {
 	get                func(t *testing.T, path string) ([]byte, error)
 	set                func(t *testing.T, path string, value string) error
 	clientFactoryError error
-	out                string
+	assert             func(t *testing.T, stdout string, stderr string, err error)
 }{
 	{
 		name: "variable command help",
 		args: []string{"--help"},
-		out:  "Use the variable command to manage Conjur variables",
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "Use the variable command to manage Conjur variables")
+		},
 	},
 	{
 		name: "get subcommand help",
 		args: []string{"get", "--help"},
-		out:  "Use the get subcommand to get the value of one or more Conjur variables",
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "Use the get subcommand to get the value of one or more Conjur variables")
+		},
 	},
 	{
 		name: "set subcommand help",
 		args: []string{"set", "--help"},
-		out:  "Use the set subcommand to set the value of a Conjur variable",
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "Use the set subcommand to set the value of a Conjur variable")
+		},
 	},
 	{
 		name: "get subcommand",
@@ -55,7 +61,9 @@ var variableCmdTestCases = []struct {
 
 			return []byte("moo"), nil
 		},
-		out: "moo",
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "moo")
+		},
 	},
 	{
 		name: "get subcommand error",
@@ -63,18 +71,24 @@ var variableCmdTestCases = []struct {
 		get: func(t *testing.T, path string) ([]byte, error) {
 			return nil, fmt.Errorf("%s", "get error")
 		},
-		out: "Error: get error",
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: get error")
+		},
 	},
 	{
 		name: "get subcommand missing required flags",
 		args: []string{"get"},
-		out:  "Error: required flag(s) \"id\" not set\n",
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: required flag(s) \"id\" not set\n")
+		},
 	},
 	{
 		name:               "get client factory error",
 		args:               []string{"get", "-i", "moo"},
 		clientFactoryError: fmt.Errorf("%s", "client factory error"),
-		out:                "Error: client factory error\n",
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: client factory error\n")
+		},
 	},
 	{
 		name: "set subcommand",
@@ -86,7 +100,9 @@ var variableCmdTestCases = []struct {
 
 			return nil
 		},
-		out: "Value added",
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "Value added")
+		},
 	},
 	{
 		name: "set subcommand error",
@@ -94,18 +110,24 @@ var variableCmdTestCases = []struct {
 		set: func(t *testing.T, path, value string) error {
 			return fmt.Errorf("%s", "set error")
 		},
-		out: "Error: set error",
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: set error")
+		},
 	},
 	{
 		name: "set subcommand missing required flags",
 		args: []string{"set"},
-		out:  "Error: required flag(s) \"id\", \"value\" not set\n",
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: required flag(s) \"id\", \"value\" not set\n")
+		},
 	},
 	{
 		name:               "set client factory error",
 		args:               []string{"set", "-i", "meow", "-v", "moo"},
 		clientFactoryError: fmt.Errorf("%s", "client factory error"),
-		out:                "Error: client factory error\n",
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: client factory error\n")
+		},
 	},
 }
 
@@ -123,8 +145,8 @@ func TestVariableCmd(t *testing.T) {
 				},
 			)
 
-			out, _ := testutils.Execute(t, cmd, tc.args...)
-			assert.Contains(t, out, tc.out)
+			stdout, stderr, err := testutils.Execute(t, cmd, tc.args...)
+			tc.assert(t, stdout, stderr, err)
 		})
 	}
 }

@@ -11,43 +11,72 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func getInitCmdFlagValues(cmd *cobra.Command) (string, string, string, error) {
+	account, err := cmd.Flags().GetString("account")
+	if err != nil {
+		return "", "", "", err
+	}
+	applianceURL, err := cmd.Flags().GetString("url")
+	if err != nil {
+		return "", "", "", err
+	}
+	conjurrcFilePath, err := cmd.Flags().GetString("file")
+	if err != nil {
+		return "", "", "", err
+	}
+
+	return account, applianceURL, conjurrcFilePath, nil
+}
+
 func runInitCommand(cmd *cobra.Command, args []string) error {
 	var err error
 
+	account, applianceURL, conjurrcFilePath, err := getInitCmdFlagValues(cmd)
+	if err != nil {
+		return err
+	}
+
 	setCommandStreamsOnPrompt := prompts.PromptDecoratorForCommand(cmd)
 
-	account := cmd.Flag("account").Value.String()
-	applianceURL := cmd.Flag("url").Value.String()
-	filePath := cmd.Flag("file").Value.String()
-
-	account, applianceURL, err = prompts.MaybeAskForConnectionDetails(setCommandStreamsOnPrompt, account, applianceURL)
+	account, applianceURL, err = prompts.MaybeAskForConnectionDetails(
+		setCommandStreamsOnPrompt,
+		account,
+		applianceURL,
+	)
 	if err != nil {
 		return err
 	}
 
-	err = conjurrc.WriteConjurrc(account, applianceURL, filePath, func(filePath string) error {
-		err := prompts.AskToOverwriteFile(setCommandStreamsOnPrompt, filePath)
-		if err != nil {
-			// TODO: make all the errors lowercase to make Go static check happy, then have something higher up that capitalizes the first letter
-			// of errors from commands
-			return fmt.Errorf("Not overwriting %s", filePath)
-		}
+	err = conjurrc.WriteConjurrc(
+		account,
+		applianceURL,
+		conjurrcFilePath,
+		func(filePath string) error {
+			err := prompts.AskToOverwriteFile(setCommandStreamsOnPrompt, filePath)
+			if err != nil {
+				// TODO: make all the errors lowercase to make Go static check happy, then have something higher up that capitalizes the first letter
+				// of errors from commands
+				return fmt.Errorf("Not overwriting %s", filePath)
+			}
 
-		return nil
-	})
+			return nil
+		})
 	if err != nil {
 		return err
 	}
 
-	cmd.Printf("Wrote configuration to %s\n", filePath)
+	cmd.Printf("Wrote configuration to %s\n", conjurrcFilePath)
 	return nil
 }
 
 // NewInitCommand initializes and configures the 'conjur init' command.
 func NewInitCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "init",
-		Short:        "Initialize the Conjur configuration",
+		Use:   "init",
+		Short: "Use the init command to initialize the Conjur CLI with a Conjur endpoint.",
+		Long: `Use the init command to initialize the Conjur CLI with a Conjur endpoint.
+
+The init command creates a configuration file (.conjurrc) that contains the details for connecting to Conjur. This file is located under the user's root directory.`,
 		SilenceUsage: true,
 		RunE:         runInitCommand,
 	}

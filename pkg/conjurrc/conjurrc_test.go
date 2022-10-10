@@ -6,8 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInitCmd(t *testing.T) {
-
+func TestConjurrc(t *testing.T) {
 	data := generateConjurrc("test-account", "test-appliance-url")
 
 	assert.Equal(t, string(data), `account: test-account
