@@ -7,6 +7,6 @@ test:
 install:
 	go install ./cmd/conjur
 
-# Example usage of run: make run ARGS="variable get -i path/to/var" 
+# Example usage of run: make run ARGS="variable get -i path/to/var"
 run:
 	go run ./cmd/conjur $(ARGS)

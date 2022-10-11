@@ -25,8 +25,7 @@ function run_unit_tests() {
              --volume "$PWD"/:/conjur-cli-go/test/ \
              conjur-cli-go-test-runner:latest \
              -coverprofile="./test/c.out" \
-             ./cmd/... \
-             ./pkg/... \
+             ./... \
              | tee -a "$junit_output_file"
   echo "Unit test exit status: $?"
 }

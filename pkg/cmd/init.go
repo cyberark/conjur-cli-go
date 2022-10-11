@@ -6,81 +6,77 @@ import (
 	"path/filepath"
 
 	"github.com/cyberark/conjur-cli-go/pkg/conjurrc"
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
+	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
-// TODO: whenever this is called we should store to .conjurrc
-func askForConnectionDetails(decoratePrompt decoratePromptFunc, account string, applianceURL string) (string, string, error) {
-	var err error
-
-	if len(applianceURL) == 0 {
-		prompt := decoratePrompt(newApplianceURLPrompt())
-		applianceURL, err = runPrompt(prompt)
-
-		if err != nil {
-			return "", "", err
-		}
+func getInitCmdFlagValues(cmd *cobra.Command) (string, string, string, error) {
+	account, err := cmd.Flags().GetString("account")
+	if err != nil {
+		return "", "", "", err
+	}
+	applianceURL, err := cmd.Flags().GetString("url")
+	if err != nil {
+		return "", "", "", err
+	}
+	conjurrcFilePath, err := cmd.Flags().GetString("file")
+	if err != nil {
+		return "", "", "", err
 	}
 
-	if len(account) == 0 {
-		prompt := decoratePrompt(newAccountPrompt())
-		account, err = runPrompt(prompt)
-
-		if err != nil {
-			return "", "", err
-		}
-	}
-
-	return account, applianceURL, err
+	return account, applianceURL, conjurrcFilePath, nil
 }
 
 func runInitCommand(cmd *cobra.Command, args []string) error {
 	var err error
 
-	setCommandStreamsOnPrompt := func(prompt *promptui.Prompt) *promptui.Prompt {
-		prompt.Stdin = utils.NoopReadCloser(cmd.InOrStdin())
-		prompt.Stdout = utils.NoopWriteCloser(cmd.OutOrStdout())
-
-		return prompt
-	}
-
-	account := cmd.Flag("account").Value.String()
-	applianceURL := cmd.Flag("url").Value.String()
-	filePath := cmd.Flag("file").Value.String()
-
-	account, applianceURL, err = askForConnectionDetails(setCommandStreamsOnPrompt, account, applianceURL)
+	account, applianceURL, conjurrcFilePath, err := getInitCmdFlagValues(cmd)
 	if err != nil {
 		return err
 	}
 
-	err = conjurrc.WriteConjurrc(account, applianceURL, filePath, func(filePath string) error {
-		prompt := setCommandStreamsOnPrompt(newFileExistsPrompt(filePath))
-		_, err = runPrompt(prompt)
+	setCommandStreamsOnPrompt := prompts.PromptDecoratorForCommand(cmd)
 
-		if err != nil {
-			// TODO: make all the errors lowercase to make Go static check happy, then have something higher up that capitalizes the first letter
-			// of errors from commands
-			return fmt.Errorf("Not overwriting %s", filePath)
-		}
-
-		return nil
-	})
+	account, applianceURL, err = prompts.MaybeAskForConnectionDetails(
+		setCommandStreamsOnPrompt,
+		account,
+		applianceURL,
+	)
 	if err != nil {
 		return err
 	}
 
-	cmd.Printf("Wrote configuration to %s\n", filePath)
+	err = conjurrc.WriteConjurrc(
+		account,
+		applianceURL,
+		conjurrcFilePath,
+		func(filePath string) error {
+			err := prompts.AskToOverwriteFile(setCommandStreamsOnPrompt, filePath)
+			if err != nil {
+				// TODO: make all the errors lowercase to make Go static check happy, then have something higher up that capitalizes the first letter
+				// of errors from commands
+				return fmt.Errorf("Not overwriting %s", filePath)
+			}
+
+			return nil
+		})
+	if err != nil {
+		return err
+	}
+
+	cmd.Printf("Wrote configuration to %s\n", conjurrcFilePath)
 	return nil
 }
 
 // NewInitCommand initializes and configures the 'conjur init' command.
 func NewInitCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "init",
-		Short:        "Initialize the Conjur configuration",
+		Use:   "init",
+		Short: "Use the init command to initialize the Conjur CLI with a Conjur endpoint.",
+		Long: `Use the init command to initialize the Conjur CLI with a Conjur endpoint.
+
+The init command creates a configuration file (.conjurrc) that contains the details for connecting to Conjur. This file is located under the user's root directory.`,
 		SilenceUsage: true,
 		RunE:         runInitCommand,
 	}

@@ -1,8 +1,18 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 # Navigate to the dev directory (where this script lives) to ensure we can run this script
 # from anywhere.
 cd "$(dirname "$0")"
+
+echo "This script will destroy any pre-existing development environment. Are you sure you want to run this script ?"
+select yn in "Yes" "No"; do
+    case $yn in
+        Yes ) break;;
+        No ) exit 1;;
+    esac
+done
+
+set -x
 
 docker-compose down -v
 rm -rf ./tmp/

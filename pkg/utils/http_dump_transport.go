@@ -30,8 +30,6 @@ func (d *dumpTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return res, err
 }
 
-// TODO?: maybe add newlines to the dumps here to seperate logs
-
 // NewDumpTransport creates a RoundTripper that can log the dumps of requests and responses
 func NewDumpTransport(roundTripper http.RoundTripper, logFunc func([]byte)) *dumpTransport {
 	if roundTripper == nil {

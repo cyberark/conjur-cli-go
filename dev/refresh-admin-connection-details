@@ -2,40 +2,43 @@
 
 set -eo pipefail
 
-# Navigate to the dev directory (where this script lives) to ensure we can run this script
+# Protect against this script running outside the cli-dev container
+if [ ! -f /.dockerenv ] || [ -z "${GOPATH}" ]; then
+    echo "This script should only be run inside the cli-dev container"
+    exit 1
+fi
+
+# Navigate to the root directory of the repository to ensure we can run this script
 # from anywhere.
 cd "$(dirname "$0")"
 
-admin_api_key_path=./tmp/admin_api_key
-dot_netrc_path=./tmp/.netrc
-dot_conjurrc_path=./tmp/.conjurrc
+# Ensure ~/.bashrc has been sourced
+# shellcheck source=/dev/null
+. ~/.bashrc
+
+path_to_dot_netrc=~/.netrc
+path_to_dot_conjurrc=~/.conjurrc
+
+admin_api_key_value=$(admin_api_key)
 
 echo
-echo "Retrieving admin API key"
-docker-compose exec conjur conjurctl role retrieve-key 'dev:user:admin' | \
-    tr -d '\r\n' > "${admin_api_key_path}"
-
-admin_api_key=$(cat ${admin_api_key_path})
-
-echo "Admin API key: ${admin_api_key}"
+echo "Refreshing admin user connection details"
 
 echo
-echo "Wrote admin API key to file ${admin_api_key_path}"
+echo "Admin API key: ${admin_api_key_value}"
 
-cat <<EOL > "${dot_conjurrc_path}"
+cat <<EOL > "${path_to_dot_conjurrc}"
 account: dev
 appliance_url: http://conjur
 plugins: []
 EOL
 
-echo "Wrote .conjurrc file to ${dot_conjurrc_path}"
+echo "Wrote .conjurrc file to ${path_to_dot_conjurrc}"
 
-cat <<EOL > "${dot_netrc_path}"
+cat <<EOL > "${path_to_dot_netrc}"
 machine http://conjur/authn
         login admin
-        password ${admin_api_key}
+        password ${admin_api_key_value}
 EOL
 
-echo "Wrote .netrc file to ${dot_netrc_path}"
-
-
+echo "Wrote .netrc file to ${path_to_dot_netrc}"
