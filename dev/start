@@ -32,7 +32,7 @@ Available dev utilities
 
 make: Make can be executed against the the Makefile in the root directory of the repository.
 
-      Available tasks are: run, build, install, test.
+      Available tasks are: run, build, install, test, integration.
 
 admin_initial_password: Prints the initially-set password of the Conjur admin
 
