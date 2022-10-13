@@ -102,6 +102,27 @@ plugins: []
 		},
 	},
 	{
+		name:  "force overwrite",
+		args:  []string{"-u=https://host", "-a=yet-another-test-account", "--force"},
+		stdin: "y\n",
+		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
+			ioutil.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
+		},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
+			// Assert that file is overwritten
+			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
+			expectedConjurrc := `account: yet-another-test-account
+appliance_url: https://host
+plugins: []
+`
+			assert.Equal(t, expectedConjurrc, string(data))
+
+			// Assert on output
+			assert.NotContains(t, stdout, ".conjurrc exists. Overwrite? [y/N]")
+			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
+		},
+	},
+	{
 		name: "errors on missing conjurrc file directory",
 		args: []string{"-u=https://host", "-a=test-account", "-f=/no/such/dir/file"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
@@ -111,6 +132,8 @@ plugins: []
 }
 
 func TestInitCmd(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range initCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// conjurrcInTmpDir is the .conjurrc test file location, it is

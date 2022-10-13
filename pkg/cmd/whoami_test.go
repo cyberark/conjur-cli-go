@@ -77,6 +77,8 @@ var whoamiCmdTestCases = []struct {
 }
 
 func TestWhoamiCmd(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range whoamiCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			testWhoamiClientFactory := func(cmd *cobra.Command) (whoamiClient, error) {

@@ -7,6 +7,8 @@ import (
 )
 
 func TestConjurrc(t *testing.T) {
+	t.Parallel()
+
 	data := generateConjurrc("test-account", "test-appliance-url")
 
 	assert.Equal(t, string(data), `account: test-account
