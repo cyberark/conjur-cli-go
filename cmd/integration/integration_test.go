@@ -61,6 +61,15 @@ func makeDevRequest(action string, params map[string]string) string {
 	return string(body)
 }
 
+func prepareConjurAccount(account string) func() {
+	makeDevRequest("purge", nil)
+	makeDevRequest("destroy_account", map[string]string{"id": account})
+	makeDevRequest("create_account", map[string]string{"id": account})
+	return func() {
+		makeDevRequest("destroy_account", map[string]string{"id": account})
+	}
+}
+
 func TestIntegration(t *testing.T) {
 	var (
 		stdOut string
@@ -70,7 +79,6 @@ func TestIntegration(t *testing.T) {
 	tmpDir := t.TempDir()
 	// Lean on the uniqueness of temp directories
 	id := strings.Replace(tmpDir, "/", "", -1)
-
 	account := id
 
 	t.Run("ensure binary exists", func(t *testing.T) {
@@ -79,10 +87,8 @@ func TestIntegration(t *testing.T) {
 	})
 
 	// Setup brand new account in Conjur
-	makeDevRequest("purge", nil)
-	makeDevRequest("destroy_account", map[string]string{"id": account})
-	makeDevRequest("create_account", map[string]string{"id": account})
-	defer makeDevRequest("destroy_account", map[string]string{"id": account})
+	cleanUpConjurAccount := prepareConjurAccount(account)
+	defer cleanUpConjurAccount()
 
 	t.Run("whoami before init", func(t *testing.T) {
 		stdOut, stdErr, err = runCLI(tmpDir, "whoami")
