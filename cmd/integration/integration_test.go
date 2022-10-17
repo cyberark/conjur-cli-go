@@ -68,7 +68,9 @@ func TestIntegration(t *testing.T) {
 		err    error
 	)
 	tmpDir := t.TempDir()
+	// Lean on the uniqueness of temp directories
 	id := strings.Replace(tmpDir, "/", "", -1)
+
 	account := id
 
 	t.Run("ensure binary exists", func(t *testing.T) {
