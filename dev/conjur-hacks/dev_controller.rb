@@ -30,7 +30,7 @@ class DevController < ApplicationController
     when 'list_accounts'
       list_accounts
     when 'destroy_account'
-      destory_account
+      destroy_account
     when 'retrieve_api_key'
       retrieve_api_key
     when 'purge'
@@ -50,7 +50,7 @@ class DevController < ApplicationController
     render plain: controller.process(:index)
   end
 
-  def destory_account
+  def destroy_account
     raise ArgumentError, "'id' may not be empty" if params[:id].blank?
 
     controller = AccountsController.new
