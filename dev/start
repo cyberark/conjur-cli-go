@@ -13,6 +13,7 @@ main() {
   if docker-compose ps conjur | grep conjur >/dev/null 2>&1; then
     ./stop
   fi
+
   local conjur_account=dev
   local admin_initial_password='SuperSecret!!!!123'
   local path_to_admin_initial_password=tmp/admin_initial_password
@@ -30,7 +31,7 @@ function dev_help() {
 Available dev utilities
 -----------------------
 
-make: Make can be executed against the the Makefile in the root directory of the repository.
+make: Make can be executed against the Makefile in the root directory of the repository.
 
       Available tasks are: run, build, install, test, integration.
 
@@ -78,7 +79,6 @@ EOL
   echo 'Setting up Conjur...'
   docker-compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${admin_initial_password}]"
   echo 'Finished setting up Conjur'
-
 
   echo
   echo "Admin password: ${admin_initial_password}"

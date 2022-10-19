@@ -95,11 +95,11 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 		os.Exit(1)
 	}
 
-	cmd.PersistentFlags().StringP("account", "a", "", "Conjur organization account name")
-	cmd.PersistentFlags().StringP("url", "u", "", "URL of the Conjur service")
-	cmd.PersistentFlags().StringP("certificate", "c", "", "Conjur SSL certificate (will be obtained from host unless provided by this option)")
-	cmd.PersistentFlags().StringP("file", "f", filepath.Join(userHomeDir, ".conjurrc"), "File to write the configuration to")
-	cmd.PersistentFlags().Bool("force", false, "Force overwrite of existing file")
+	cmd.Flags().StringP("account", "a", "", "Conjur organization account name")
+	cmd.Flags().StringP("url", "u", "", "URL of the Conjur service")
+	cmd.Flags().StringP("certificate", "c", "", "Conjur SSL certificate (will be obtained from host unless provided by this option)")
+	cmd.Flags().StringP("file", "f", filepath.Join(userHomeDir, ".conjurrc"), "File to write the configuration to")
+	cmd.Flags().Bool("force", false, "Force overwrite of existing file")
 
 	return cmd
 }

@@ -33,7 +33,6 @@ func NewWhoamiCommand(clientFactory func(*cobra.Command) (whoamiClient, error)) 
 			}
 
 			userData, err = utils.PrettyPrintJSON(userData)
-
 			if err != nil {
 				return err
 			}

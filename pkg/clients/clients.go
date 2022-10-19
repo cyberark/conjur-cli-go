@@ -18,6 +18,7 @@ type ConjurClient interface {
 	Login(authn.LoginPair) ([]byte, error)
 	GetConfig() conjurapi.Config
 	WhoAmI() ([]byte, error)
+	RotateHostAPIKey(hostID string) ([]byte, error)
 	InternalAuthenticate() ([]byte, error)
 	LoadPolicy(mode conjurapi.PolicyMode, policyID string, policy io.Reader) (*conjurapi.PolicyResponse, error)
 	AddSecret(variableID string, secretValue string) error
