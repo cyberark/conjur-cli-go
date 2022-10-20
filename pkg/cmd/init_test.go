@@ -1,11 +1,10 @@
 package cmd
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"testing"
-
-	"github.com/cyberark/conjur-cli-go/pkg/testutils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +21,7 @@ var initCmdTestCases = []struct {
 }{
 	{
 		name: "help",
-		args: []string{"--help"},
+		args: []string{"init", "--help"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			assert.Contains(
 				t,
@@ -33,7 +32,7 @@ var initCmdTestCases = []struct {
 	},
 	{
 		name:  "prompts for account and URL",
-		args:  []string{},
+		args:  []string{"init"},
 		stdin: "http://conjur\ndev\n",
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			assert.Contains(t, stdout, "Enter the URL of your Conjur service:")
@@ -51,7 +50,7 @@ plugins: []
 	},
 	{
 		name: "writes conjurrc",
-		args: []string{"-u=https://host", "-a=test-account"},
+		args: []string{"init", "-u=https://host", "-a=test-account"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: test-account
@@ -65,7 +64,7 @@ plugins: []
 	},
 	{
 		name:  "prompts for overwrite, reject",
-		args:  []string{"-u=https://host", "-a=other-test-account"},
+		args:  []string{"init", "-u=https://host", "-a=other-test-account"},
 		stdin: "N\n",
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
 			ioutil.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
@@ -82,7 +81,7 @@ plugins: []
 	},
 	{
 		name:  "prompts for overwrite, accept",
-		args:  []string{"-u=https://host", "-a=other-test-account"},
+		args:  []string{"init", "-u=https://host", "-a=other-test-account"},
 		stdin: "y\n",
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
 			ioutil.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
@@ -103,7 +102,7 @@ plugins: []
 	},
 	{
 		name:  "force overwrite",
-		args:  []string{"-u=https://host", "-a=yet-another-test-account", "--force"},
+		args:  []string{"init", "-u=https://host", "-a=yet-another-test-account", "--force"},
 		stdin: "y\n",
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
 			ioutil.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
@@ -124,7 +123,7 @@ plugins: []
 	},
 	{
 		name: "errors on missing conjurrc file directory",
-		args: []string{"-u=https://host", "-a=test-account", "-f=/no/such/dir/file"},
+		args: []string{"init", "-u=https://host", "-a=test-account", "-f=/no/such/dir/file"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			assert.Contains(t, stderr, "no such file or directory")
 		},
@@ -146,23 +145,30 @@ func TestInitCmd(t *testing.T) {
 				tc.beforeTest(t, conjurrcInTmpDir)
 			}
 
-			cmd := NewInitCommand()
+			cmd := newInitCommand()
 
 			// -f default to conjurrcInTmpDir. It can always be overwritten in each test case
 			args := []string{"-f=" + conjurrcInTmpDir}
 			args = append(args, tc.args...)
 
-			stdout, stderr, err := testutils.ExecuteWithStdIn(t, cmd, tc.stdin, args...)
+			stdout, stderr, err := executeCommandForTestWithStdin(t, cmd, tc.stdin, args...)
 			tc.assert(t, conjurrcInTmpDir, stdout, stderr, err)
 		})
 	}
 
 	// Other tests
 	t.Run("default flags", func(t *testing.T) {
-		cmd := NewInitCommand()
-		cmd.ParseFlags(nil)
+		cmd := newInitCommand()
 
-		f, _ := cmd.Flags().GetString("file")
+		rootCmd := newRootCommand()
+		rootCmd.AddCommand(cmd)
+		rootCmd.SetOut(io.Discard)
+		rootCmd.SetErr(io.Discard)
+		rootCmd.SetArgs([]string{"init"})
+		rootCmd.Execute()
+
+		f, err := cmd.Flags().GetString("file")
+		assert.NoError(t, err)
 		assert.Equal(t, "/root/.conjurrc", f)
 	})
 }

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-cli-go/pkg/testutils"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -40,35 +39,35 @@ var policyCmdTestCases = []struct {
 }{
 	{
 		name: "policy command help",
-		args: []string{"--help"},
+		args: []string{"policy", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "Use the policy command to manage Conjur policies")
 		},
 	},
 	{
 		name: "load subcommand help",
-		args: []string{"load", "--help"},
+		args: []string{"policy", "load", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "Load a policy and create resources")
 		},
 	},
 	{
 		name: "replace subcommand help",
-		args: []string{"replace", "--help"},
+		args: []string{"policy", "replace", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "Fully replace an existing policy")
 		},
 	},
 	{
 		name: "append subcommand help",
-		args: []string{"append", "--help"},
+		args: []string{"policy", "append", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "Update existing resources in the policy or create new resources")
 		},
 	},
 	{
 		name: "load subcommand",
-		args: []string{"load", "-b", "meow", "-f", "-"},
+		args: []string{"policy", "load", "-b", "meow", "-f", "-"},
 		loadPolicy: func(
 			t *testing.T,
 			mode conjurapi.PolicyMode,
@@ -93,7 +92,7 @@ var policyCmdTestCases = []struct {
 	},
 	{
 		name: "load subcommand error",
-		args: []string{"load", "-b", "meow", "-f", "-"},
+		args: []string{"policy", "load", "-b", "meow", "-f", "-"},
 		loadPolicy: func(
 			t *testing.T,
 			mode conjurapi.PolicyMode,
@@ -175,7 +174,7 @@ func TestPolicyCmd(t *testing.T) {
 				},
 			)
 
-			stdout, stderr, err := testutils.Execute(t, cmd, tc.args...)
+			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
 			tc.assert(t, stdout, stderr, err)
 		})
 	}

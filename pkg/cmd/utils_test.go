@@ -1,18 +1,17 @@
-package testutils
+package cmd
 
 import (
 	"bytes"
 	"io"
 	"regexp"
-
 	"testing"
 
 	"github.com/spf13/cobra"
 )
 
-// Execute executes a cobra command in-memory and returns stdout, stderr and error
-func Execute(t *testing.T, c *cobra.Command, args ...string) (string, string, error) {
-	return ExecuteWithStdIn(t, c, "", args...)
+// executeCommandForTest executes a cobra command in-memory and returns stdout, stderr and error
+func executeCommandForTest(t *testing.T, c *cobra.Command, args ...string) (string, string, error) {
+	return executeCommandForTestWithStdin(t, c, "", args...)
 }
 
 // stdinBuffer is to address the fact that promptui is greedy and attempts to consume all the bytes
@@ -46,12 +45,15 @@ func (b *stdinBuffer) Read(dst []byte) (int, error) {
 	return n, nil
 }
 
-// ExecuteWithStdIn executes a cobra command in-memory and returns stdout, stderr and error. It takes a
+// executeCommandForTestWithStdin executes a cobra command in-memory and returns stdout, stderr and error. It takes a
 // as input a string representing stdin, and sets a custom stdin buffer on the command. When the custom stdin buffer
 // is Read is will return bytes up to the length of the destination or up to the next newline charater, see
 // StdinBuffer for details.
-func ExecuteWithStdIn(t *testing.T, c *cobra.Command, stdin string, args ...string) (string, string, error) {
+func executeCommandForTestWithStdin(t *testing.T, c *cobra.Command, stdin string, args ...string) (string, string, error) {
 	t.Helper()
+
+	rootCmd := newRootCommand()
+	rootCmd.AddCommand(c)
 
 	stdinBuf := new(stdinBuffer)
 	stdinBuf.WriteString(stdin)
@@ -59,14 +61,13 @@ func ExecuteWithStdIn(t *testing.T, c *cobra.Command, stdin string, args ...stri
 	stdoutBuf := new(bytes.Buffer)
 	stderrBuf := new(bytes.Buffer)
 
-	c.SetOut(stdoutBuf)
-	c.SetErr(stderrBuf)
-	c.SetIn(stdinBuf)
+	rootCmd.SetOut(stdoutBuf)
+	rootCmd.SetErr(stderrBuf)
+	rootCmd.SetIn(stdinBuf)
 
-	// The help flag is somehow defaulting to true. The fix is to prepend the args with --help=false.
-	c.SetArgs(append([]string{"--help=false"}, args...))
+	rootCmd.SetArgs(args)
 
-	err := c.Execute()
+	err := rootCmd.Execute()
 
 	// strip ansi from stdout and stderr because we're using promptui
 	return stripAnsi(stdoutBuf.String()), stripAnsi(stderrBuf.String()), err
