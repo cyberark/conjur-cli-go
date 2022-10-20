@@ -7,9 +7,7 @@ import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-api-go/conjurapi/authn"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
-	"github.com/cyberark/conjur-cli-go/pkg/storage"
 
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
@@ -83,12 +81,15 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		}
 		decorateConjurClient(client)
 
-		authenticatePair, err := LoginWithPromptFallback(prompts.PromptDecoratorForCommand(cmd), client, "", "")
-		if err != nil {
-			return nil, err
+		if config.AuthnType == "" || config.AuthnType == "authn" || config.AuthnType == "ldap" {
+			decoratePrompt := prompts.PromptDecoratorForCommand(cmd)
+			client, err = Login(client, decoratePrompt)
+		} else if config.AuthnType == "oidc" {
+			client, err = OidcLogin(client)
+		} else {
+			return nil, fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
 		}
 
-		client, err = conjurapi.NewClientFromKey(config, *authenticatePair)
 		decorateConjurClient(client)
 		if err != nil {
 			return nil, err
@@ -96,36 +97,4 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 	}
 
 	return client, nil
-}
-
-// LoginWithPromptFallback attempts to login to Conjur using the username and password provided.
-// If either the username or password is missing then a prompt is presented to interactively request
-// the missing information from the user
-func LoginWithPromptFallback(
-	decoratePrompt func(prompt *promptui.Prompt) *promptui.Prompt,
-	client ConjurClient,
-	username string,
-	password string,
-) (*authn.LoginPair, error) {
-	username, password, err := prompts.MaybeAskForCredentials(decoratePrompt, username, password)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Maybe have a specific struct for logging in?
-	loginPair := authn.LoginPair{Login: username, APIKey: password}
-	data, err := client.Login(loginPair)
-	if err != nil {
-		// TODO: Ruby CLI hides actual error and simply says "Unable to authenticate with Conjur. Please check your credentials."
-		return nil, err
-	}
-
-	authenticatePair := &authn.LoginPair{Login: username, APIKey: string(data)}
-
-	err = storage.StoreCredentials(client.GetConfig(), authenticatePair.Login, authenticatePair.APIKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return authenticatePair, nil
 }
