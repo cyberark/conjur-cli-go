@@ -72,12 +72,14 @@ const promptCheckInterval = 10 * time.Millisecond
 func executeCommandWithPromptResponses(
 	cmd *cobra.Command, promptResponses []promptResponse,
 ) (cmdErr error, stdinErr error) {
-	// If there are no prompt responses then simply execute with an empty stdin :)
+	// For no prompt-responses we simply execute with an empty stdin :)
 	if len(promptResponses) == 0 {
 		cmd.SetIn(bytes.NewReader(nil))
 		return cmd.Execute(), nil
 	}
 
+	// For prompt-responses we create a pipe for stdin and use goroutine to carry out the
+	// required writes to stdin in response to prompts
 	endSignal := make(chan struct{}, 1)
 	doneSignal := make(chan error, 1)
 
@@ -91,6 +93,7 @@ func executeCommandWithPromptResponses(
 	}()
 	cmd.SetIn(io.NopCloser(stdinReader))
 
+	// This goroutine schedules writes to the write-end of the stdin pipe based on the prompt-responses
 	go func() {
 		// Close the writer here in the goroutine to signal to the readers that we're done writing after
 		// what's left in the buffer
