@@ -11,27 +11,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func getInitCmdFlagValues(cmd *cobra.Command) (string, string, string, error) {
+func getInitCmdFlagValues(cmd *cobra.Command) (string, string, string, bool, error) {
 	account, err := cmd.Flags().GetString("account")
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", false, err
 	}
 	applianceURL, err := cmd.Flags().GetString("url")
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", false, err
 	}
 	conjurrcFilePath, err := cmd.Flags().GetString("file")
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", false, err
+	}
+	forceFileOverwrite, err := cmd.Flags().GetBool("force")
+	if err != nil {
+		return "", "", "", false, err
 	}
 
-	return account, applianceURL, conjurrcFilePath, nil
+	return account, applianceURL, conjurrcFilePath, forceFileOverwrite, nil
 }
 
 func runInitCommand(cmd *cobra.Command, args []string) error {
 	var err error
 
-	account, applianceURL, conjurrcFilePath, err := getInitCmdFlagValues(cmd)
+	account, applianceURL, conjurrcFilePath, forceFileOverwrite, err := getInitCmdFlagValues(cmd)
 	if err != nil {
 		return err
 	}
@@ -52,6 +56,10 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 		applianceURL,
 		conjurrcFilePath,
 		func(filePath string) error {
+			if forceFileOverwrite {
+				return nil
+			}
+
 			err := prompts.AskToOverwriteFile(setCommandStreamsOnPrompt, filePath)
 			if err != nil {
 				// TODO: make all the errors lowercase to make Go static check happy, then have something higher up that capitalizes the first letter

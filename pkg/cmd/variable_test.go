@@ -132,6 +132,8 @@ var variableCmdTestCases = []struct {
 }
 
 func TestVariableCmd(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range variableCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockClient := mockVariableClient{t: t, set: tc.set, get: tc.get}
