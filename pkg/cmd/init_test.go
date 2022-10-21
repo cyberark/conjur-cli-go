@@ -13,11 +13,11 @@ var initCmdTestCases = []struct {
 	name string
 	// NOTE: -f defaults to conjurrcInTmpDir in the args slice.
 	// It can always be overwritten by appending another value to the args slice.
-	args       []string
-	out        string
-	stdin      string
-	beforeTest func(t *testing.T, conjurrcInTmpDir string)
-	assert     func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error)
+	args            []string
+	out             string
+	promptResponses []promptResponse
+	beforeTest      func(t *testing.T, conjurrcInTmpDir string)
+	assert          func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error)
 }{
 	{
 		name: "help",
@@ -31,9 +31,18 @@ var initCmdTestCases = []struct {
 		},
 	},
 	{
-		name:  "prompts for account and URL",
-		args:  []string{"init"},
-		stdin: "http://conjur\ndev\n",
+		name: "prompts for account and URL",
+		args: []string{"init"},
+		promptResponses: []promptResponse{
+			{
+				prompt:   "Enter the URL of your Conjur service:",
+				response: "http://conjur",
+			},
+			{
+				prompt:   "Enter your organization account name:",
+				response: "dev",
+			},
+		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			assert.Contains(t, stdout, "Enter the URL of your Conjur service:")
 			assert.Contains(t, stdout, "Enter your organization account name:")
@@ -63,9 +72,14 @@ plugins: []
 		},
 	},
 	{
-		name:  "prompts for overwrite, reject",
-		args:  []string{"init", "-u=https://host", "-a=other-test-account"},
-		stdin: "N\n",
+		name: "prompts for overwrite, reject",
+		args: []string{"init", "-u=https://host", "-a=other-test-account"},
+		promptResponses: []promptResponse{
+			{
+				prompt:   ".conjurrc exists. Overwrite? [y/N]",
+				response: "N",
+			},
+		},
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
 			ioutil.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
 		},
@@ -80,9 +94,14 @@ plugins: []
 		},
 	},
 	{
-		name:  "prompts for overwrite, accept",
-		args:  []string{"init", "-u=https://host", "-a=other-test-account"},
-		stdin: "y\n",
+		name: "prompts for overwrite, accept",
+		args: []string{"init", "-u=https://host", "-a=other-test-account"},
+		promptResponses: []promptResponse{
+			{
+				prompt:   "",
+				response: "y",
+			},
+		},
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
 			ioutil.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
 		},
@@ -101,9 +120,8 @@ plugins: []
 		},
 	},
 	{
-		name:  "force overwrite",
-		args:  []string{"init", "-u=https://host", "-a=yet-another-test-account", "--force"},
-		stdin: "y\n",
+		name: "force overwrite",
+		args: []string{"init", "-u=https://host", "-a=yet-another-test-account", "--force"},
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
 			ioutil.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
 		},
@@ -151,7 +169,9 @@ func TestInitCmd(t *testing.T) {
 			args := []string{"-f=" + conjurrcInTmpDir}
 			args = append(args, tc.args...)
 
-			stdout, stderr, err := executeCommandForTestWithStdin(t, cmd, tc.stdin, args...)
+			stdout, stderr, err := executeCommandForTestWithPromptResponses(
+				t, cmd, tc.promptResponses, args...,
+			)
 			tc.assert(t, conjurrcInTmpDir, stdout, stderr, err)
 		})
 	}

@@ -3,6 +3,9 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
@@ -33,6 +36,7 @@ func (m mockPolicyClient) LoadPolicy(
 var policyCmdTestCases = []struct {
 	name               string
 	args               []string
+	beforeTest         func(t *testing.T, pathToTmpfile string)
 	loadPolicy         loadPolicyTestFunc
 	clientFactoryError error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
@@ -91,7 +95,44 @@ var policyCmdTestCases = []struct {
 		},
 	},
 	{
-		name: "load subcommand error",
+		name: "load subcommand from stdin",
+		args: []string{"policy", "load", "-b", "meow", "-f", "-"},
+		loadPolicy: func(
+			t *testing.T,
+			mode conjurapi.PolicyMode,
+			policyBranch string,
+			policySrc io.Reader,
+		) (*conjurapi.PolicyResponse, error) {
+			assert.Equal(t, policySrc, os.Stdin)
+
+			return nil, nil
+		},
+	},
+	{
+		name: "load subcommand from file",
+		args: []string{"policy", "load", "-b", "meow", "-f", "TMPFILE"},
+		beforeTest: func(t *testing.T, pathToTmpfile string) {
+			err := ioutil.WriteFile(pathToTmpfile, []byte("policy file content"), 0644)
+			assert.NoError(t, err)
+		},
+		loadPolicy: func(
+			t *testing.T,
+			mode conjurapi.PolicyMode,
+			policyBranch string,
+			policySrc io.Reader,
+		) (*conjurapi.PolicyResponse, error) {
+			policyContents, err := ioutil.ReadAll(policySrc)
+			assert.NoError(t, err)
+			assert.Equal(t, "policy file content", string(policyContents))
+
+			return nil, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+		},
+	},
+	{
+		name: "load subcommand response error",
 		args: []string{"policy", "load", "-b", "meow", "-f", "-"},
 		loadPolicy: func(
 			t *testing.T,
@@ -166,6 +207,14 @@ func TestPolicyCmd(t *testing.T) {
 
 	for _, tc := range policyCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
+			pathToTmpfile := t.TempDir() + "/file"
+			os.Remove(pathToTmpfile)
+			defer os.Remove(pathToTmpfile)
+
+			if tc.beforeTest != nil {
+				tc.beforeTest(t, pathToTmpfile)
+			}
+
 			mockClient := mockPolicyClient{t: t, loadPolicy: tc.loadPolicy}
 
 			cmd := newPolicyCommand(
@@ -174,8 +223,14 @@ func TestPolicyCmd(t *testing.T) {
 				},
 			)
 
+			for i, v := range tc.args {
+				tc.args[i] = strings.Replace(v, "TMPFILE", pathToTmpfile, 1)
+			}
+
 			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
-			tc.assert(t, stdout, stderr, err)
+			if tc.assert != nil {
+				tc.assert(t, stdout, stderr, err)
+			}
 		})
 	}
 }
