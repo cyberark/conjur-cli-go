@@ -38,6 +38,7 @@ var policyCmdTestCases = []struct {
 	args               []string
 	beforeTest         func(t *testing.T, pathToTmpfile string)
 	loadPolicy         loadPolicyTestFunc
+	promptResponses    []promptResponse
 	clientFactoryError error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
 }{
@@ -78,6 +79,10 @@ var policyCmdTestCases = []struct {
 			policyBranch string,
 			policySrc io.Reader,
 		) (*conjurapi.PolicyResponse, error) {
+			policyContents, err := ioutil.ReadAll(policySrc)
+			assert.NoError(t, err)
+			assert.Equal(t, "", string(policyContents))
+
 			return &conjurapi.PolicyResponse{
 				CreatedRoles: map[string]conjurapi.CreatedRole{
 					"a role": {
@@ -96,6 +101,11 @@ var policyCmdTestCases = []struct {
 	},
 	{
 		name: "load subcommand from stdin",
+		promptResponses: []promptResponse{
+			{
+				response: "policy file content\n",
+			},
+		},
 		args: []string{"policy", "load", "-b", "meow", "-f", "-"},
 		loadPolicy: func(
 			t *testing.T,
@@ -103,7 +113,9 @@ var policyCmdTestCases = []struct {
 			policyBranch string,
 			policySrc io.Reader,
 		) (*conjurapi.PolicyResponse, error) {
-			assert.Equal(t, policySrc, os.Stdin)
+			policyContents, err := ioutil.ReadAll(policySrc)
+			assert.NoError(t, err)
+			assert.Equal(t, "policy file content\n", string(policyContents))
 
 			return nil, nil
 		},
@@ -227,7 +239,9 @@ func TestPolicyCmd(t *testing.T) {
 				tc.args[i] = strings.Replace(v, "TMPFILE", pathToTmpfile, 1)
 			}
 
-			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
+			stdout, stderr, err := executeCommandForTestWithPromptResponses(
+				t, cmd, tc.promptResponses, tc.args...,
+			)
 			if tc.assert != nil {
 				tc.assert(t, stdout, stderr, err)
 			}

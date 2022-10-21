@@ -17,7 +17,9 @@ import (
 // the response to write on stdin when such a prompt is encountered
 type promptResponse struct {
 	prompt   string // optional, because
-	response string
+	response string // A new line character is added to the end of the response,
+	// unless if the last character of the response is already a new line.
+	// This makes it so that an empty response is equivalent to sending a newline to stdin.
 }
 
 // executeCommandForTest executes a cobra command in-memory and returns stdout, stderr and error
@@ -56,10 +58,23 @@ func executeCommandForTestWithPromptResponses(
 	return stripAnsi(stdoutBuf.String()), stripAnsi(stderrBuf.String()), cmdErr
 }
 
+func maybeAddNewLineSuffix(s string) string {
+	if strings.HasSuffix(s, "\n") {
+		return s
+	}
+
+	return s + "\n"
+}
+
+const maxWaitTimeForPrompt = 2 * time.Second
+const promptCheckInterval = 10 * time.Millisecond
+
 func executeCommandWithPromptResponses(
 	cmd *cobra.Command, promptResponses []promptResponse,
 ) (cmdErr error, stdinErr error) {
+	// If there are no prompt responses then simply execute with an empty stdin :)
 	if len(promptResponses) == 0 {
+		cmd.SetIn(bytes.NewReader(nil))
 		return cmd.Execute(), nil
 	}
 
@@ -70,11 +85,16 @@ func executeCommandWithPromptResponses(
 	cmd.SetOut(io.MultiWriter(cmd.OutOrStdout(), stdoutBuf))
 
 	stdinReader, stdinWriter := io.Pipe()
+	// Close the reader here so that this happens after the command invocation
+	defer func() {
+		stdinReader.Close()
+	}()
 	cmd.SetIn(io.NopCloser(stdinReader))
 
 	go func() {
+		// Close the writer here in the goroutine to signal to the readers that we're done writing after
+		// what's left in the buffer
 		defer func() {
-			stdinReader.Close()
 			stdinWriter.Close()
 		}()
 
@@ -82,22 +102,38 @@ func executeCommandWithPromptResponses(
 		reader := bufio.NewReader(stdoutBuf)
 		promptResponsesIndex := 0
 
-		timer := time.NewTimer(1 * time.Second)
+		timer := time.NewTimer(maxWaitTimeForPrompt)
 		defer timer.Stop()
 
-		ticker := time.NewTicker(10 * time.Millisecond)
+		ticker := time.NewTicker(promptCheckInterval)
 		defer ticker.Stop()
 
 	L:
 		for promptResponsesIndex < len(promptResponses) {
+			promptResponse := promptResponses[promptResponsesIndex]
+			// Empty prompt means immediately write to stdin without waiting for a stdout prompt
+			// This is useful when a command is reading from stdin such as policy loading.
+			// TODO: what happens when you have a sequence of empty prompts ?
+			if promptResponse.prompt == "" {
+				promptResponsesIndex++
+
+				stdinWriter.Write([]byte(maybeAddNewLineSuffix(promptResponse.response)))
+				continue
+			}
+
 			select {
+			// This case makes sure that you don't wait forever for a prompt that never shows up.
+			// Here we timebox the wait on a prompt.
+			// Additionally ensures we don't leak this goroutine because it ensures that after
+			// a second of waiting we break the circuit.
 			case <-timer.C:
 				goRoutineErr = fmt.Errorf(
-					"a whole second passed without the command issuing the expected prompt: %q",
-					promptResponses[promptResponsesIndex].prompt,
+					"maxWaitTimeForPrompt was exceeded without the command issuing the expected prompt: %q",
+					promptResponse.prompt,
 				)
-
 				break L
+			// This cases makes it so that you don't actually have to wait for the timebox above
+			// to be exhausted all if the command is already done, it's a cleaner signal.
 			case <-endSignal:
 				break L
 			case <-ticker.C:
@@ -117,11 +153,10 @@ func executeCommandWithPromptResponses(
 				line = stripAnsi(line)
 
 				// Try to match promptResponses in order
-				promptResponse := promptResponses[promptResponsesIndex]
 				if strings.Contains(line, promptResponse.prompt) {
 					promptResponsesIndex++
 
-					stdinWriter.Write([]byte(promptResponse.response + "\n"))
+					stdinWriter.Write([]byte(maybeAddNewLineSuffix(promptResponse.response)))
 				}
 			}
 		}
