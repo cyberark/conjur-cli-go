@@ -79,10 +79,21 @@ var policyCmdTestCases = []struct {
 			policyBranch string,
 			policySrc io.Reader,
 		) (*conjurapi.PolicyResponse, error) {
-			policyContents, err := ioutil.ReadAll(policySrc)
-			assert.NoError(t, err)
-			assert.Equal(t, "", string(policyContents))
+			// Assert on mode
+			assert.Equal(t, conjurapi.PolicyModePost, mode)
 
+			return nil, nil
+		},
+	},
+	{
+		name: "load subcommand with good response",
+		args: []string{"policy", "load", "-b", "meow", "-f", "-"},
+		loadPolicy: func(
+			t *testing.T,
+			mode conjurapi.PolicyMode,
+			policyBranch string,
+			policySrc io.Reader,
+		) (*conjurapi.PolicyResponse, error) {
 			return &conjurapi.PolicyResponse{
 				CreatedRoles: map[string]conjurapi.CreatedRole{
 					"a role": {
@@ -158,60 +169,6 @@ var policyCmdTestCases = []struct {
 			assert.Contains(t, stderr, "Error: some error")
 		},
 	},
-	// {
-	// 	name: "get subcommand missing required flags",
-	// 	args: []string{"get"},
-	// 	assert: func(t *testing.T, stdout, stderr string, err error) {
-	// 		assert.Contains(t, stderr, "Error: required flag(s) \"id\" not set\n")
-	// 	},
-	// },
-	// {
-	// 	name:               "get client factory error",
-	// 	args:               []string{"get", "-i", "moo"},
-	// 	clientFactoryError: fmt.Errorf("%s", "client factory error"),
-	// 	assert: func(t *testing.T, stdout, stderr string, err error) {
-	// 		assert.Contains(t, stderr, "Error: client factory error\n")
-	// 	},
-	// },
-	// {
-	// 	name: "set subcommand",
-	// 	args: []string{"set", "-i", "meow", "-v", "moo"},
-	// 	set: func(t *testing.T, path, value string) error {
-	// 		// Assert on arguments
-	// 		assert.Equal(t, "meow", path)
-	// 		assert.Equal(t, "moo", value)
-
-	// 		return nil
-	// 	},
-	// 	assert: func(t *testing.T, stdout, stderr string, err error) {
-	// 		assert.Contains(t, stdout, "Value added")
-	// 	},
-	// },
-	// {
-	// 	name: "set subcommand error",
-	// 	args: []string{"set", "-i", "meow", "-v", "moo"},
-	// 	set: func(t *testing.T, path, value string) error {
-	// 		return fmt.Errorf("%s", "set error")
-	// 	},
-	// 	assert: func(t *testing.T, stdout, stderr string, err error) {
-	// 		assert.Contains(t, stderr, "Error: set error")
-	// 	},
-	// },
-	// {
-	// 	name: "set subcommand missing required flags",
-	// 	args: []string{"set"},
-	// 	assert: func(t *testing.T, stdout, stderr string, err error) {
-	// 		assert.Contains(t, stderr, "Error: required flag(s) \"id\", \"value\" not set\n")
-	// 	},
-	// },
-	// {
-	// 	name:               "set client factory error",
-	// 	args:               []string{"set", "-i", "meow", "-v", "moo"},
-	// 	clientFactoryError: fmt.Errorf("%s", "client factory error"),
-	// 	assert: func(t *testing.T, stdout, stderr string, err error) {
-	// 		assert.Contains(t, stderr, "Error: client factory error\n")
-	// 	},
-	// },
 }
 
 func TestPolicyCmd(t *testing.T) {

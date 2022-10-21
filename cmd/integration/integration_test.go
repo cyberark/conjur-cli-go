@@ -53,7 +53,7 @@ func TestIntegration(t *testing.T) {
 		assert.Equal(t, "", stdErr)
 	})
 
-	t.Run("whoami after init", func(t *testing.T) {
+	t.Run("whoami after login", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("whoami")
 		assert.NoError(t, err)
 		assert.Contains(t, stdOut, "token_issued_at")
