@@ -33,15 +33,18 @@ func (m mockPolicyClient) LoadPolicy(
 	return m.loadPolicy(m.t, mode, policyBranch, policySrc)
 }
 
-var policyCmdTestCases = []struct {
-	name               string
-	args               []string
+type policyCmdTestCase struct {
+	name string
+	args []string // $TMPFILE in any of the args is substituted
+	// for the temporary file created for each test
 	beforeTest         func(t *testing.T, pathToTmpfile string)
 	loadPolicy         loadPolicyTestFunc
 	promptResponses    []promptResponse
 	clientFactoryError error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
-}{
+}
+
+var policyCmdTestCases = []policyCmdTestCase{
 	{
 		name: "policy command help",
 		args: []string{"policy", "--help"},
@@ -49,132 +52,175 @@ var policyCmdTestCases = []struct {
 			assert.Contains(t, stdout, "Use the policy command to manage Conjur policies")
 		},
 	},
-	{
-		name: "load subcommand help",
-		args: []string{"policy", "load", "--help"},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "Load a policy and create resources")
-		},
-	},
-	{
-		name: "replace subcommand help",
-		args: []string{"policy", "replace", "--help"},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "Fully replace an existing policy")
-		},
-	},
-	{
-		name: "append subcommand help",
-		args: []string{"policy", "append", "--help"},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "Update existing resources in the policy or create new resources")
-		},
-	},
-	{
-		name: "load subcommand",
-		args: []string{"policy", "load", "-b", "meow", "-f", "-"},
-		loadPolicy: func(
-			t *testing.T,
-			mode conjurapi.PolicyMode,
-			policyBranch string,
-			policySrc io.Reader,
-		) (*conjurapi.PolicyResponse, error) {
-			// Assert on mode
-			assert.Equal(t, conjurapi.PolicyModePost, mode)
+}
 
-			return nil, nil
-		},
-	},
-	{
-		name: "load subcommand with good response",
-		args: []string{"policy", "load", "-b", "meow", "-f", "-"},
-		loadPolicy: func(
-			t *testing.T,
-			mode conjurapi.PolicyMode,
-			policyBranch string,
-			policySrc io.Reader,
-		) (*conjurapi.PolicyResponse, error) {
-			return &conjurapi.PolicyResponse{
-				CreatedRoles: map[string]conjurapi.CreatedRole{
-					"a role": {
-						ID:     "a role id",
-						APIKey: "a role api key",
-					},
-				},
-				Version: 1234,
-			}, nil
-		},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "created_roles")
-			assert.Contains(t, stdout, "version")
-			assert.Contains(t, stderr, "Loaded policy 'meow'")
-		},
-	},
-	{
-		name: "load subcommand from stdin",
-		promptResponses: []promptResponse{
-			{
-				response: "policy file content\n",
+func sharedPolicyCmdTestCases(
+	subcommand string,
+	expectedMode conjurapi.PolicyMode,
+	expectedHelpString string,
+) []policyCmdTestCase {
+	return []policyCmdTestCase{
+		{
+			name: fmt.Sprintf("%s subcommand help", subcommand),
+			args: []string{"policy", subcommand, "--help"},
+			assert: func(t *testing.T, stdout, stderr string, err error) {
+				assert.Contains(t, stdout, expectedHelpString)
 			},
 		},
-		args: []string{"policy", "load", "-b", "meow", "-f", "-"},
-		loadPolicy: func(
-			t *testing.T,
-			mode conjurapi.PolicyMode,
-			policyBranch string,
-			policySrc io.Reader,
-		) (*conjurapi.PolicyResponse, error) {
-			policyContents, err := ioutil.ReadAll(policySrc)
-			assert.NoError(t, err)
-			assert.Equal(t, "policy file content\n", string(policyContents))
+		{
+			name: fmt.Sprintf("%s subcommand policy mode", subcommand),
+			args: []string{"policy", subcommand, "-b", "meow", "-f", "-"},
+			loadPolicy: func(
+				t *testing.T,
+				mode conjurapi.PolicyMode,
+				policyBranch string,
+				policySrc io.Reader,
+			) (*conjurapi.PolicyResponse, error) {
+				// Assert on mode
+				assert.Equal(t, expectedMode, mode)
 
-			return nil, nil
+				return nil, nil
+			},
 		},
-	},
-	{
-		name: "load subcommand from file",
-		args: []string{"policy", "load", "-b", "meow", "-f", "TMPFILE"},
-		beforeTest: func(t *testing.T, pathToTmpfile string) {
-			err := ioutil.WriteFile(pathToTmpfile, []byte("policy file content"), 0644)
-			assert.NoError(t, err)
+		{
+			name: fmt.Sprintf("%s subcommand with good response", subcommand),
+			args: []string{"policy", subcommand, "-b", "meow", "-f", "-"},
+			loadPolicy: func(
+				t *testing.T,
+				mode conjurapi.PolicyMode,
+				policyBranch string,
+				policySrc io.Reader,
+			) (*conjurapi.PolicyResponse, error) {
+				return &conjurapi.PolicyResponse{
+					CreatedRoles: map[string]conjurapi.CreatedRole{
+						"a role": {
+							ID:     "a role id",
+							APIKey: "a role api key",
+						},
+					},
+					Version: 1234,
+				}, nil
+			},
+			assert: func(t *testing.T, stdout, stderr string, err error) {
+				assert.Contains(t, stdout, "created_roles")
+				assert.Contains(t, stdout, "version")
+				assert.Contains(t, stderr, "Loaded policy 'meow'")
+			},
 		},
-		loadPolicy: func(
-			t *testing.T,
-			mode conjurapi.PolicyMode,
-			policyBranch string,
-			policySrc io.Reader,
-		) (*conjurapi.PolicyResponse, error) {
-			policyContents, err := ioutil.ReadAll(policySrc)
-			assert.NoError(t, err)
-			assert.Equal(t, "policy file content", string(policyContents))
+		{
+			name: fmt.Sprintf("%s subcommand from stdin", subcommand),
+			promptResponses: []promptResponse{
+				{
+					prompt:   "", // An empty prompt means to immediately write to stdin
+					response: "policy file content\n",
+				},
+			},
+			args: []string{"policy", subcommand, "-b", "meow", "-f", "-"},
+			loadPolicy: func(
+				t *testing.T,
+				mode conjurapi.PolicyMode,
+				policyBranch string,
+				policySrc io.Reader,
+			) (*conjurapi.PolicyResponse, error) {
+				policyContents, err := ioutil.ReadAll(policySrc)
+				assert.NoError(t, err)
+				assert.Equal(t, "policy file content\n", string(policyContents))
 
-			return nil, nil
+				return nil, nil
+			},
+			assert: func(t *testing.T, stdout, stderr string, err error) {
+				assert.NoError(t, err)
+			},
 		},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.NoError(t, err)
+		{
+			name: fmt.Sprintf("%s subcommand from file", subcommand),
+			args: []string{"policy", subcommand, "-b", "meow", "-f", "$TMPFILE"},
+			beforeTest: func(t *testing.T, pathToTmpfile string) {
+				err := ioutil.WriteFile(pathToTmpfile, []byte("policy file content"), 0644)
+				assert.NoError(t, err)
+			},
+			loadPolicy: func(
+				t *testing.T,
+				mode conjurapi.PolicyMode,
+				policyBranch string,
+				policySrc io.Reader,
+			) (*conjurapi.PolicyResponse, error) {
+				policyContents, err := ioutil.ReadAll(policySrc)
+				assert.NoError(t, err)
+				assert.Equal(t, "policy file content", string(policyContents))
+
+				return nil, nil
+			},
+			assert: func(t *testing.T, stdout, stderr string, err error) {
+				assert.NoError(t, err)
+			},
 		},
-	},
-	{
-		name: "load subcommand response error",
-		args: []string{"policy", "load", "-b", "meow", "-f", "-"},
-		loadPolicy: func(
-			t *testing.T,
-			mode conjurapi.PolicyMode,
-			policyBranch string,
-			policySrc io.Reader,
-		) (*conjurapi.PolicyResponse, error) {
-			return nil, fmt.Errorf("%s", "some error")
+		{
+			name: fmt.Sprintf("%s subcommand response error", subcommand),
+			args: []string{"policy", subcommand, "-b", "meow", "-f", "-"},
+			loadPolicy: func(
+				t *testing.T,
+				mode conjurapi.PolicyMode,
+				policyBranch string,
+				policySrc io.Reader,
+			) (*conjurapi.PolicyResponse, error) {
+				return nil, fmt.Errorf("%s", "some error")
+			},
+			assert: func(t *testing.T, stdout, stderr string, err error) {
+				assert.Contains(t, stderr, "Error: some error")
+			},
 		},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "Error: some error")
+		{
+			name:               fmt.Sprintf("%s subcommand client factory error", subcommand),
+			args:               []string{"policy", subcommand, "-b", "meow", "-f", "-"},
+			clientFactoryError: fmt.Errorf("client factory error"),
+			assert: func(t *testing.T, stdout, stderr string, err error) {
+				assert.Contains(t, stderr, "Error: client factory error")
+			},
 		},
-	},
+		{
+			name: fmt.Sprintf("%s subcommand missing filepath", subcommand),
+			args: []string{"policy", subcommand, "-b", "meow"},
+			assert: func(t *testing.T, stdout, stderr string, err error) {
+				assert.Contains(t, stderr, "Error: required flag(s) \"filepath\" not set\n")
+			},
+		},
+		{
+			name: fmt.Sprintf("%s subcommand missing branch", subcommand),
+			args: []string{"policy", subcommand, "-f", "-"},
+			assert: func(t *testing.T, stdout, stderr string, err error) {
+				assert.Contains(t, stderr, "Error: required flag(s) \"branch\" not set\n")
+			},
+		},
+	}
 }
 
 func TestPolicyCmd(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range policyCmdTestCases {
+	var allTests []policyCmdTestCase
+	for _, cases := range [][]policyCmdTestCase{
+		policyCmdTestCases,
+		sharedPolicyCmdTestCases(
+			"load",
+			conjurapi.PolicyModePost,
+			"Load a policy and create resources",
+		),
+		sharedPolicyCmdTestCases(
+			"append",
+			conjurapi.PolicyModePatch,
+			"Update existing resources in the policy or create new resources",
+		),
+		sharedPolicyCmdTestCases(
+			"replace",
+			conjurapi.PolicyModePut,
+			"Fully replace an existing policy",
+		),
+	} {
+		allTests = append(allTests, cases...)
+	}
+
+	for _, tc := range allTests {
 		t.Run(tc.name, func(t *testing.T) {
 			pathToTmpfile := t.TempDir() + "/file"
 			os.Remove(pathToTmpfile)
@@ -192,8 +238,9 @@ func TestPolicyCmd(t *testing.T) {
 				},
 			)
 
+			// $TMPFILE points to tempfile created for each test run
 			for i, v := range tc.args {
-				tc.args[i] = strings.Replace(v, "TMPFILE", pathToTmpfile, 1)
+				tc.args[i] = strings.Replace(v, "$TMPFILE", pathToTmpfile, 1)
 			}
 
 			stdout, stderr, err := executeCommandForTestWithPromptResponses(

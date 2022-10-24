@@ -170,7 +170,7 @@ func executeCommandWithPromptResponses(
 	defer func() {
 		stdinReader.Close()
 	}()
-	cmd.SetIn(io.NopCloser(stdinReader))
+	cmd.SetIn(stdinReader)
 
 	endSignal := make(chan struct{}, 1)
 	doneSignal := make(chan error, 1)
