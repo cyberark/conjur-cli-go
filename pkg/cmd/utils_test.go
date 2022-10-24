@@ -25,17 +25,12 @@ type promptResponse struct {
 type promptResponseSlice []promptResponse
 
 func (promptResponses promptResponseSlice) respondToPrompts(
-	stdinWriter io.WriteCloser,
+	stdinWriter io.Writer,
 	stdoutReader io.Reader,
 	doneSignal chan<- error,
 	endSignal <-chan struct{},
 ) {
 	stdOutBufferedReader := bufio.NewReader(stdoutReader)
-	// Close the writer here in the goroutine to signal to the readers that we're done writing after
-	// what's left in the buffer
-	defer func() {
-		stdinWriter.Close()
-	}()
 
 	var goRoutineErr error
 	promptResponsesIndex := 0
@@ -69,8 +64,8 @@ L:
 				pr.prompt,
 			)
 			break L
-		// This cases makes it so that you don't actually have to wait for the timebox above
-		// to be exhausted all if the command is already done, it's a cleaner signal.
+		// This case avoids wait for the timebox above. When we know the command is finished we can simply
+		// break the loop knowing that there will be no further reading.
 		case <-endSignal:
 			break L
 		case <-ticker.C:
@@ -78,7 +73,7 @@ L:
 			if err != nil {
 				if err == io.EOF {
 					// Sleep is important to avoid a busy goroutine
-					// that never yields.
+					// that never yields the CPU to anything else
 					continue
 				}
 
@@ -166,9 +161,9 @@ func executeCommandWithPromptResponses(
 	// For prompt-responses we create a pipe for stdin and use goroutine to carry out the
 	// required writes to stdin in response to prompts
 	stdinReader, stdinWriter := io.Pipe()
-	// Close the reader here so that this happens after the command invocation
 	defer func() {
 		stdinReader.Close()
+		stdinWriter.Close()
 	}()
 	cmd.SetIn(stdinReader)
 
@@ -181,14 +176,21 @@ func executeCommandWithPromptResponses(
 	cmd.SetOut(io.MultiWriter(cmd.OutOrStdout(), stdoutBuf))
 
 	// This goroutine schedules writes to the write-end of the stdin pipe based on the prompt-responses
-	go promptResponseSlice(promptResponses).respondToPrompts(
-		stdinWriter,
-		stdoutBuf,
-		doneSignal,
-		endSignal,
-	)
+	go func() {
+		// Signal that there will be no further writing
+		defer stdinWriter.Close()
+
+		promptResponseSlice(promptResponses).respondToPrompts(
+			stdinWriter,
+			stdoutBuf,
+			doneSignal,
+			endSignal,
+		)
+	}()
 
 	err := cmd.Execute()
+	// Signal that there will be no further reading
+	stdinReader.Close()
 
 	// Inform the goroutine that the command is done
 	endSignal <- struct{}{}
