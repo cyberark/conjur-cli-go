@@ -77,8 +77,7 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// NewInitCommand initializes and configures the 'conjur init' command.
-func NewInitCommand() *cobra.Command {
+func newInitCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Use the init command to initialize the Conjur CLI with a Conjur endpoint.",
@@ -106,6 +105,6 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 }
 
 func init() {
-	initCmd := NewInitCommand()
+	initCmd := newInitCommand()
 	rootCmd.AddCommand(initCmd)
 }

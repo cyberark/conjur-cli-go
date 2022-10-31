@@ -65,7 +65,6 @@ func makeDevRequest(action string, params map[string]string) string {
 }
 
 func prepareConjurAccount(account string) func() {
-	makeDevRequest("purge", nil)
 	makeDevRequest("destroy_account", map[string]string{"id": account})
 	makeDevRequest("create_account", map[string]string{"id": account})
 	return func() {

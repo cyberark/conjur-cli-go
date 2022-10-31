@@ -33,8 +33,6 @@ class DevController < ApplicationController
       destroy_account
     when 'retrieve_api_key'
       retrieve_api_key
-    when 'purge'
-      purge
     else
       raise ArgumentError, "'action' not recognized"
     end

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cyberark/conjur-cli-go/pkg/testutils"
-
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,14 +25,14 @@ var whoamiCmdTestCases = []struct {
 }{
 	{
 		name: "display help",
-		args: []string{"--help"},
+		args: []string{"whoami", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "Displays info about the logged in user")
 		},
 	},
 	{
 		name: "json response",
-		args: []string{},
+		args: []string{"whoami"},
 		whoami: func() ([]byte, error) {
 			return []byte(`{"user":"test"}`), nil
 		},
@@ -48,7 +46,7 @@ var whoamiCmdTestCases = []struct {
 	},
 	{
 		name: "non-json response",
-		args: []string{},
+		args: []string{"whoami"},
 		whoami: func() ([]byte, error) {
 			return []byte(`use is test`), nil
 		},
@@ -58,7 +56,7 @@ var whoamiCmdTestCases = []struct {
 	},
 	{
 		name: "client error",
-		args: []string{},
+		args: []string{"whoami"},
 		whoami: func() ([]byte, error) {
 			return nil, fmt.Errorf("%s", "an error")
 		},
@@ -68,7 +66,7 @@ var whoamiCmdTestCases = []struct {
 	},
 	{
 		name:               "client factory error",
-		args:               []string{},
+		args:               []string{"whoami"},
 		clientFactoryError: fmt.Errorf("%s", "client factory error"),
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stderr, "Error: client factory error\n")
@@ -86,7 +84,7 @@ func TestWhoamiCmd(t *testing.T) {
 			}
 			cmd := NewWhoamiCommand(testWhoamiClientFactory)
 
-			stdout, stderr, err := testutils.Execute(t, cmd, tc.args...)
+			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
 			tc.assert(t, stdout, stderr, err)
 		})
 	}

@@ -54,10 +54,17 @@ func AskToOverwriteFile(decoratePrompt decoratePromptFunc, filePath string) erro
 }
 
 func runPrompt(prompt *promptui.Prompt) (userInput string, err error) {
+	// To avoid loss of contents described in the documentation for NewByteBufferedReader
+	// we wrap the stdin reader.
+	prompt.Stdin = utils.NoopReadCloser(
+		utils.NewByteBufferedReader(prompt.Stdin),
+	)
+
 	userInput, err = prompt.Run()
 	if err != nil {
 		return "", err
 	}
+
 	return userInput, nil
 }
 
