@@ -30,7 +30,7 @@ function dev_help() {
 Available dev utilities
 -----------------------
 
-make: Make can be executed against the the Makefile in the root directory of the repository.
+make: Make can be executed against the Makefile in the root directory of the repository.
 
       Available tasks are: run, build, install, test, integration.
 
@@ -79,7 +79,6 @@ EOL
   docker-compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${admin_initial_password}]"
   echo 'Finished setting up Conjur'
 
-
   echo
   echo "Admin password: ${admin_initial_password}"
   echo "${admin_initial_password}" | tr -d '\r\n' > "${path_to_admin_initial_password}"
@@ -87,6 +86,11 @@ EOL
 
   docker-compose exec cli-dev ./dev/refresh-admin-connection-details
 
+  echo
+  echo "Loading policy"
+
+  docker-compose exec cli-dev  conjur policy load -b root -f dev/policy.yml
+  
   echo
   echo "Entering CLI container"
 
