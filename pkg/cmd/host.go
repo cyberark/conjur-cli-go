@@ -16,7 +16,7 @@ var hostCmd = &cobra.Command{
 }
 
 type hostRotateAPIKeyClient interface {
-	RotateAPIKey(roleID string) ([]byte, error)
+	RotateHostAPIKey(roleID string) ([]byte, error)
 }
 
 func hostRotateAPIKeyClientFactory(cmd *cobra.Command) (hostRotateAPIKeyClient, error) {
