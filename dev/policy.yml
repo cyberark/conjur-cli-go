@@ -1,0 +1,12 @@
+- !host test-host
+
+- !user alice
+
+- !variable secret
+
+- !permit
+  # Give permissions to the human user to update the secret and fetch the secret.
+  role: !user alice
+  privileges: [read]
+  resource: !variable secret
+  

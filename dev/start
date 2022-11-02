@@ -88,6 +88,11 @@ EOL
   docker-compose exec cli-dev ./dev/refresh-admin-connection-details
 
   echo
+  echo "Loading policy"
+
+  docker-compose exec cli-dev  conjur policy load -b root -f dev/policy.yml
+  
+  echo
   echo "Entering CLI container"
 
   docker-compose exec cli-dev go mod download || true
