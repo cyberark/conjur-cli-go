@@ -6,25 +6,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var hostCmd = &cobra.Command{
-	Use:   "host",
-	Short: "Host commands (rotate-api-key)",
-	Run: func(cmd *cobra.Command, args []string) {
-		// Print --help if called without subcommand
-		cmd.Help()
-	},
+type hostClient interface {
+	RotateHostAPIKey(hostID string) ([]byte, error)
 }
 
-type hostRotateAPIKeyClient interface {
-	RotateHostAPIKey(roleID string) ([]byte, error)
-}
+type hostClientFactoryFunc func(*cobra.Command) (hostClient, error)
 
-func hostRotateAPIKeyClientFactory(cmd *cobra.Command) (hostRotateAPIKeyClient, error) {
+func hostClientFactory(cmd *cobra.Command) (hostClient, error) {
 	return clients.AuthenticatedConjurClientForCommand(cmd)
 }
 
-// NewHostRotateAPIKeyCommand creates a Command instance with injected dependencies.
-func NewHostRotateAPIKeyCommand(clientFactory func(*cobra.Command) (hostRotateAPIKeyClient, error)) *cobra.Command {
+func newHostCmd(clientFactory hostClientFactoryFunc) *cobra.Command {
+	hostCmd := &cobra.Command{
+		Use:   "host",
+		Short: "Host commands (rotate-api-key)",
+		Run: func(cmd *cobra.Command, args []string) {
+			// Print --help if called without subcommand
+			cmd.Help()
+		},
+	}
+
+	hostCmd.AddCommand(newHostRotateAPIKeyCmd(clientFactory))
+
+	return hostCmd
+}
+
+func newHostRotateAPIKeyCmd(clientFactory hostClientFactoryFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "rotate-api-key",
 		Short:        "Rotate a host's API key",
@@ -57,8 +64,7 @@ func NewHostRotateAPIKeyCommand(clientFactory func(*cobra.Command) (hostRotateAP
 }
 
 func init() {
-	rootCmd.AddCommand(hostCmd)
+	hostCmd := newHostCmd(hostClientFactory)
 
-	hostRotateAPIKeyCmd := NewHostRotateAPIKeyCommand(hostRotateAPIKeyClientFactory)
-	hostCmd.AddCommand(hostRotateAPIKeyCmd)
+	rootCmd.AddCommand(hostCmd)
 }
