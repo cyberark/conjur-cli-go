@@ -23,6 +23,7 @@ type ConjurClient interface {
 	LoadPolicy(mode conjurapi.PolicyMode, policyID string, policy io.Reader) (*conjurapi.PolicyResponse, error)
 	AddSecret(variableID string, secretValue string) error
 	RetrieveSecret(variableID string) ([]byte, error)
+	CheckPermission(resourceID, privilege string) (bool, error)
 }
 
 // LoadAndValidateConjurConfig loads and validate Conjur configuration

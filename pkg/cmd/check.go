@@ -1,27 +1,62 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/spf13/cobra"
 )
 
-// checkCmd represents the check command
-var checkCmd = &cobra.Command{
-	Use:   "check",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+type checkClient interface {
+	CheckPermission(resourceID, privilege string) (bool, error)
+}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("check called")
-	},
+type checkClientFactoryFunc func(*cobra.Command) (checkClient, error)
+
+func checkClientFactory(cmd *cobra.Command) (checkClient, error) {
+	return clients.AuthenticatedConjurClientForCommand(cmd)
+}
+
+func newCheckCmd(clientFactory checkClientFactoryFunc) *cobra.Command {
+	return &cobra.Command{
+		Use:   "check",
+		Short: "Check for a privilege on a resource",
+		Long: `Check for a privilege on a resource
+		
+This command requires two arguments, a [resourceId] and a [privilege].
+
+Examples:
+
+-   conjur check dev:variable:somevariable read
+-   conjur check dev:host:somehost write`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var resourceID string
+			var privilege string
+
+			if len(args) < 2 {
+				cmd.Help()
+				return nil
+			}
+
+			resourceID, privilege = args[0], args[1]
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			result, err := client.CheckPermission(resourceID, privilege)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(result)
+
+			return nil
+		},
+	}
 }
 
 func init() {
+	checkCmd := newCheckCmd(checkClientFactory)
 	rootCmd.AddCommand(checkCmd)
 
 	// Here you will define your flags and configuration settings.
