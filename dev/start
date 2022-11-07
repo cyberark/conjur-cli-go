@@ -90,7 +90,7 @@ EOL
   echo
   echo "Loading policy"
 
-  docker-compose exec cli-dev  conjur policy load -b root -f dev/policy.yml
+  docker-compose exec -T conjur conjurctl policy load dev /dev/stdin < policy.yml
   
   echo
   echo "Entering CLI container"
