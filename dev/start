@@ -13,6 +13,7 @@ main() {
   if docker-compose ps conjur | grep conjur >/dev/null 2>&1; then
     ./stop
   fi
+
   local conjur_account=dev
   local admin_initial_password='SuperSecret!!!!123'
   local path_to_admin_initial_password=tmp/admin_initial_password
