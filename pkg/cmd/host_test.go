@@ -33,7 +33,7 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 	},
 	{
 		name: "successful rotation",
-		args: []string{"host", "rotate-api-key", "--host=dev-host"},
+		args: []string{"host", "rotate-api-key", "--host-id=dev-host"},
 		hostRotateAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
 			// Assert on arguments
 			assert.Equal(t, "dev-host", hostID)
@@ -46,7 +46,7 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 	},
 	{
 		name: "client error",
-		args: []string{"host", "rotate-api-key", "--host=dev-host"},
+		args: []string{"host", "rotate-api-key", "--host-id=dev-host"},
 		hostRotateAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
 			return nil, fmt.Errorf("%s", "an error")
 		},
@@ -56,7 +56,7 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 	},
 	{
 		name:               "client factory error",
-		args:               []string{"host", "rotate-api-key", "--host=dev-host"},
+		args:               []string{"host", "rotate-api-key", "--host-id=dev-host"},
 		clientFactoryError: fmt.Errorf("%s", "client factory error"),
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stderr, "Error: client factory error\n")
