@@ -24,6 +24,7 @@ type ConjurClient interface {
 	AddSecret(variableID string, secretValue string) error
 	RetrieveSecret(variableID string) ([]byte, error)
 	CheckPermission(resourceID, privilege string) (bool, error)
+	ResourceIDs(filter *conjurapi.ResourceFilter) ([]string, error)
 }
 
 // LoadAndValidateConjurConfig loads and validate Conjur configuration
