@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
@@ -9,13 +10,12 @@ import (
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 	"github.com/cyberark/conjur-cli-go/pkg/storage"
 
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
 // ConjurClient is an interface that represents a Conjur client
 type ConjurClient interface {
-	Login(authn.LoginPair) ([]byte, error)
+	Login(login string, password string) ([]byte, error)
 	GetConfig() conjurapi.Config
 	WhoAmI() ([]byte, error)
 	RotateHostAPIKey(hostID string) ([]byte, error)
@@ -104,7 +104,7 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 // If either the username or password is missing then a prompt is presented to interactively request
 // the missing information from the user
 func LoginWithPromptFallback(
-	decoratePrompt func(prompt *promptui.Prompt) *promptui.Prompt,
+	decoratePrompt prompts.DecoratePromptFunc,
 	client ConjurClient,
 	username string,
 	password string,
@@ -114,12 +114,9 @@ func LoginWithPromptFallback(
 		return nil, err
 	}
 
-	// TODO: Maybe have a specific struct for logging in?
-	loginPair := authn.LoginPair{Login: username, APIKey: password}
-	data, err := client.Login(loginPair)
+	data, err := client.Login(username, password)
 	if err != nil {
-		// TODO: Ruby CLI hides actual error and simply says "Unable to authenticate with Conjur. Please check your credentials."
-		return nil, err
+		return nil, errors.New("Unable to authenticate with Conjur. Please check your credentials.")
 	}
 
 	authenticatePair := &authn.LoginPair{Login: username, APIKey: string(data)}

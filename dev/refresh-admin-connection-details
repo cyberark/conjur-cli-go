@@ -30,7 +30,6 @@ echo "Admin API key: ${admin_api_key_value}"
 cat <<EOL > "${path_to_dot_conjurrc}"
 account: dev
 appliance_url: http://conjur
-plugins: []
 EOL
 
 echo "Wrote .conjurrc file to ${path_to_dot_conjurrc}"

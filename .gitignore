@@ -1,7 +1,9 @@
 action/mocks/*.go
 c.out
 junit.xml
+junit.output
 key.txt
+coverage.xml
 
 output/
 dist/

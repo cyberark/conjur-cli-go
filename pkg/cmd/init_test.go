@@ -51,7 +51,6 @@ var initCmdTestCases = []struct {
 			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: dev
 appliance_url: http://conjur
-plugins: []
 `
 
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -64,7 +63,21 @@ plugins: []
 			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: test-account
 appliance_url: https://host
-plugins: []
+`
+
+			assert.Equal(t, expectedConjurrc, string(data))
+			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
+		},
+	},
+	{
+		name: "writes conjurrc for ldap",
+		args: []string{"init", "-u=https://host", "-a=test-account", "-t=ldap", "--service-id=test"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
+			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
+			expectedConjurrc := `account: test-account
+appliance_url: https://host
+authn_type: ldap
+service_id: test
 `
 
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -110,7 +123,6 @@ plugins: []
 			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: other-test-account
 appliance_url: https://host
-plugins: []
 `
 			assert.Equal(t, expectedConjurrc, string(data))
 
@@ -130,7 +142,6 @@ plugins: []
 			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: yet-another-test-account
 appliance_url: https://host
-plugins: []
 `
 			assert.Equal(t, expectedConjurrc, string(data))
 
