@@ -11,6 +11,8 @@ github.com/cyberark/conjur-api-go v0.10.2-0.20220921204736-eb284b1264ca h1:k6pAM
 github.com/cyberark/conjur-api-go v0.10.2-0.20220921204736-eb284b1264ca/go.mod h1:8+qYC7L6wPY1e56hoZmHSdGa2fHALck8PtS+cUky75Y=
 github.com/cyberark/conjur-api-go v0.10.2-0.20221102143142-dc3c23858ed6 h1:mpvHvz/CdT27bFiMnD5s8x41cUebj/M1Xb+RfZQkCyo=
 github.com/cyberark/conjur-api-go v0.10.2-0.20221102143142-dc3c23858ed6/go.mod h1:8+qYC7L6wPY1e56hoZmHSdGa2fHALck8PtS+cUky75Y=
+github.com/cyberark/conjur-api-go v0.10.3-0.20221122222223-b1152f8b27b8 h1:HgEx6Tu950bHf32Tcdt3xhNj0RPzXJiWXcjrICsfSfw=
+github.com/cyberark/conjur-api-go v0.10.3-0.20221122222223-b1152f8b27b8/go.mod h1:8+qYC7L6wPY1e56hoZmHSdGa2fHALck8PtS+cUky75Y=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
