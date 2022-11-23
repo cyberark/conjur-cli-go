@@ -3,25 +3,12 @@ package conjurrc
 import (
 	"os"
 
-	"gopkg.in/yaml.v3"
+	"github.com/cyberark/conjur-api-go/conjurapi"
 )
-
-// conjurrc uses the YAML format
-func generateConjurrc(account string, applianceUrl string) []byte {
-	conjurrcMap := map[string]interface{}{
-		"account":       account,
-		"appliance_url": applianceUrl,
-		"plugins":       []string{},
-	}
-
-	data, _ := yaml.Marshal(&conjurrcMap)
-	return data
-}
 
 // WriteConjurrc writes Conjur connection info to a file.
 func WriteConjurrc(
-	account string,
-	applianceURL string,
+	config conjurapi.Config,
 	filePath string,
 	overwriteDecision func(string) error,
 ) error {
@@ -32,7 +19,7 @@ func WriteConjurrc(
 		}
 	}
 
-	fileContents := generateConjurrc(account, applianceURL)
+	fileContents := config.Conjurrc()
 
 	return os.WriteFile(filePath, fileContents, 0644)
 }

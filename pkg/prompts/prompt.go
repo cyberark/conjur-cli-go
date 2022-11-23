@@ -11,7 +11,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type decoratePromptFunc func(*promptui.Prompt) *promptui.Prompt
+// DecoratePromptFunc is a function that decorates a prompt with additional functionality.
+// For example, it may be used to redirect the stdin and stdout from a command onto a prompt.
+type DecoratePromptFunc func(*promptui.Prompt) *promptui.Prompt
 
 func newApplianceURLPrompt() *promptui.Prompt {
 	return &promptui.Prompt{
@@ -47,7 +49,7 @@ func newFileExistsPrompt(filePath string) *promptui.Prompt {
 }
 
 // AskToOverwriteFile presents a prompt to get confirmation from a user to overwrite a file
-func AskToOverwriteFile(decoratePrompt decoratePromptFunc, filePath string) error {
+func AskToOverwriteFile(decoratePrompt DecoratePromptFunc, filePath string) error {
 	fileExistsPrompt := decoratePrompt(newFileExistsPrompt(filePath))
 	_, err := runPrompt(fileExistsPrompt)
 	return err
@@ -83,7 +85,7 @@ func newUsernamePrompt() *promptui.Prompt {
 
 // PromptDecoratorForCommand redirects the stdin and stdout from the command onto the prompt. This is to
 // ensure that command and prompt stay synchronized
-func PromptDecoratorForCommand(cmd *cobra.Command) func(*promptui.Prompt) *promptui.Prompt {
+func PromptDecoratorForCommand(cmd *cobra.Command) DecoratePromptFunc {
 	return func(prompt *promptui.Prompt) *promptui.Prompt {
 		prompt.Stdin = utils.NoopReadCloser(cmd.InOrStdin())
 		prompt.Stdout = utils.NoopWriteCloser(cmd.OutOrStdout())
@@ -94,7 +96,7 @@ func PromptDecoratorForCommand(cmd *cobra.Command) func(*promptui.Prompt) *promp
 }
 
 // MaybeAskForCredentials optionally presents a prompt to retrieve missing username and/or password from the user
-func MaybeAskForCredentials(decoratePrompt decoratePromptFunc, username string, password string) (string, string, error) {
+func MaybeAskForCredentials(decoratePrompt DecoratePromptFunc, username string, password string) (string, string, error) {
 	var err error
 
 	if len(username) == 0 {
@@ -117,7 +119,7 @@ func MaybeAskForCredentials(decoratePrompt decoratePromptFunc, username string, 
 }
 
 // MaybeAskForConnectionDetails presents a prompt to retrieve missing Conjur account and/or URL from the user
-func MaybeAskForConnectionDetails(decoratePrompt decoratePromptFunc, account string, applianceURL string) (string, string, error) {
+func MaybeAskForConnectionDetails(decoratePrompt DecoratePromptFunc, account string, applianceURL string) (string, string, error) {
 	var err error
 
 	if len(applianceURL) == 0 {
