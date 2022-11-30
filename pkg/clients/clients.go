@@ -2,7 +2,6 @@ package clients
 
 import (
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
@@ -39,13 +38,7 @@ func LoadAndValidateConjurConfig() (conjurapi.Config, error) {
 		return config, err
 	}
 
-	if config.ApplianceURL == "" {
-		return config, fmt.Errorf("%s", "Missing required configuration for Conjur API URL")
-	}
-
-	if config.Account == "" {
-		return config, fmt.Errorf("%s", "Missing required configuation for Conjur account")
-	}
+	err = config.Validate()
 
 	return config, err
 }
