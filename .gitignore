@@ -9,6 +9,7 @@ output/
 dist/
 dev/tmp
 build_ca_certificate
+.vscode/
 
 # CLI binaries
 conjur

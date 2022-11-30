@@ -7,7 +7,7 @@ go 1.19
 
 require (
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
-	github.com/cyberark/conjur-api-go v0.10.3-0.20221122222223-b1152f8b27b8 // Run "go get github.com/cyberark/conjur-api-go@main" to update
+	github.com/cyberark/conjur-api-go v0.10.3-0.20221130171904-3140b0d8e3e9 // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/manifoldco/promptui v0.9.0
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0

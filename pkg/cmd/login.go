@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
@@ -56,7 +58,14 @@ Examples:
 			clients.MaybeVerboseLoggingForClient(verbose, cmd, conjurClient)
 		}
 
-		_, err = clients.LoginWithPromptFallback(prompts.PromptDecoratorForCommand(cmd), conjurClient, username, password)
+		if config.AuthnType == "" || config.AuthnType == "authn" || config.AuthnType == "ldap" {
+			decoratePrompt := prompts.PromptDecoratorForCommand(cmd)
+			_, err = clients.LoginWithPromptFallback(decoratePrompt, conjurClient, username, password)
+		} else if config.AuthnType == "oidc" {
+			_, err = clients.OidcLogin(conjurClient)
+		} else {
+			return fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
+		}
 		if err != nil {
 			return err
 		}
