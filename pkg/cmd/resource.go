@@ -1,32 +1,66 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/spf13/cobra"
 )
 
+type resourceClient interface {
+	Resource(resourceID string) (resource map[string]interface{}, err error)
+}
+
+type resourceClientFactoryFunc func(*cobra.Command) (resourceClient, error)
+
+func resourceClientFactory(cmd *cobra.Command) (resourceClient, error) {
+	return clients.AuthenticatedConjurClientForCommand(cmd)
+}
+
 var resourceCmd = &cobra.Command{
 	Use:   "resource",
-	Short: "A brief description of your command",
+	Short: "Manage resources",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Print --help if called without subcommand
 		cmd.Help()
 	},
 }
 
-var resourceExistsCmd = &cobra.Command{
-	Use:   "exists",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+func newResourceExistsCmd(clientFactory resourceClientFactoryFunc) *cobra.Command {
+	return &cobra.Command{
+		Use:   "exists",
+		Short: "Checks if whether a resource exists",
+		Long: `Checks if whether a resource exists
+		
+This command requires one argument, a [resource-id].
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("resource exists called")
-	},
+Examples:
+
+-   conjur resource exists dev:variable:somevariable
+-   conjur resource exists dev:host:somehost`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var resourceID string
+
+			if len(args) < 1 {
+				cmd.Help()
+				return nil
+			}
+
+			resourceID = args[0]
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			result, err := client.Resource(resourceID)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(result != nil)
+
+			return nil
+		},
+	}
 }
 
 var resourceShowCmd = &cobra.Command{
@@ -39,7 +73,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("resource show called")
+		cmd.Println("resource show called")
 	},
 }
 
@@ -53,12 +87,14 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("resource permitted-roles called")
+		cmd.Println("resource permitted-roles called")
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(resourceCmd)
+
+	resourceExistsCmd := newResourceExistsCmd(resourceClientFactory)
 
 	resourceCmd.AddCommand(resourceExistsCmd)
 	resourceCmd.AddCommand(resourceShowCmd)
