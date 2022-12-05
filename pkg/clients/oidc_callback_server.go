@@ -6,14 +6,19 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os/exec"
 	"time"
+
+	"github.com/pkg/browser"
 )
 
 type callbackEndpoint struct {
 	server         *http.Server
 	shutdownSignal chan string
 	code           string
+}
+
+func OpenBrowser(url string) error {
+	return browser.OpenURL(url)
 }
 
 func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +32,7 @@ func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.shutdownSignal <- "shutdown"
 }
 
-func handleOpenIDFlow(authEndpointURL string) (string, error) {
+func handleOpenIDFlow(authEndpointURL string, openBrowserFn func(string) error) (string, error) {
 
 	callbackEndpoint := &callbackEndpoint{}
 	callbackEndpoint.shutdownSignal = make(chan string)
@@ -42,20 +47,21 @@ func handleOpenIDFlow(authEndpointURL string) (string, error) {
 	http.Handle("/callback", callbackEndpoint)
 
 	// Replace the callback URL returned by Conjur with the URL to the local server we're starting
-	callbackURL := "http://localhost:8888/callback"
+	//TODO: Instead, fail if the callback URL is not localhost:8888
+	// callbackURL := "http://localhost:8888/callback"
 	authURL, authURLParseError := url.Parse(authEndpointURL)
 	if authURLParseError != nil {
 		return "", authURLParseError
 	}
-	query := authURL.Query()
-	query.Set("redirect_uri", callbackURL)
-	authURL.RawQuery = query.Encode()
+	// query := authURL.Query()
+	// query.Set("redirect_uri", callbackURL)
+	// authURL.RawQuery = query.Encode()
 
 	// BEGIN TEST CODE
 	// FIXME
 	// Point to locally running keycloak instance for testing
-	authURL.Scheme = "http"
-	authURL.Host = "localhost:7777"
+	// authURL.Scheme = "http"
+	// authURL.Host = "localhost:7777"
 	// END TEST CODE
 
 	// Start the local server
@@ -64,10 +70,9 @@ func handleOpenIDFlow(authEndpointURL string) (string, error) {
 	}()
 
 	// Open the browser to the OIDC provider
-	cmd := exec.Command("open", authURL.String())
-	cmdErorr := cmd.Start()
-	if cmdErorr != nil {
-		return "", cmdErorr
+	browserErr := openBrowserFn(authURL.String())
+	if browserErr != nil {
+		fmt.Printf("Error opening browser. Please open the following URL in your browser:\n%s\n", authURL.String())
 	}
 
 	// Set a timeout and shut down the server if we don't get a response in time

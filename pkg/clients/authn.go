@@ -55,7 +55,7 @@ func OidcLogin(conjurClient *conjurapi.Client) (*conjurapi.Client, error) {
 		return nil, err
 	}
 
-	code, err := handleOpenIDFlow(oidcProvider.RedirectURI)
+	code, err := handleOpenIDFlow(oidcProvider.RedirectURI, OpenBrowser)
 	if err != nil {
 		return nil, err
 	}
