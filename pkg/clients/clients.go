@@ -25,6 +25,7 @@ type ConjurClient interface {
 	AddSecret(variableID string, secretValue string) error
 	RetrieveSecret(variableID string) ([]byte, error)
 	CheckPermission(resourceID, privilege string) (bool, error)
+	Resource(resourceID string) (resource map[string]interface{}, err error)
 	ResourceIDs(filter *conjurapi.ResourceFilter) ([]string, error)
 }
 
