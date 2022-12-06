@@ -7,6 +7,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type whoamiResponse struct {
+	ClientIP      string `json:"client_ip"`
+	UserAgent     string `json:"user_agent"`
+	Account       string `json:"account"`
+	Username      string `json:"username"`
+	TokenIssuedAt string `json:"token_issued_at"`
+}
+
 type whoamiClient interface {
 	WhoAmI() ([]byte, error)
 }
