@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const _userRotateAPIKeyHelpStr = "Rotate the API key of the user specified by the [user-id] parameter or for the currently logged-in user if no [user-id] is provided."
+
 type mockUserClient struct {
 	t                *testing.T
 	userRotateAPIKey func(*testing.T, string) ([]byte, error)
@@ -34,7 +36,7 @@ var userRotateAPIKeyCmdTestCases = []struct {
 		name: "display help",
 		args: []string{"user", "rotate-api-key", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "Rotate a user's API key")
+			assert.Contains(t, stdout, _userRotateAPIKeyHelpStr)
 		},
 	},
 	{

@@ -19,14 +19,12 @@ func newCheckCmd(clientFactory checkClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
 		Use:   "check",
 		Short: "Check for a privilege on a resource",
-		Long: `Check for a privilege on a resource
-		
-This command requires two arguments, a [resourceId] and a [privilege].
+		Long: `Check whether the currently logged-in user has a given [privilege] on a resource specified by a [resource-id].
 
 Examples:
 
--   conjur check dev:variable:somevariable read
--   conjur check dev:host:somehost write`,
+- conjur check dev:variable:somevariable read
+- conjur check dev:host:somehost write`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var resourceID string
 			var privilege string

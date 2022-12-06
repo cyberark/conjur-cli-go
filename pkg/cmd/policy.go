@@ -86,8 +86,12 @@ func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 
 func newPolicyLoadCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:          "load",
-		Short:        "Load a policy and create resources",
+		Use:   "load",
+		Short: "Load a policy and create resources",
+		Long: `Load a policy and create resources.
+
+Examples:
+- conjur policy load -b staging -f /policy/staging.yml`,
 		SilenceUsage: true,
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePost),
 	}
@@ -95,8 +99,12 @@ func newPolicyLoadCommand(clientFactory policyClientFactoryFunc) *cobra.Command 
 
 func newPolicyAppendCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:          "append",
-		Short:        "Update existing resources in the policy or create new resources",
+		Use:   "append",
+		Short: "Update existing resources in the policy or create new resources",
+		Long: `Update existing resources in the policy or create new resources.
+
+Examples:
+- conjur policy append -b staging -f /policy/staging.yml`,
 		SilenceUsage: true,
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePatch),
 	}
@@ -105,8 +113,12 @@ func newPolicyAppendCommand(clientFactory policyClientFactoryFunc) *cobra.Comman
 
 func newPolicyReplaceCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:          "replace",
-		Short:        "Fully replace an existing policy",
+		Use:   "replace",
+		Short: "Fully replace an existing policy",
+		Long: `Fully replace an existing policy.
+
+Examples:
+- conjur policy replace -b staging -f /policy/staging.yml`,
 		SilenceUsage: true,
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePut),
 	}

@@ -53,6 +53,11 @@ func newUserRotateAPIKeyCmd(clientFactory userClientFactoryFunc) *cobra.Command 
 	cmd := &cobra.Command{
 		Use:   "rotate-api-key",
 		Short: "Rotate a user's API key",
+		Long: `Rotate the API key of the user specified by the [user-id] parameter or for the currently logged-in user if no [user-id] is provided.
+
+Examples:
+- conjur user rotate-api-key --user-id alice
+- conjur user rotate-api-key`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			userID, err := cmd.Flags().GetString("user-id")
 			if err != nil {

@@ -27,15 +27,13 @@ var resourceCmd = &cobra.Command{
 func newResourceExistsCmd(clientFactory resourceClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
 		Use:   "exists",
-		Short: "Checks if whether a resource exists",
-		Long: `Checks if whether a resource exists
+		Short: "Checks if a resource exists",
+		Long: `Checks if a resource exists, given a [resource-id].
 		
-This command requires one argument, a [resource-id].
-
 Examples:
 
--   conjur resource exists dev:variable:somevariable
--   conjur resource exists dev:host:somehost`,
+- conjur resource exists dev:variable:somevariable
+- conjur resource exists dev:host:somehost`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var resourceID string
 

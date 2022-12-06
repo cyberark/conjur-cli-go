@@ -9,8 +9,18 @@ import (
 )
 
 var loginCmd = &cobra.Command{
-	Use:          "login",
-	Short:        "A brief description of your command",
+	Use:   "login",
+	Short: "Authenticate with Conjur using the provided username and password.",
+	Long: `Authenticate with Conjur using the provided username and password.
+
+The command will prompt for username and password if they are not provided via flag.
+
+On successful login, the password is exchanged for the user's API key, which is cached in the operating system user's .netrc file. Subsequent commands will authenticate using the cached credentials. To switch users, login again using new credentials. To erase credentials, use the 'logout' command.
+
+Examples:
+
+- conjur authn login -u alice -p My$ecretPass
+- conjur authn login`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var err error
