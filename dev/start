@@ -14,6 +14,7 @@ cd "$(dirname "$0")"
 # It can be such a pain to mistakenly destroy your environment.
 
 ENABLE_AUTHN_OIDC=false
+ENABLE_OIDC_OKTA=false
 
 # Minimal set of services.  We add to this list based on cmd line flags.
 services=(pg conjur cli-dev)
@@ -126,6 +127,7 @@ parse_options() {
   while true ; do
     case "$1" in
       --authn-oidc ) ENABLE_AUTHN_OIDC=true ; shift ;;
+      --oidc-okta ) ENABLE_OIDC_OKTA=true ; shift ;;
       # -h | --help ) print_help ; shift ;;
        * )
          if [ -z "$1" ]; then
@@ -193,19 +195,19 @@ configure_oidc_authenticators() {
 
 
 
-  # if [[ $ENABLE_OIDC_OKTA = true ]]; then
-  #   # Specific for new OIDC Authenticator
-  #   client_load_policy '/src/conjur-server/dev/policies/authenticators/authn-oidc/okta-2.yml'
-  #   client_add_secret 'conjur/authn-oidc/okta-2/provider-uri' 'https://dev-92899796.okta.com/oauth2/default'
-  #   client_add_secret 'conjur/authn-oidc/okta-2/client-id' '0oa3w3xig6rHiu9yT5d7'
-  #   client_add_secret 'conjur/authn-oidc/okta-2/client-secret' 'e349BMTTIpLO-rPuPqLLkLyH_pO-loUzhIVJCrHj'
-  #   client_add_secret 'conjur/authn-oidc/okta-2/claim-mapping' 'preferred_username'
-  #   client_add_secret 'conjur/authn-oidc/okta-2/nonce' '1656b4264b60af659fce'
-  #   client_add_secret 'conjur/authn-oidc/okta-2/state' '4f413476ef7e2395f0af'
-  #   client_add_secret 'conjur/authn-oidc/okta-2/redirect_uri' 'http://localhost:3000/authn-oidc/okta-2/cucumber/authenticate'
+  if [[ $ENABLE_OIDC_OKTA = true ]]; then
+    client_load_policy "okta/okta-2.yml"
 
-  #   client_load_policy '/src/conjur-server/dev/policies/authenticators/authn-oidc/okta-users.yml'
-  # fi
+    client_add_secret 'conjur/authn-oidc/okta-2/provider-uri' 'https://dev-92899796.okta.com/oauth2/default'
+    client_add_secret 'conjur/authn-oidc/okta-2/client-id' '0oa3w3xig6rHiu9yT5d7'
+    client_add_secret 'conjur/authn-oidc/okta-2/client-secret' 'e349BMTTIpLO-rPuPqLLkLyH_pO-loUzhIVJCrHj'
+    client_add_secret 'conjur/authn-oidc/okta-2/claim-mapping' 'preferred_username'
+    client_add_secret 'conjur/authn-oidc/okta-2/nonce' '1656b4264b60af659fce'
+    client_add_secret 'conjur/authn-oidc/okta-2/state' '4f413476ef7e2395f0af'
+    client_add_secret 'conjur/authn-oidc/okta-2/redirect_uri' 'http://localhost:8888/callback'
+
+    client_load_policy "okta/okta-users.yml"
+  fi
 }
 
 enable_oidc_authenticators() {
@@ -214,10 +216,10 @@ enable_oidc_authenticators() {
   # invalid.
   enabled_authenticators="$enabled_authenticators,authn-oidc/keycloak"
 
-  # if [[ $ENABLE_OIDC_OKTA = true ]]; then
-  #   echo "Configuring OKTA as OpenID provider for manual testing"
-  #   enabled_authenticators="$enabled_authenticators,authn-oidc/okta,authn-oidc/okta-2"
-  # fi
+  if [[ $ENABLE_OIDC_OKTA = true ]]; then
+    echo "Configuring OKTA as OpenID provider for manual testing"
+    enabled_authenticators="$enabled_authenticators,authn-oidc/okta-2"
+  fi
 }
 
 init_oidc() {

@@ -50,21 +50,26 @@ func LoginWithPromptFallback(
 }
 
 func OidcLogin(conjurClient *conjurapi.Client) (*conjurapi.Client, error) {
-	oidcProvider, err := getOidcProviderInfo(conjurClient, conjurClient.GetConfig().ServiceID)
+	config := conjurClient.GetConfig()
+
+	oidcProvider, err := getOidcProviderInfo(conjurClient, config.ServiceID)
 	if err != nil {
 		return nil, err
 	}
 
-	code, err := handleOpenIDFlow(oidcProvider.RedirectURI, OpenBrowser)
+	code, err := handleOpenIDFlow(oidcProvider.RedirectURI, FetchOidcCodeFromKeycloak)
 	if err != nil {
 		return nil, err
 	}
 
-	//TODO: Will this reassignment cause issues?
-	conjurClient, err = conjurapi.NewClientFromOidcCode(conjurClient.GetConfig(), code, oidcProvider.Nonce, oidcProvider.CodeVerifier)
+	conjurClient, err = conjurapi.NewClientFromOidcCode(config, code, oidcProvider.Nonce, oidcProvider.CodeVerifier)
+	if err != nil {
+		return nil, err
+	}
 
 	//TODO: What to store?
-	// err = StoreCredentials(config, config.ServiceID, ...)
+	// ? conjurClient.GetAuthenticator().(*authn.OidcAuthenticator).RefreshToken()
+	// err = storage.StoreCredentials(config, config.ServiceID, ...)
 	// if err != nil {
 	// 	return nil, err
 	// }
@@ -76,7 +81,7 @@ func OidcLogin(conjurClient *conjurapi.Client) (*conjurapi.Client, error) {
 	return conjurClient, nil
 }
 
-func getOidcProviderInfo(conjurClient *conjurapi.Client, serviceID string) (*conjurapi.OidcProviderResponse, error) {
+func getOidcProviderInfo(conjurClient ConjurClient, serviceID string) (*conjurapi.OidcProviderResponse, error) {
 	if serviceID == "" {
 		return nil, fmt.Errorf("%s", "Missing required configuration service ID for OIDC authenticator")
 	}
@@ -86,10 +91,12 @@ func getOidcProviderInfo(conjurClient *conjurapi.Client, serviceID string) (*con
 		return nil, err
 	}
 
+	// Find the provider that matches the service id
 	var oidcProvider *conjurapi.OidcProviderResponse
 	for _, provider := range data {
 		if provider.ServiceID == serviceID {
 			oidcProvider = &provider
+			break
 		}
 	}
 	if oidcProvider == nil {

@@ -13,6 +13,14 @@ github.com/cyberark/conjur-api-go v0.10.3-0.20221201205135-1f569b8d2690 h1:pyKoP
 github.com/cyberark/conjur-api-go v0.10.3-0.20221201205135-1f569b8d2690/go.mod h1:8+qYC7L6wPY1e56hoZmHSdGa2fHALck8PtS+cUky75Y=
 github.com/cyberark/conjur-api-go v0.10.3-0.20221201205217-6df567cf841f h1:mIZUqdGoj6oTClt7VP23HNXVVLn1A1jSOgJ+dS60hPg=
 github.com/cyberark/conjur-api-go v0.10.3-0.20221201205217-6df567cf841f/go.mod h1:8+qYC7L6wPY1e56hoZmHSdGa2fHALck8PtS+cUky75Y=
+github.com/cyberark/conjur-api-go v0.10.3-0.20221206164407-651134c62f53 h1:GhTWe69dXMq2KWaaQCSYprJpa/XM3mpPY5CWa0bEZx4=
+github.com/cyberark/conjur-api-go v0.10.3-0.20221206164407-651134c62f53/go.mod h1:8+qYC7L6wPY1e56hoZmHSdGa2fHALck8PtS+cUky75Y=
+github.com/cyberark/conjur-api-go v0.10.3-0.20221206181133-f9c2c9c9027e h1:3C13dykY02sPDIjrIQn3n/cC5VK5woPzEYWiMduNsAE=
+github.com/cyberark/conjur-api-go v0.10.3-0.20221206181133-f9c2c9c9027e/go.mod h1:8+qYC7L6wPY1e56hoZmHSdGa2fHALck8PtS+cUky75Y=
+github.com/cyberark/conjur-api-go v0.10.3-0.20221206182518-35ab290cf8e8 h1:DQ4JqDv4h9hL8VezT1D1SIDVVQfG4HDZ3tyBoEOsqe0=
+github.com/cyberark/conjur-api-go v0.10.3-0.20221206182518-35ab290cf8e8/go.mod h1:8+qYC7L6wPY1e56hoZmHSdGa2fHALck8PtS+cUky75Y=
+github.com/cyberark/conjur-api-go v0.10.3-0.20221206182913-f40c5f3c613e h1:WzOC+hb2M0uC/eazed67vKD0vC9vMylrf8XcuH2oiQ8=
+github.com/cyberark/conjur-api-go v0.10.3-0.20221206182913-f40c5f3c613e/go.mod h1:8+qYC7L6wPY1e56hoZmHSdGa2fHALck8PtS+cUky75Y=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

@@ -24,6 +24,7 @@ type ConjurClient interface {
 	CheckPermission(resourceID, privilege string) (bool, error)
 	Resource(resourceID string) (resource map[string]interface{}, err error)
 	ResourceIDs(filter *conjurapi.ResourceFilter) ([]string, error)
+	ListOidcProviders() ([]conjurapi.OidcProviderResponse, error)
 }
 
 // LoadAndValidateConjurConfig loads and validate Conjur configuration
