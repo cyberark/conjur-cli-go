@@ -2,10 +2,15 @@ package clients
 
 import (
 	"context"
+	"crypto/tls"
+	"errors"
 	"fmt"
-	"log"
+	"html"
+	"io"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/pkg/browser"
@@ -18,7 +23,69 @@ type callbackEndpoint struct {
 }
 
 func OpenBrowser(url string) error {
-	return browser.OpenURL(url)
+	err := browser.OpenURL(url)
+	if err != nil {
+		fmt.Printf("Error opening browser %s.\nPlease open the following URL in your browser:\n%s\n", err, url)
+	}
+	// Don't return an error - we want to continue even if the browser didn't open because the user
+	// can open it manually and continue the authn flow.
+	return nil
+}
+
+func FetchOidcCodeFromKeycloak(providerUrl string) error {
+
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	resp, err := http.Get(providerUrl)
+
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	content, _ := io.ReadAll(resp.Body)
+
+	cookies := resp.Cookies()
+
+	actionRegex := regexp.MustCompile(`<form[\s\S]+action="([^"]+)"`)
+	action := html.UnescapeString(actionRegex.FindStringSubmatch(string(content))[1])
+
+	// TODO: Pull username and password from environment variables?
+	req, err := http.NewRequest("POST", action, strings.NewReader("username=alice&password=alice"))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	for _, cookie := range cookies {
+		req.AddCookie(cookie)
+	}
+
+	// Disable redirect following
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	resp, err = client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == 302 || resp.StatusCode == 301 {
+		location := string(resp.Header.Get("Location"))
+		go func() {
+			resp, err = http.Get(location)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			defer resp.Body.Close()
+			content, _ = io.ReadAll(resp.Body)
+		}()
+		return nil
+	}
+
+	return errors.New("Something went wrong")
 }
 
 func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -70,9 +137,9 @@ func handleOpenIDFlow(authEndpointURL string, openBrowserFn func(string) error) 
 	}()
 
 	// Open the browser to the OIDC provider
-	browserErr := openBrowserFn(authURL.String())
-	if browserErr != nil {
-		fmt.Printf("Error opening browser. Please open the following URL in your browser:\n%s\n", authURL.String())
+	err := openBrowserFn(authURL.String())
+	if err != nil {
+		return "", err
 	}
 
 	// Set a timeout and shut down the server if we don't get a response in time
@@ -86,8 +153,6 @@ func handleOpenIDFlow(authEndpointURL string, openBrowserFn func(string) error) 
 	case <-callbackEndpoint.shutdownSignal:
 		callbackEndpoint.server.Shutdown(context.Background())
 	}
-
-	log.Println("Authorization code is ", callbackEndpoint.code)
 
 	return callbackEndpoint.code, nil
 }
