@@ -52,7 +52,7 @@ var loginCmd = &cobra.Command{
 			decoratePrompt := prompts.PromptDecoratorForCommand(cmd)
 			_, err = clients.LoginWithPromptFallback(decoratePrompt, conjurClient, username, password)
 		} else if config.AuthnType == "oidc" {
-			_, err = clients.OidcLogin(conjurClient)
+			_, err = clients.OidcLogin(conjurClient, username, password)
 		} else {
 			return fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
 		}

@@ -32,60 +32,75 @@ func OpenBrowser(url string) error {
 	return nil
 }
 
-func FetchOidcCodeFromKeycloak(providerUrl string) error {
+// Attempts to bypass the browser by using the username and password to fetch an OIDC code.
+// This works for Keycloak and possibly other OIDC providers but will not work if MFA is needed.
+func FetchOidcCodeFromProvider(username, password string) func(providerUrl string) error {
+	return func(providerUrl string) error {
+		//FIXME: This shouldn't be required to make keycloak work
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	resp, err := http.Get(providerUrl)
+		// Get the provider's login page
+		resp, err := http.Get(providerUrl)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		content, _ := io.ReadAll(resp.Body)
+
+		cookies := resp.Cookies()
+
+		// Assuming there's a form on the page, get the action URL
+		actionRegex := regexp.MustCompile(`<form[\s\S]+action="([^"]+)"`)
+		matches := actionRegex.FindStringSubmatch(string(content))
+		if len(matches) < 2 {
+			return errors.New("Unable to find login form")
+		}
+		action := html.UnescapeString(matches[1])
+
+		// Pass the username and password to the login form
+		credentials := fmt.Sprintf("username=%s&password=%s", username, password)
+		req, err := http.NewRequest("POST", action, strings.NewReader(credentials))
+		if err != nil {
+			return err
+		}
+
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+		// Include the cookies from the login page. These are used to identify the user session.
+		for _, cookie := range cookies {
+			req.AddCookie(cookie)
+		}
+
+		// Disable redirect following so we can handle the redirect ourselves
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+		resp, err = client.Do(req)
+		if err != nil {
+			return err
+		}
+
+		// If the login was successful, the provider will redirect to the callback URL with a code
+		if resp.StatusCode == 302 || resp.StatusCode == 301 {
+			location := string(resp.Header.Get("Location"))
+			go func() {
+				// Send a request to the callback URL to pass the code back to the CLI
+				resp, err = http.Get(location)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				defer resp.Body.Close()
+				content, _ = io.ReadAll(resp.Body)
+			}()
+			return nil
+		}
+
+		return errors.New("Unable to fetch code from OIDC provider")
 	}
-	defer resp.Body.Close()
-	content, _ := io.ReadAll(resp.Body)
-
-	cookies := resp.Cookies()
-
-	actionRegex := regexp.MustCompile(`<form[\s\S]+action="([^"]+)"`)
-	action := html.UnescapeString(actionRegex.FindStringSubmatch(string(content))[1])
-
-	// TODO: Pull username and password from environment variables?
-	req, err := http.NewRequest("POST", action, strings.NewReader("username=alice&password=alice"))
-	if err != nil {
-		return err
-	}
-
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	for _, cookie := range cookies {
-		req.AddCookie(cookie)
-	}
-
-	// Disable redirect following
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-	resp, err = client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode == 302 || resp.StatusCode == 301 {
-		location := string(resp.Header.Get("Location"))
-		go func() {
-			resp, err = http.Get(location)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			defer resp.Body.Close()
-			content, _ = io.ReadAll(resp.Body)
-		}()
-		return nil
-	}
-
-	return errors.New("Something went wrong")
 }
 
 func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -113,23 +128,16 @@ func handleOpenIDFlow(authEndpointURL string, openBrowserFn func(string) error) 
 	callbackEndpoint.server = server
 	http.Handle("/callback", callbackEndpoint)
 
-	// Replace the callback URL returned by Conjur with the URL to the local server we're starting
-	//TODO: Instead, fail if the callback URL is not localhost:8888
-	// callbackURL := "http://localhost:8888/callback"
 	authURL, authURLParseError := url.Parse(authEndpointURL)
 	if authURLParseError != nil {
 		return "", authURLParseError
 	}
-	// query := authURL.Query()
-	// query.Set("redirect_uri", callbackURL)
-	// authURL.RawQuery = query.Encode()
 
-	// BEGIN TEST CODE
-	// FIXME
-	// Point to locally running keycloak instance for testing
-	// authURL.Scheme = "http"
-	// authURL.Host = "localhost:7777"
-	// END TEST CODE
+	//TODO: Fail if the callback URL is not localhost:8888/callback
+	// callbackURL := "http://localhost:8888/callback"
+	if authURL.Query().Get("redirect_uri") != "http://localhost:8888/callback" {
+		return "", fmt.Errorf("redirect_uri must be http://localhost:8888/callback")
+	}
 
 	// Start the local server
 	go func() {
