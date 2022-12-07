@@ -99,6 +99,8 @@ EOL
   echo "${admin_initial_password}" | tr -d '\r\n' > "${path_to_admin_initial_password}"
   echo "Wrote admin password to dev/${path_to_admin_initial_password}"
 
+  # Even when using OIDC, we need to set up conjur with the regular authenticator
+  # so we can set up policy before dropping the user into the CLI container.
   docker-compose exec cli-dev ./dev/refresh-admin-connection-details
 
   echo
@@ -118,6 +120,14 @@ EOL
   echo "Entering CLI container"
 
   docker-compose exec cli-dev go mod download || true
+
+  echo
+  if [ "$ENABLE_AUTHN_OIDC" = true ]; then
+    echo "Setting up Conjur for OIDC"
+    docker-compose exec cli-dev bash -c 'conjur logout
+conjur init --force -u http://conjur -a dev -t oidc --service-id keycloak
+conjur login -u alice -p alice'
+  fi
 
   echo
   docker-compose exec cli-dev bash
@@ -239,16 +249,6 @@ init_oidc() {
   docker-compose up -d --no-deps "${services[@]}"
 
   configure_oidc_providers
-
-  # if [[ $ENABLE_AUTHN_LDAP = true && $ENABLE_OIDC_OKTA = true ]]; then
-  #   echo "Building & configuring Okta-LDAP agent"
-  #   services+=(okta-ldap-agent)
-  #   docker-compose up -d --no-deps "${services[@]}"
-
-  #   echo "Starting Okta agent service"
-  #   docker exec "$(docker-compose ps -q okta-ldap-agent)" \
-  #     "/opt/Okta/OktaLDAPAgent/scripts/OktaLDAPAgent"
-  # fi
 }
 
 start_auth_services() {

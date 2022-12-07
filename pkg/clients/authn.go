@@ -3,6 +3,7 @@ package clients
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-api-go/conjurapi/authn"
@@ -49,7 +50,7 @@ func LoginWithPromptFallback(
 	return authenticatePair, nil
 }
 
-func OidcLogin(conjurClient *conjurapi.Client) (*conjurapi.Client, error) {
+func OidcLogin(conjurClient *conjurapi.Client, username string, password string) (*conjurapi.Client, error) {
 	config := conjurClient.GetConfig()
 
 	oidcProvider, err := getOidcProviderInfo(conjurClient, config.ServiceID)
@@ -57,7 +58,14 @@ func OidcLogin(conjurClient *conjurapi.Client) (*conjurapi.Client, error) {
 		return nil, err
 	}
 
-	code, err := handleOpenIDFlow(oidcProvider.RedirectURI, FetchOidcCodeFromKeycloak)
+	// If a username and password is provided, attempt to use them to fetch an OIDC code instead of opening a browser
+	oidcPromptHandler := OpenBrowser
+	if username != "" && password != "" {
+		log.Print("Attempting to use username and password to fetch OIDC code. " +
+			"This is meant for testing purposes only and should not be used in production.")
+		oidcPromptHandler = FetchOidcCodeFromProvider(username, password)
+	}
+	code, err := handleOpenIDFlow(oidcProvider.RedirectURI, oidcPromptHandler)
 	if err != nil {
 		return nil, err
 	}
@@ -67,13 +75,8 @@ func OidcLogin(conjurClient *conjurapi.Client) (*conjurapi.Client, error) {
 		return nil, err
 	}
 
-	//TODO: What to store?
-	// ? conjurClient.GetAuthenticator().(*authn.OidcAuthenticator).RefreshToken()
-	// err = storage.StoreCredentials(config, config.ServiceID, ...)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
+	// Refreshes the access token and caches it locally
+	err = conjurClient.RefreshToken()
 	if err != nil {
 		return nil, err
 	}

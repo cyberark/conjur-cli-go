@@ -81,7 +81,7 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 			decoratePrompt := prompts.PromptDecoratorForCommand(cmd)
 			client, err = Login(client, decoratePrompt)
 		} else if config.AuthnType == "oidc" {
-			client, err = OidcLogin(client)
+			client, err = OidcLogin(client, "", "")
 		} else {
 			return nil, fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
 		}
