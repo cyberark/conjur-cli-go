@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"encoding/json"
+
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/spf13/cobra"
 )
@@ -61,18 +63,48 @@ Examples:
 	}
 }
 
-var resourceShowCmd = &cobra.Command{
-	Use:   "show",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+func newResourceShowCmd(clientFactory resourceClientFactoryFunc) *cobra.Command {
+	return &cobra.Command{
+		Use:   "show",
+		Short: "Show a resource",
+		Long: `Show a resource
+		
+This command requires one argument, a [resource-id].
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Println("resource show called")
-	},
+Examples:
+
+-   conjur resource show dev:user:someuser
+-   conjur resource show dev:host:somehost`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var resourceID string
+
+			if len(args) < 1 {
+				cmd.Help()
+				return nil
+			}
+
+			resourceID = args[0]
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			result, err := client.Resource(resourceID)
+			if err != nil {
+				return err
+			}
+
+			prettyResult, err := json.MarshalIndent(result, "", "  ")
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(string(prettyResult))
+
+			return nil
+		},
+	}
 }
 
 var resourcePermittedRolesCmd = &cobra.Command{
@@ -93,6 +125,7 @@ func init() {
 	rootCmd.AddCommand(resourceCmd)
 
 	resourceExistsCmd := newResourceExistsCmd(resourceClientFactory)
+	resourceShowCmd := newResourceShowCmd(resourceClientFactory)
 
 	resourceCmd.AddCommand(resourceExistsCmd)
 	resourceCmd.AddCommand(resourceShowCmd)
