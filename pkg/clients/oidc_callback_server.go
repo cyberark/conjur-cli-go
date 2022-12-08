@@ -2,7 +2,9 @@ package clients
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/tls"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"html"
@@ -20,21 +22,21 @@ type callbackEndpoint struct {
 	server         *http.Server
 	shutdownSignal chan string
 	code           string
+	state          string
 }
 
-func OpenBrowser(url string) error {
+// openBrowser attempts to open a web browser to the given URL
+func openBrowser(url string) error {
 	err := browser.OpenURL(url)
 	if err != nil {
-		fmt.Printf("Error opening browser %s.\nPlease open the following URL in your browser:\n%s\n", err, url)
+		return fmt.Errorf("Error opening browser")
 	}
-	// Don't return an error - we want to continue even if the browser didn't open because the user
-	// can open it manually and continue the authn flow.
 	return nil
 }
 
-// Attempts to bypass the browser by using the username and password to fetch an OIDC code.
-// This works for Keycloak and possibly other OIDC providers but will not work if MFA is needed.
-func FetchOidcCodeFromProvider(username, password string) func(providerUrl string) error {
+// fetchOidcCodeFromProvider attempts to bypass the browser by using the username and password to fetch
+// an OIDC code. This works for Keycloak and possibly other OIDC providers but will not work if MFA is needed.
+func fetchOidcCodeFromProvider(username, password string) func(providerUrl string) error {
 	return func(providerUrl string) error {
 		//FIXME: This shouldn't be required to make keycloak work
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -104,7 +106,23 @@ func FetchOidcCodeFromProvider(username, password string) func(providerUrl strin
 }
 
 func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Verify request is coming from local machine
+	if !strings.HasPrefix(r.RemoteAddr, "[::1]:") && !strings.HasPrefix(r.RemoteAddr, "127.0.0.1:") {
+		fmt.Fprintln(w, "Failed to log in. You may close the browser and try again.")
+		return
+	}
+
+	// Check state and ignore request if it doesn't match
+	state := r.URL.Query().Get("state")
+	if state != h.state {
+		fmt.Fprintln(w, "Failed to log in. You may close the browser and try again.")
+		// Don't shut down the server so the user can try again. This prevents DoS attacks by
+		// flooding the localhost:8888/callback endpoint with requests.
+		return
+	}
+
 	code := r.URL.Query().Get("code")
+
 	if code != "" {
 		h.code = code
 		fmt.Fprintln(w, "Logged in successfully. You may close the browser and return to the command line.")
@@ -114,16 +132,16 @@ func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.shutdownSignal <- "shutdown"
 }
 
-func handleOpenIDFlow(authEndpointURL string, openBrowserFn func(string) error) (string, error) {
+func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, openBrowserFn func(string) error) (string, error) {
 
 	callbackEndpoint := &callbackEndpoint{}
+	callbackEndpoint.state = generateStateFn()
 	callbackEndpoint.shutdownSignal = make(chan string)
 	server := &http.Server{
-		Addr:           ":8888",
-		Handler:        nil,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+		Addr:         "localhost:8888",
+		Handler:      nil,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 	callbackEndpoint.server = server
 	http.Handle("/callback", callbackEndpoint)
@@ -133,15 +151,27 @@ func handleOpenIDFlow(authEndpointURL string, openBrowserFn func(string) error) 
 		return "", authURLParseError
 	}
 
-	//TODO: Fail if the callback URL is not localhost:8888/callback
-	// callbackURL := "http://localhost:8888/callback"
-	if authURL.Query().Get("redirect_uri") != "http://localhost:8888/callback" {
+	queryVals := authURL.Query()
+
+	// TODO: What if this port isn't available? Should this be configurable?
+	if queryVals.Get("redirect_uri") != "http://localhost:8888/callback" {
 		return "", fmt.Errorf("redirect_uri must be http://localhost:8888/callback")
 	}
 
+	queryVals.Set("state", callbackEndpoint.state)
+	authURL.RawQuery = queryVals.Encode()
+
 	// Start the local server
 	go func() {
-		server.ListenAndServe()
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Errorf("Error starting local server: %s", err)
+			}
+		}()
+		err := server.ListenAndServe()
+		if err != nil {
+			fmt.Errorf("Error starting local server: %s", err)
+		}
 	}()
 
 	// Open the browser to the OIDC provider
@@ -163,4 +193,10 @@ func handleOpenIDFlow(authEndpointURL string, openBrowserFn func(string) error) 
 	}
 
 	return callbackEndpoint.code, nil
+}
+
+func generateState() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return base64.StdEncoding.EncodeToString(b)
 }

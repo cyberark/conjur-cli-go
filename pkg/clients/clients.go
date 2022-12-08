@@ -3,6 +3,7 @@ package clients
 import (
 	"fmt"
 	"io"
+	"net/http"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
@@ -14,6 +15,7 @@ import (
 type ConjurClient interface {
 	Login(login string, password string) ([]byte, error)
 	GetConfig() conjurapi.Config
+	GetAuthenticator() conjurapi.Authenticator
 	WhoAmI() ([]byte, error)
 	RotateUserAPIKey(userID string) ([]byte, error)
 	RotateHostAPIKey(hostID string) ([]byte, error)
@@ -25,6 +27,8 @@ type ConjurClient interface {
 	Resource(resourceID string) (resource map[string]interface{}, err error)
 	ResourceIDs(filter *conjurapi.ResourceFilter) ([]string, error)
 	ListOidcProviders() ([]conjurapi.OidcProviderResponse, error)
+	RefreshToken() error
+	GetHttpClient() *http.Client
 }
 
 // LoadAndValidateConjurConfig loads and validate Conjur configuration
@@ -55,7 +59,7 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 	// TODO: This is called multiple time because each operation potentially uses a new HTTP client bound to the
 	// temporary Conjur client being created at that point in time. We should really not be creating so many Conjur clients
 	// we should just have one then the rest is an attempt to get an authenticator
-	decorateConjurClient := func(client *conjurapi.Client) {
+	decorateConjurClient := func(client ConjurClient) {
 		MaybeVerboseLoggingForClient(verbose, cmd, client)
 	}
 
@@ -64,7 +68,8 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		return nil, err
 	}
 
-	client, err := conjurapi.NewClientFromEnvironment(config)
+	var client ConjurClient
+	client, err = conjurapi.NewClientFromEnvironment(config)
 	decorateConjurClient(client)
 	if err != nil {
 		cmd.Printf("warn: %s\n", err)

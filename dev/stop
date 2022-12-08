@@ -4,13 +4,13 @@
 # from anywhere.
 cd "$(dirname "$0")"
 
-# echo "This script will destroy any pre-existing development environment. Are you sure you want to run this script ?"
-# select yn in "Yes" "No"; do
-#     case $yn in
-#         Yes ) break;;
-#         No ) exit 1;;
-#     esac
-# done
+echo "This script will destroy any pre-existing development environment. Are you sure you want to run this script ?"
+select yn in "Yes" "No"; do
+    case $yn in
+        Yes ) break;;
+        No ) exit 1;;
+    esac
+done
 
 set -x
 

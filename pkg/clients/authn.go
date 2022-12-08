@@ -3,7 +3,6 @@ package clients
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-api-go/conjurapi/authn"
@@ -12,7 +11,8 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-func Login(conjurClient *conjurapi.Client, decoratePrompt func(prompt *promptui.Prompt) *promptui.Prompt) (*conjurapi.Client, error) {
+// Login attempts to login to Conjur and prompts the user for credentials interactively
+func Login(conjurClient ConjurClient, decoratePrompt func(prompt *promptui.Prompt) *promptui.Prompt) (ConjurClient, error) {
 	authenticatePair, err := LoginWithPromptFallback(decoratePrompt, conjurClient, "", "")
 	if err != nil {
 		return nil, err
@@ -50,7 +50,10 @@ func LoginWithPromptFallback(
 	return authenticatePair, nil
 }
 
-func OidcLogin(conjurClient *conjurapi.Client, username string, password string) (*conjurapi.Client, error) {
+// OidcLogin attempts to login to Conjur using the OIDC flow. Username and password can be provided to
+// bypass the browser and use the username and password to fetch an OIDC code. This option is meant for testing
+// purposes only and will print a warning.
+func OidcLogin(conjurClient ConjurClient, username string, password string) (ConjurClient, error) {
 	config := conjurClient.GetConfig()
 
 	oidcProvider, err := getOidcProviderInfo(conjurClient, config.ServiceID)
@@ -59,13 +62,13 @@ func OidcLogin(conjurClient *conjurapi.Client, username string, password string)
 	}
 
 	// If a username and password is provided, attempt to use them to fetch an OIDC code instead of opening a browser
-	oidcPromptHandler := OpenBrowser
+	oidcPromptHandler := openBrowser
 	if username != "" && password != "" {
-		log.Print("Attempting to use username and password to fetch OIDC code. " +
+		fmt.Println("Attempting to use username and password to fetch OIDC code. " +
 			"This is meant for testing purposes only and should not be used in production.")
-		oidcPromptHandler = FetchOidcCodeFromProvider(username, password)
+		oidcPromptHandler = fetchOidcCodeFromProvider(username, password)
 	}
-	code, err := handleOpenIDFlow(oidcProvider.RedirectURI, oidcPromptHandler)
+	code, err := handleOpenIDFlow(oidcProvider.RedirectURI, generateState, oidcPromptHandler)
 	if err != nil {
 		return nil, err
 	}

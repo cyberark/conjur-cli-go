@@ -6,9 +6,8 @@ services:
       POSTGRES_HOST_AUTH_METHOD: trust
 
   conjur:
-    image: conjur:fd6155b5
+    image: cyberark/conjur:1.19.1-3325
     command: server
-    pull_policy: never
     environment:
       DATABASE_URL: postgres://postgres@pg/postgres
       CONJUR_DATA_KEY: Bd4+A1QnELGC1Fb5/KauFlVez981OoYblbyfNOCavuQ=
@@ -25,8 +24,6 @@ services:
     command: bash -c "cd ${PWD}/..; make install; sleep infinity"
     working_dir: ${PWD}/..
     restart: on-failure
-    ports:
-      - 8080
     volumes:
       - ${PWD}/..:${PWD}/..
       - ./tmp/.bashrc:/root/.bashrc

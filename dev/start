@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -xeo pipefail
+set -eo pipefail
 
 # CC servers can't find it for some reason.  Local shellcheck is fine.
 # shellcheck disable=SC1091
