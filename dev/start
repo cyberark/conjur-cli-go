@@ -208,7 +208,9 @@ configure_oidc_authenticators() {
   if [[ $ENABLE_OIDC_OKTA = true ]]; then
     client_load_policy "okta/okta-2.yml"
 
-    # TODO - okta credentials currently linked to Glen's developer account - need to hand off to infra for actual integration tests
+    # TODO - Okta credentials currently linked to Glen's developer account
+    # Assumes callback url is http://localhost:8888/callback
+    # Need to hand off to infra for actual integration tests
     client_add_secret 'conjur/authn-oidc/okta-2/provider-uri' 'https://dev-89721339.okta.com/oauth2/default'
     client_add_secret 'conjur/authn-oidc/okta-2/client-id' '0oa6wgpys3TD2c3Bz5d7'
     client_add_secret 'conjur/authn-oidc/okta-2/client-secret' 'aTNL1FTvj9NQeLCi5sHxBxrYThNixFHdDR5vrWiy'

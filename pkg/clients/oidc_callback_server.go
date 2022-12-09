@@ -10,6 +10,7 @@ import (
 	"html"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -39,18 +40,24 @@ func OpenBrowser(url string) error {
 // This works for Keycloak and possibly other OIDC providers but will not work if MFA is needed.
 func FetchOidcCodeFromProvider(username, password string) func(providerUrl string) error {
 	return func(providerUrl string) error {
+		// Create a client with redirect following disabled so we can handle the redirect ourselves
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
 		switch {
 		case strings.Contains(providerUrl, "okta"):
 			fmt.Println("Using Okta as OIDC provider")
-			return FetchOidcCodeFromOkta(username, password, providerUrl)
+			return fetchOidcCodeFromOkta(client, username, password, providerUrl)
 		default:
 			fmt.Println("Using Keycloak as OIDC provider")
-			return FetchOidcCodeFromKeycloak(username, password, providerUrl)
+			return fetchOidcCodeFromKeycloak(client, username, password, providerUrl)
 		}
 	}
 }
 
-func FetchOidcCodeFromKeycloak(username, password, providerUrl string) error {
+func fetchOidcCodeFromKeycloak(client *http.Client, username, password, providerUrl string) error {
 	//FIXME: This shouldn't be required to make keycloak work
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
@@ -87,12 +94,6 @@ func FetchOidcCodeFromKeycloak(username, password, providerUrl string) error {
 		req.AddCookie(cookie)
 	}
 
-	// Disable redirect following so we can handle the redirect ourselves
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
 	resp, err = client.Do(req)
 	if err != nil {
 		return err
@@ -100,120 +101,58 @@ func FetchOidcCodeFromKeycloak(username, password, providerUrl string) error {
 
 	// If the login was successful, the provider will redirect to the callback URL with a code
 	if resp.StatusCode == 302 || resp.StatusCode == 301 {
-		location := string(resp.Header.Get("Location"))
-		go func() {
-			// Send a request to the callback URL to pass the code back to the CLI
-			resp, err = http.Get(location)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			defer resp.Body.Close()
-			content, _ = io.ReadAll(resp.Body)
-		}()
+		callbackRedirect(resp)
 		return nil
 	}
 
 	return errors.New("Unable to fetch authorization code from Keycloak")
 }
 
-func FetchOidcCodeFromOkta(username, password, providerUrl string) error {
-
-	sessionToken, err := FetchSessionTokenFromOkta()
+func fetchOidcCodeFromOkta(client *http.Client, username, password, providerUrl string) error {
+	sessionToken, err := fetchSessionTokenFromOkta(client, providerUrl, username, password)
 	if err != nil {
 		return err
 	}
 
+	// TODO: Okta currently requires a state parameter which may not be needed
+	// Or at the very least shouldn't be hardcoded and should come from Conjur
 	providerUrl += "&state=4f413476ef7e2395f0af&sessionToken=" + sessionToken
-	fmt.Printf("Provider URL: %s\n", providerUrl)
 
 	req, err := http.NewRequest("GET", providerUrl, nil)
 	if err != nil {
 		return err
 	}
 
-	// Disable redirect following
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
 	resp, err := client.Do(req)
-	//TODO: Hanging here
-	fmt.Println("Response received")
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	fmt.Println(resp.Status)
-
-	content, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(content))
+	defer resp.Body.Close()
 
 	// If the login was successful, the provider will redirect to the callback URL with a code
 	if resp.StatusCode == 302 || resp.StatusCode == 301 {
-		location := string(resp.Header.Get("Location"))
-		go func() {
-			// Send a request to the callback URL to pass the code back to the CLI
-			resp, err = http.Get(location)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			defer resp.Body.Close()
-			content, _ = io.ReadAll(resp.Body)
-		}()
+		callbackRedirect(resp)
 		return nil
 	}
 	return errors.New("Unable to fetch authorization code from Okta")
 }
 
-type OktaRequestBody struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
+func fetchSessionTokenFromOkta(client *http.Client, providerUrl string, username string, password string) (string, error) {
+	fmt.Println("Attempting to get session token from Okta using the provided username/password")
 
-func CallbackRedirect(resp http.Response) error {
-	location := string(resp.Header.Get("Location"))
-	go func() {
-		// Send a request to the callback URL to pass the code back to the CLI
-		resp, err := http.Get(location)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		defer resp.Body.Close()
-		content, _ := io.ReadAll(resp.Body)
-		fmt.Println(string(content))
-	}()
-	return nil
-}
+	type OktaRequestBody struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
 
-func FetchSessionTokenFromOkta() (string, error) {
-
-	fmt.Printf("Attempting to get session token from Okta\n")
 	requestJson := OktaRequestBody{
-		Username: "test.user3@mycompany.com",
-		Password: "Password1234!",
+		Username: username,
+		Password: password,
 	}
+
 	payload, _ := json.Marshal(requestJson)
-
-	fmt.Printf("Payload: %s\n", string(payload))
-
-	url := "https://dev-89721339.okta.com/api/v1/authn"
-	method := "POST"
-
-	// Disable redirect following
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
+	authEndpoint := extractHostname(providerUrl) + "/api/v1/authn"
+	req, err := http.NewRequest("POST", authEndpoint, bytes.NewBuffer(payload))
 
 	if err != nil {
 		fmt.Println(err)
@@ -228,18 +167,37 @@ func FetchSessionTokenFromOkta() (string, error) {
 	}
 	defer res.Body.Close()
 
-	fmt.Println("Response status: ", res.Status)
-
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
 		return "", err
 	}
-	fmt.Println("Response body: ", string(body))
 
 	sessionToken := extractValueFromJson(string(body), "sessionToken")
 	return sessionToken, nil
+}
 
+func callbackRedirect(resp *http.Response) error {
+	location := string(resp.Header.Get("Location"))
+	go func() {
+		// Send a request to the callback URL to pass the code back to the CLI
+		resp, err := http.Get(location)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer resp.Body.Close()
+	}()
+	return nil
+}
+
+func extractHostname(providerUrl string) string {
+	url, err := url.Parse(providerUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	hostname := url.Scheme + "://" + url.Host
+	return hostname
 }
 
 func extractValueFromJson(body string, key string) string {

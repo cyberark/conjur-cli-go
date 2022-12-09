@@ -66,8 +66,6 @@ func OidcLogin(conjurClient *conjurapi.Client, username string, password string)
 		oidcPromptHandler = FetchOidcCodeFromProvider(username, password)
 	}
 
-	fmt.Printf("Got Provider info: %s", oidcProvider)
-
 	code, err := handleOpenIDFlow(oidcProvider.RedirectURI, oidcPromptHandler)
 	if err != nil {
 		return nil, err
