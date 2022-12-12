@@ -28,28 +28,28 @@ var checkCmdTestCases = []struct {
 		name: "check help",
 		args: []string{"check", "--help"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "This command requires two arguments, a [resourceId] and a [privilege].")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
 		name: "check no args",
 		args: []string{"check"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "This command requires two arguments, a [resourceId] and a [privilege].")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
 		name: "check missing resourceID",
 		args: []string{"check", "write"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "This command requires two arguments, a [resourceId] and a [privilege].")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
 		name: "check missing privilege",
 		args: []string{"check", "dev:variable:somevariable"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "This command requires two arguments, a [resourceId] and a [privilege].")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{

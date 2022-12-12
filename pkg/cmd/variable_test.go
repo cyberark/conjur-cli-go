@@ -33,21 +33,21 @@ var variableCmdTestCases = []struct {
 		name: "variable command help",
 		args: []string{"variable", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "Use the variable command to manage Conjur variables")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
 		name: "get subcommand help",
 		args: []string{"variable", "get", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "Use the get subcommand to get the value of one or more Conjur variables")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
 		name: "set subcommand help",
 		args: []string{"variable", "set", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "Use the set subcommand to set the value of a Conjur variable")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{

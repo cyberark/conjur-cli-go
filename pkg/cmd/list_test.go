@@ -29,7 +29,7 @@ var listCmdTestCases = []struct {
 		name: "list help",
 		args: []string{"list", "--help"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "List all available resources belonging to this account.")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{

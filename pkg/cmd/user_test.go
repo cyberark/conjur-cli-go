@@ -34,7 +34,7 @@ var userRotateAPIKeyCmdTestCases = []struct {
 		name: "display help",
 		args: []string{"user", "rotate-api-key", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "Rotate a user's API key")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
@@ -114,6 +114,7 @@ func TestUserRotateAPIKeyCmd(t *testing.T) {
 			)
 
 			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
+
 			tc.assert(t, stdout, stderr, err)
 		})
 	}

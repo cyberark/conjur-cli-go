@@ -28,14 +28,14 @@ var resourceExistsCmdTestCases = []struct {
 		name: "resource exists help",
 		args: []string{"exists", "--help"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "Checks if whether a resource exists")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
 		name: "resource exists missing resource-id",
 		args: []string{"exists"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "This command requires one argument, a [resource-id].")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{

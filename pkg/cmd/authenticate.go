@@ -9,7 +9,7 @@ import (
 
 var authenticateCmd = &cobra.Command{
 	Use:          "authenticate",
-	Short:        "A brief description of your command",
+	Short:        "Obtains an access token for the currently logged-in user.",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		conjurClient, err := clients.AuthenticatedConjurClientForCommand(cmd)

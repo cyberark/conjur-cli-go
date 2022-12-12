@@ -49,7 +49,7 @@ var policyCmdTestCases = []policyCmdTestCase{
 		name: "policy command help",
 		args: []string{"policy", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "Use the policy command to manage Conjur policies")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 }
@@ -57,14 +57,13 @@ var policyCmdTestCases = []policyCmdTestCase{
 func sharedPolicyCmdTestCases(
 	subcommand string,
 	expectedMode conjurapi.PolicyMode,
-	expectedHelpString string,
 ) []policyCmdTestCase {
 	return []policyCmdTestCase{
 		{
 			name: fmt.Sprintf("%s subcommand help", subcommand),
 			args: []string{"policy", subcommand, "--help"},
 			assert: func(t *testing.T, stdout, stderr string, err error) {
-				assert.Contains(t, stdout, expectedHelpString)
+				assert.Contains(t, stdout, "HELP LONG")
 			},
 		},
 		{
@@ -204,17 +203,14 @@ func TestPolicyCmd(t *testing.T) {
 		sharedPolicyCmdTestCases(
 			"load",
 			conjurapi.PolicyModePost,
-			"Load a policy and create resources",
 		),
 		sharedPolicyCmdTestCases(
 			"append",
 			conjurapi.PolicyModePatch,
-			"Update existing resources in the policy or create new resources",
 		),
 		sharedPolicyCmdTestCases(
 			"replace",
 			conjurapi.PolicyModePut,
-			"Fully replace an existing policy",
 		),
 	} {
 		allTests = append(allTests, cases...)

@@ -28,7 +28,7 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 		name: "display help",
 		args: []string{"host", "rotate-api-key", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "Rotate a host's API key")
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{

@@ -47,17 +47,17 @@ func getResourceFilterObject(cmd *cobra.Command) (*conjurapi.ResourceFilter, err
 func newListCmd(clientFactory listClientFactoryFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List all available resources belonging to this account",
-		Long: `List all available resources belonging to this account.
+		Short: "List resources visible to the currently logged-in user",
+		Long: `List resources visible to the currently logged-in user.
 		
-This command returns desired resources belonging to this account.
 Optional flags can be used to narrow down specific resources.
 
 Examples:
-
-List all resources : conjur list
-List all users     : conjur list -k user
-List 5 users       : conjur list -k user -l 5`,
+- List all resources : conjur list
+- List all users     : conjur list -k user
+- List first 5 users : conjur list -k user -l 5
+- List next 5 users  : conjur list -k user -l 5 -o 5
+- List staging hosts : conjur list -k host -s staging`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := clientFactory(cmd)
