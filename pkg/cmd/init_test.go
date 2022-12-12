@@ -26,7 +26,7 @@ var initCmdTestCases = []struct {
 			assert.Contains(
 				t,
 				stdout,
-				"Use the init command to initialize the Conjur CLI with a Conjur endpoint.",
+				"HELP LONG",
 			)
 		},
 	},

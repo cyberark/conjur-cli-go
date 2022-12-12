@@ -119,8 +119,17 @@ func executeCommandForTestWithPromptResponses(
 	cmd.AddCommand(c)
 	cmd.SetArgs(args)
 
+	c.Short = "HELP SHORT"
+	c.Long = "HELP LONG"
+
 	stdoutBuf := new(bytes.Buffer)
 	stderrBuf := new(bytes.Buffer)
+
+	// Will have to make this recursive if we have deeper subcommands.
+	for _, subCmd := range c.Commands() {
+		subCmd.Short = "HELP SHORT"
+		subCmd.Long = "HELP LONG"
+	}
 
 	cmd.SetOut(stdoutBuf)
 	cmd.SetErr(stderrBuf)

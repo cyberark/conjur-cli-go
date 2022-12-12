@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const _listHelpStr = "List resources visible to the currently logged-in user."
-
 type mockListClient struct {
 	t             *testing.T
 	listResources func(t *testing.T, filter *conjurapi.ResourceFilter) ([]string, error)
@@ -31,7 +29,7 @@ var listCmdTestCases = []struct {
 		name: "list help",
 		args: []string{"list", "--help"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, _listHelpStr)
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{

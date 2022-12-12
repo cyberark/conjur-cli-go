@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const _hostRotateAPIKeyHelpStr = "Rotate the API key of the host specified by the [host-id] parameter."
-
 type mockHostClient struct {
 	t                *testing.T
 	hostRotateAPIKey func(*testing.T, string) ([]byte, error)
@@ -30,7 +28,7 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 		name: "display help",
 		args: []string{"host", "rotate-api-key", "--help"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, _hostRotateAPIKeyHelpStr)
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{

@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const _resourceExistsHelpStr = "Checks if a resource exists, given a [resource-id]."
-
 type mockResourceClient struct {
 	t        *testing.T
 	resource func(t *testing.T, resourceID string) (resource map[string]interface{}, err error)
@@ -30,14 +28,14 @@ var resourceExistsCmdTestCases = []struct {
 		name: "resource exists help",
 		args: []string{"exists", "--help"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, _resourceExistsHelpStr)
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
 		name: "resource exists missing resource-id",
 		args: []string{"exists"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, _resourceExistsHelpStr)
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{

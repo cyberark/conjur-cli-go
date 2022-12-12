@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const _checkHelpStr = "Check whether the currently logged-in user has a given [privilege] on a resource specified by a [resource-id]."
-
 type mockCheckClient struct {
 	t               *testing.T
 	checkPermission func(t *testing.T, resourceID, privilege string) (bool, error)
@@ -30,28 +28,28 @@ var checkCmdTestCases = []struct {
 		name: "check help",
 		args: []string{"check", "--help"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, _checkHelpStr)
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
 		name: "check no args",
 		args: []string{"check"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, _checkHelpStr)
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
 		name: "check missing resourceID",
 		args: []string{"check", "write"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, _checkHelpStr)
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
 		name: "check missing privilege",
 		args: []string{"check", "dev:variable:somevariable"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, _checkHelpStr)
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{
