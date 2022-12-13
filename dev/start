@@ -199,7 +199,7 @@ configure_oidc_authenticators() {
     client_add_secret 'conjur/authn-oidc/keycloak/claim-mapping' 'email'
     client_add_secret 'conjur/authn-oidc/keycloak/nonce' 'af88d8f8ff6631fb4cf0'
     client_add_secret 'conjur/authn-oidc/keycloak/state' 'd38e57e0fd47ccffa9c2'
-    client_add_secret 'conjur/authn-oidc/keycloak/redirect_uri' 'http://localhost:8888/callback'
+    client_add_secret 'conjur/authn-oidc/keycloak/redirect_uri' 'http://127.0.0.1:8888/callback'
 
     client_load_policy "keycloak/users.yml"
 
@@ -214,7 +214,7 @@ configure_oidc_authenticators() {
     client_add_secret 'conjur/authn-oidc/okta-2/claim-mapping' 'preferred_username'
     client_add_secret 'conjur/authn-oidc/okta-2/nonce' '1656b4264b60af659fce'
     client_add_secret 'conjur/authn-oidc/okta-2/state' '4f413476ef7e2395f0af'
-    client_add_secret 'conjur/authn-oidc/okta-2/redirect_uri' 'http://localhost:8888/callback'
+    client_add_secret 'conjur/authn-oidc/okta-2/redirect_uri' 'http://127.0.0.1:8888/callback'
 
     client_load_policy "okta/okta-users.yml"
   fi

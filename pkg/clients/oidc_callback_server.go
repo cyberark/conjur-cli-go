@@ -3,15 +3,10 @@ package clients
 import (
 	"context"
 	"crypto/rand"
-	"crypto/tls"
 	"encoding/base64"
-	"errors"
 	"fmt"
-	"html"
-	"io"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -34,77 +29,6 @@ func openBrowser(url string) error {
 	return nil
 }
 
-// fetchOidcCodeFromProvider attempts to bypass the browser by using the username and password to fetch
-// an OIDC code. This works for Keycloak and possibly other OIDC providers but will not work if MFA is needed.
-func fetchOidcCodeFromProvider(username, password string) func(providerUrl string) error {
-	return func(providerUrl string) error {
-		//FIXME: This shouldn't be required to make keycloak work
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
-		// Get the provider's login page
-		resp, err := http.Get(providerUrl)
-
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-		content, _ := io.ReadAll(resp.Body)
-
-		cookies := resp.Cookies()
-
-		// Assuming there's a form on the page, get the action URL
-		actionRegex := regexp.MustCompile(`<form[\s\S]+action="([^"]+)"`)
-		matches := actionRegex.FindStringSubmatch(string(content))
-		if len(matches) < 2 {
-			return errors.New("Unable to find login form")
-		}
-		action := html.UnescapeString(matches[1])
-
-		// Pass the username and password to the login form
-		credentials := fmt.Sprintf("username=%s&password=%s", username, password)
-		req, err := http.NewRequest("POST", action, strings.NewReader(credentials))
-		if err != nil {
-			return err
-		}
-
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-		// Include the cookies from the login page. These are used to identify the user session.
-		for _, cookie := range cookies {
-			req.AddCookie(cookie)
-		}
-
-		// Disable redirect following so we can handle the redirect ourselves
-		client := &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-		}
-		resp, err = client.Do(req)
-		if err != nil {
-			return err
-		}
-
-		// If the login was successful, the provider will redirect to the callback URL with a code
-		if resp.StatusCode == 302 || resp.StatusCode == 301 {
-			location := string(resp.Header.Get("Location"))
-			go func() {
-				// Send a request to the callback URL to pass the code back to the CLI
-				resp, err = http.Get(location)
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-				defer resp.Body.Close()
-				content, _ = io.ReadAll(resp.Body)
-			}()
-			return nil
-		}
-
-		return errors.New("Unable to fetch code from OIDC provider")
-	}
-}
-
 func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Verify request is coming from local machine
 	if !strings.HasPrefix(r.RemoteAddr, "[::1]:") && !strings.HasPrefix(r.RemoteAddr, "127.0.0.1:") {
@@ -117,7 +41,7 @@ func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if state != h.state {
 		fmt.Fprintln(w, "Failed to log in. You may close the browser and try again.")
 		// Don't shut down the server so the user can try again. This prevents DoS attacks by
-		// flooding the localhost:8888/callback endpoint with requests.
+		// flooding the 127.0.0.1:8888/callback endpoint with requests.
 		return
 	}
 
@@ -138,11 +62,12 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 	callbackEndpoint.state = generateStateFn()
 	callbackEndpoint.shutdownSignal = make(chan string)
 	server := &http.Server{
-		Addr:         "localhost:8888",
+		Addr:         "127.0.0.1:8888",
 		Handler:      nil,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
+	// No need to use HTTPS as per https://www.rfc-editor.org/rfc/rfc8252#section-8.3
 	callbackEndpoint.server = server
 	http.Handle("/callback", callbackEndpoint)
 
@@ -154,8 +79,8 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 	queryVals := authURL.Query()
 
 	// TODO: What if this port isn't available? Should this be configurable?
-	if queryVals.Get("redirect_uri") != "http://localhost:8888/callback" {
-		return "", fmt.Errorf("redirect_uri must be http://localhost:8888/callback")
+	if queryVals.Get("redirect_uri") != "http://127.0.0.1:8888/callback" {
+		return "", fmt.Errorf("redirect_uri must be http://127.0.0.1:8888/callback")
 	}
 
 	queryVals.Set("state", callbackEndpoint.state)
@@ -163,15 +88,7 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 
 	// Start the local server
 	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				fmt.Errorf("Error starting local server: %s", err)
-			}
-		}()
-		err := server.ListenAndServe()
-		if err != nil {
-			fmt.Errorf("Error starting local server: %s", err)
-		}
+		server.ListenAndServe()
 	}()
 
 	// Open the browser to the OIDC provider

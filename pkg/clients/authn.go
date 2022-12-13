@@ -50,10 +50,8 @@ func LoginWithPromptFallback(
 	return authenticatePair, nil
 }
 
-// OidcLogin attempts to login to Conjur using the OIDC flow. Username and password can be provided to
-// bypass the browser and use the username and password to fetch an OIDC code. This option is meant for testing
-// purposes only and will print a warning.
-func OidcLogin(conjurClient ConjurClient, username string, password string) (ConjurClient, error) {
+// oidcLogin attempts to login to Conjur using the OIDC flow
+func oidcLogin(conjurClient ConjurClient, oidcPromptHandler func(string) error) (ConjurClient, error) {
 	config := conjurClient.GetConfig()
 
 	oidcProvider, err := getOidcProviderInfo(conjurClient, config.ServiceID)
@@ -61,13 +59,6 @@ func OidcLogin(conjurClient ConjurClient, username string, password string) (Con
 		return nil, err
 	}
 
-	// If a username and password is provided, attempt to use them to fetch an OIDC code instead of opening a browser
-	oidcPromptHandler := openBrowser
-	if username != "" && password != "" {
-		fmt.Println("Attempting to use username and password to fetch OIDC code. " +
-			"This is meant for testing purposes only and should not be used in production.")
-		oidcPromptHandler = fetchOidcCodeFromProvider(username, password)
-	}
 	code, err := handleOpenIDFlow(oidcProvider.RedirectURI, generateState, oidcPromptHandler)
 	if err != nil {
 		return nil, err

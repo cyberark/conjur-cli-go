@@ -21,7 +21,7 @@ services:
     
   cli-dev:
     image: golang:1.19
-    command: bash -c "cd ${PWD}/..; make install; sleep infinity"
+    command: bash -c "cd ${PWD}/..; make install_dev; sleep infinity"
     working_dir: ${PWD}/..
     restart: on-failure
     volumes:
@@ -44,7 +44,7 @@ services:
       - KEYCLOAK_NON_CONJUR_APP_USER_EMAIL=not_in_conjur
       - DB_VENDOR=H2
       - KEYCLOAK_CLIENT_ID=conjurClient
-      - KEYCLOAK_REDIRECT_URI=http://localhost:8888/callback
+      - KEYCLOAK_REDIRECT_URI=http://127.0.0.1:8888/callback
       - KEYCLOAK_CLIENT_SECRET=1234
       - KEYCLOAK_SCOPE=openid
     ports:

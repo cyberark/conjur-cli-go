@@ -20,7 +20,7 @@ func StoreCredentials(config conjurapi.Config, login string, apiKey string) erro
 	_, err := os.Stat(filePath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			err = os.WriteFile(filePath, []byte{}, 0644)
+			err = os.WriteFile(filePath, []byte{}, 0600)
 			if err != nil {
 				return err
 			}
@@ -51,7 +51,7 @@ func StoreCredentials(config conjurapi.Config, login string, apiKey string) erro
 		data = append(data, byte('\n'))
 	}
 
-	return os.WriteFile(filePath, data, 0644)
+	return os.WriteFile(filePath, data, 0600)
 }
 
 // PurgeCredentials purges credentials from the specified .netrc file

@@ -19,8 +19,8 @@ func TestHandleOidcFlow(t *testing.T) {
 	// running the tests in parallel.
 
 	t.Run("Fails if redirect_uri is wrong", func(t *testing.T) {
-		_, err := handleOpenIDFlow("https://example.com?redirect_uri=http%3A%2F%2Flocalhost%3A9999%2Fcallback", generateState, openBrowser)
-		assert.ErrorContains(t, err, "redirect_uri must be http://localhost:8888/callback")
+		_, err := handleOpenIDFlow("https://example.com?redirect_uri=http%3A%2F%2F127.0.0.1%3A9999%2Fcallback", generateState, openBrowser)
+		assert.ErrorContains(t, err, "redirect_uri must be http://127.0.0.1:8888/callback")
 		assert.False(t, isServerRunning())
 	})
 
@@ -41,7 +41,7 @@ func TestHandleOidcFlow(t *testing.T) {
 		var code string
 		var serverError error
 		go func() {
-			code, serverError = handleOpenIDFlow("https://example.com?redirect_uri=http%3A%2F%2Flocalhost%3A8888%2Fcallback", mockGenerateState, mockOpenBrowser)
+			code, serverError = handleOpenIDFlow("https://example.com?redirect_uri=http%3A%2F%2F127.0.0.1%3A8888%2Fcallback", mockGenerateState, mockOpenBrowser)
 		}()
 		// Wait for the server to start up asynchronously
 		time.Sleep(1 * time.Second)
@@ -49,7 +49,7 @@ func TestHandleOidcFlow(t *testing.T) {
 		assert.True(t, openBrowserCalled)
 		assert.True(t, isServerRunning())
 		// Make a request to the callback endpoint with a code
-		resp, err := httpClient.Get("http://localhost:8888/callback?code=1234&state=test-state")
+		resp, err := httpClient.Get("http://127.0.0.1:8888/callback?code=1234&state=test-state")
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		content, _ := io.ReadAll(resp.Body)
@@ -65,7 +65,7 @@ func TestHandleOidcFlow(t *testing.T) {
 
 func isServerRunning() bool {
 	// Checks whether the server is running by attempting to connect to the port
-	conn, err := net.DialTimeout("tcp", "localhost:8888", 1*time.Second)
+	conn, err := net.DialTimeout("tcp", "127.0.0.1:8888", 1*time.Second)
 	if err != nil {
 		return false
 	}
