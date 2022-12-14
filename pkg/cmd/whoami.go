@@ -23,8 +23,10 @@ func whoamiClientFactory(cmd *cobra.Command) (whoamiClient, error) {
 	return clients.AuthenticatedConjurClientForCommand(cmd)
 }
 
+type whoamiClientFactoryFunc func(*cobra.Command) (whoamiClient, error)
+
 // NewWhoamiCommand creates a Command instance with injected dependencies.
-func NewWhoamiCommand(clientFactory func(*cobra.Command) (whoamiClient, error)) *cobra.Command {
+func NewWhoamiCommand(clientFactory whoamiClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
 		Use:          "whoami",
 		Short:        "Displays info about the logged in user",
