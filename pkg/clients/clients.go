@@ -72,16 +72,13 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		return nil, err
 	}
 
-	var authenticator conjurapi.Authenticator
 	client, err := conjurapi.NewClientFromEnvironment(config)
 	decorateConjurClient(client)
-	if err == nil {
-		authenticator = client.GetAuthenticator()
-	} else {
+	if err != nil {
 		cmd.Printf("warn: %s\n", err)
 	}
 
-	if authenticator == nil {
+	if err == nil && client.GetAuthenticator() == nil {
 		client, err = conjurapi.NewClient(config)
 		if err != nil {
 			return nil, err
