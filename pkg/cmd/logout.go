@@ -7,28 +7,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var logoutCmd = &cobra.Command{
-	Use:          "logout",
-	Short:        "Logs out a user and deletes cached credentials.",
-	Long:         `Logs out a user and deletes the credentials cached in the operating system user's .netrc file.`,
-	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		config, err := conjurapi.LoadConfig()
-		if err != nil {
-			return err
-		}
+type configLoaderFn func() (conjurapi.Config, error)
 
-		err = storage.PurgeCredentials(config)
-		if err != nil {
-			return err
-		}
+func newLogoutCmd(loadConfig configLoaderFn) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:          "logout",
+		Short:        "Logs out a user and deletes cached credentials.",
+		Long:         `Logs out a user and deletes the credentials cached in the operating system user's .netrc file.`,
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			config, err := loadConfig()
+			if err != nil {
+				return err
+			}
 
-		cmd.Println("Logged out")
+			err = storage.PurgeCredentials(config)
+			if err != nil {
+				return err
+			}
 
-		return nil
-	},
+			cmd.Println("Logged out")
+
+			return nil
+		},
+	}
+	return cmd
 }
 
 func init() {
+	logoutCmd := newLogoutCmd(conjurapi.LoadConfig)
 	rootCmd.AddCommand(logoutCmd)
 }

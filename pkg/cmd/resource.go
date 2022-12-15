@@ -9,6 +9,7 @@ import (
 
 type resourceClient interface {
 	Resource(resourceID string) (resource map[string]interface{}, err error)
+	PermittedRoles(resourceID, privilege string) ([]string, error)
 }
 
 type resourceClientFactoryFunc func(*cobra.Command) (resourceClient, error)
@@ -63,6 +64,51 @@ Examples:
 	}
 }
 
+func newResourcePermittedRolesCmd(clientFactory resourceClientFactoryFunc) *cobra.Command {
+	return &cobra.Command{
+		Use:   "permitted-roles",
+		Short: "List roles with a specified privilege on the resource",
+		Long: `List roles with a specified privilege on the resource
+		
+This command requires two arguments, a [resource-id] and a [privilege].
+
+Examples:
+
+-   conjur resource permitted-roles dev:variable:somevariable execute
+-   conjur resource permitted-roles dev:user:someuser read`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var resourceID string
+			var privilege string
+
+			if len(args) < 2 {
+				cmd.Help()
+				return nil
+			}
+
+			resourceID, privilege = args[0], args[1]
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			result, err := client.PermittedRoles(resourceID, privilege)
+			if err != nil {
+				return err
+			}
+
+			prettyResult, err := json.MarshalIndent(result, "", "  ")
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(string(prettyResult))
+
+			return nil
+		},
+	}
+}
+
 func newResourceShowCmd(clientFactory resourceClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
 		Use:   "show",
@@ -107,37 +153,14 @@ Examples:
 	}
 }
 
-var resourcePermittedRolesCmd = &cobra.Command{
-	Use:   "permitted-roles",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Println("resource permitted-roles called")
-	},
-}
-
 func init() {
 	rootCmd.AddCommand(resourceCmd)
 
 	resourceExistsCmd := newResourceExistsCmd(resourceClientFactory)
+	resourcePermittedRolesCmd := newResourcePermittedRolesCmd(resourceClientFactory)
 	resourceShowCmd := newResourceShowCmd(resourceClientFactory)
 
 	resourceCmd.AddCommand(resourceExistsCmd)
-	resourceCmd.AddCommand(resourceShowCmd)
 	resourceCmd.AddCommand(resourcePermittedRolesCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// resourceCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// resourceCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	resourceCmd.AddCommand(resourceShowCmd)
 }

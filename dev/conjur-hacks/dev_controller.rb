@@ -26,7 +26,7 @@ class DevController < ApplicationController
     when 'get_secret'
       get_secret
     when 'load_policy'
-      create_secret
+      load_policy
     when 'list_accounts'
       list_accounts
     when 'destroy_account'
@@ -110,5 +110,20 @@ class DevController < ApplicationController
     controller.params = params
 
     render plain: controller.process(:create)
+  end
+
+  def load_policy
+    policy = params[:policy]
+    raise ArgumentError, "'policy' may not be empty" if policy.blank?
+
+    request.headers['RAW_POST_DATA'] = policy
+
+    controller = PoliciesController.new
+    controller.instance_variable_set("@current_user", Role[params[:account] + ":user:admin"])
+    controller.request = request
+    controller.response = response
+    controller.params = params
+
+    render plain: controller.process(:post)
   end
 end

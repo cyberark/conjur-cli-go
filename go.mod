@@ -7,11 +7,11 @@ go 1.19
 
 require (
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
-	github.com/cyberark/conjur-api-go v0.10.3-0.20221122222223-b1152f8b27b8 // Run "go get github.com/cyberark/conjur-api-go@main" to update
+	github.com/cyberark/conjur-api-go v0.10.3-0.20221220184345-998b95c7b450 // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/manifoldco/promptui v0.9.0
+	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
@@ -23,6 +23,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/sys v0.0.0-20211214234402-4825e8c3871d // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c => gopkg.in/yaml.v3 v3.0.1

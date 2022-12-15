@@ -3,7 +3,6 @@ package clients
 import (
 	"net/http"
 
-	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
 
 	"github.com/spf13/cobra"
@@ -13,7 +12,7 @@ import (
 func MaybeVerboseLoggingForClient(
 	verbose bool,
 	cmd *cobra.Command,
-	client *conjurapi.Client,
+	client ConjurClient,
 ) {
 	if !verbose {
 		return

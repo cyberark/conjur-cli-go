@@ -1,14 +1,12 @@
 package clients
 
 import (
-	"errors"
 	"fmt"
 	"io"
+	"net/http"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-api-go/conjurapi/authn"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
-	"github.com/cyberark/conjur-cli-go/pkg/storage"
 
 	"github.com/spf13/cobra"
 )
@@ -17,6 +15,7 @@ import (
 type ConjurClient interface {
 	Login(login string, password string) ([]byte, error)
 	GetConfig() conjurapi.Config
+	GetAuthenticator() conjurapi.Authenticator
 	WhoAmI() ([]byte, error)
 	RotateUserAPIKey(userID string) ([]byte, error)
 	RotateHostAPIKey(hostID string) ([]byte, error)
@@ -27,6 +26,10 @@ type ConjurClient interface {
 	CheckPermission(resourceID, privilege string) (bool, error)
 	Resource(resourceID string) (resource map[string]interface{}, err error)
 	ResourceIDs(filter *conjurapi.ResourceFilter) ([]string, error)
+	PermittedRoles(resourceID, privilege string) ([]string, error)
+	ListOidcProviders() ([]conjurapi.OidcProvider, error)
+	RefreshToken() error
+	GetHttpClient() *http.Client
 }
 
 // LoadAndValidateConjurConfig loads and validate Conjur configuration
@@ -39,13 +42,7 @@ func LoadAndValidateConjurConfig() (conjurapi.Config, error) {
 		return config, err
 	}
 
-	if config.ApplianceURL == "" {
-		return config, fmt.Errorf("%s", "Missing required configuration for Conjur API URL")
-	}
-
-	if config.Account == "" {
-		return config, fmt.Errorf("%s", "Missing required configuation for Conjur account")
-	}
+	err = config.Validate()
 
 	return config, err
 }
@@ -63,7 +60,7 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 	// TODO: This is called multiple time because each operation potentially uses a new HTTP client bound to the
 	// temporary Conjur client being created at that point in time. We should really not be creating so many Conjur clients
 	// we should just have one then the rest is an attempt to get an authenticator
-	decorateConjurClient := func(client *conjurapi.Client) {
+	decorateConjurClient := func(client ConjurClient) {
 		MaybeVerboseLoggingForClient(verbose, cmd, client)
 	}
 
@@ -72,7 +69,8 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		return nil, err
 	}
 
-	client, err := conjurapi.NewClientFromEnvironment(config)
+	var client ConjurClient
+	client, err = conjurapi.NewClientFromEnvironment(config)
 	decorateConjurClient(client)
 	if err != nil {
 		cmd.Printf("warn: %s\n", err)
@@ -85,12 +83,15 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		}
 		decorateConjurClient(client)
 
-		authenticatePair, err := LoginWithPromptFallback(prompts.PromptDecoratorForCommand(cmd), client, "", "")
-		if err != nil {
-			return nil, err
+		if config.AuthnType == "" || config.AuthnType == "authn" || config.AuthnType == "ldap" {
+			decoratePrompt := prompts.PromptDecoratorForCommand(cmd)
+			client, err = Login(client, decoratePrompt)
+		} else if config.AuthnType == "oidc" {
+			client, err = OidcLogin(client, "", "")
+		} else {
+			return nil, fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
 		}
 
-		client, err = conjurapi.NewClientFromKey(config, *authenticatePair)
 		decorateConjurClient(client)
 		if err != nil {
 			return nil, err
@@ -98,33 +99,4 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 	}
 
 	return client, nil
-}
-
-// LoginWithPromptFallback attempts to login to Conjur using the username and password provided.
-// If either the username or password is missing then a prompt is presented to interactively request
-// the missing information from the user
-func LoginWithPromptFallback(
-	decoratePrompt prompts.DecoratePromptFunc,
-	client ConjurClient,
-	username string,
-	password string,
-) (*authn.LoginPair, error) {
-	username, password, err := prompts.MaybeAskForCredentials(decoratePrompt, username, password)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := client.Login(username, password)
-	if err != nil {
-		return nil, errors.New("Unable to authenticate with Conjur. Please check your credentials.")
-	}
-
-	authenticatePair := &authn.LoginPair{Login: username, APIKey: string(data)}
-
-	err = storage.StoreCredentials(client.GetConfig(), authenticatePair.Login, authenticatePair.APIKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return authenticatePair, nil
 }
