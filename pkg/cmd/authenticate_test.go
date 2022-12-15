@@ -109,7 +109,7 @@ func TestAuthenticateCmd(t *testing.T) {
 			testWhoamiClientFactory := func(cmd *cobra.Command) (authenticateClient, error) {
 				return mockAuthenticateClient{internalAuthenticate: tc.internalAuthenticate}, tc.clientFactoryError
 			}
-			cmd := NewAuthenticateCommand(testWhoamiClientFactory)
+			cmd := newAuthenticateCommand(testWhoamiClientFactory)
 
 			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
 			tc.assert(t, stdout, stderr, err)

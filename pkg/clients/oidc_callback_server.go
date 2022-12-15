@@ -32,27 +32,24 @@ func openBrowser(url string) error {
 func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Verify request is coming from local machine
 	if !strings.HasPrefix(r.RemoteAddr, "[::1]:") && !strings.HasPrefix(r.RemoteAddr, "127.0.0.1:") {
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, "Failed to log in. You may close the browser and try again.")
 		return
 	}
 
-	// Check state and ignore request if it doesn't match
+	// Check state and code. Ignore request if state doesn't match or code is missing.
 	state := r.URL.Query().Get("state")
-	if state != h.state {
+	code := r.URL.Query().Get("code")
+	if state != h.state || code == "" {
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, "Failed to log in. You may close the browser and try again.")
 		// Don't shut down the server so the user can try again. This prevents DoS attacks by
 		// flooding the 127.0.0.1:8888/callback endpoint with requests.
 		return
 	}
 
-	code := r.URL.Query().Get("code")
-
-	if code != "" {
-		h.code = code
-		fmt.Fprintln(w, "Logged in successfully. You may close the browser and return to the command line.")
-	} else {
-		fmt.Fprintln(w, "Failed to log in. You may close the browser and try again.")
-	}
+	h.code = code
+	fmt.Fprintln(w, "Logged in successfully. You may close the browser and return to the command line.")
 	h.shutdownSignal <- "shutdown"
 }
 
@@ -90,6 +87,10 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 	go func() {
 		server.ListenAndServe()
 	}()
+
+	// Wait for the server to start before opening the browser. This ensures that the browser won't
+	// be opened if the server fails to start.
+	time.Sleep(100 * time.Millisecond)
 
 	// Open the browser to the OIDC provider
 	err := openBrowserFn(authURL.String())

@@ -26,7 +26,7 @@ func whoamiClientFactory(cmd *cobra.Command) (whoamiClient, error) {
 type whoamiClientFactoryFunc func(*cobra.Command) (whoamiClient, error)
 
 // NewWhoamiCommand creates a Command instance with injected dependencies.
-func NewWhoamiCommand(clientFactory whoamiClientFactoryFunc) *cobra.Command {
+func newWhoamiCommand(clientFactory whoamiClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
 		Use:          "whoami",
 		Short:        "Displays info about the logged in user",
@@ -55,7 +55,6 @@ func NewWhoamiCommand(clientFactory whoamiClientFactoryFunc) *cobra.Command {
 }
 
 func init() {
-	whoamiCmd := NewWhoamiCommand(whoamiClientFactory)
-
+	whoamiCmd := newWhoamiCommand(whoamiClientFactory)
 	rootCmd.AddCommand(whoamiCmd)
 }

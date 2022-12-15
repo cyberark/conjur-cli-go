@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -121,7 +120,7 @@ func sharedPolicyCmdTestCases(
 				policyBranch string,
 				policySrc io.Reader,
 			) (*conjurapi.PolicyResponse, error) {
-				policyContents, err := ioutil.ReadAll(policySrc)
+				policyContents, err := io.ReadAll(policySrc)
 				assert.NoError(t, err)
 				assert.Equal(t, "policy file content\n", string(policyContents))
 
@@ -135,7 +134,7 @@ func sharedPolicyCmdTestCases(
 			name: fmt.Sprintf("%s subcommand from file", subcommand),
 			args: []string{"policy", subcommand, "-b", "meow", "-f", "$TMPFILE"},
 			beforeTest: func(t *testing.T, pathToTmpfile string) {
-				err := ioutil.WriteFile(pathToTmpfile, []byte("policy file content"), 0644)
+				err := os.WriteFile(pathToTmpfile, []byte("policy file content"), 0644)
 				assert.NoError(t, err)
 			},
 			loadPolicy: func(
@@ -144,7 +143,7 @@ func sharedPolicyCmdTestCases(
 				policyBranch string,
 				policySrc io.Reader,
 			) (*conjurapi.PolicyResponse, error) {
-				policyContents, err := ioutil.ReadAll(policySrc)
+				policyContents, err := io.ReadAll(policySrc)
 				assert.NoError(t, err)
 				assert.Equal(t, "policy file content", string(policyContents))
 

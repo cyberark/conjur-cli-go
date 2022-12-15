@@ -58,7 +58,7 @@ func StoreCredentials(config conjurapi.Config, login string, apiKey string) erro
 func PurgeCredentials(config conjurapi.Config) error {
 	// Remove cached access token (in case user logged in with OIDC which saves the access token to a file)
 	if config.OidcTokenPath == "" {
-		config.OidcTokenPath = os.ExpandEnv("$HOME/.conjur/oidc_token")
+		config.OidcTokenPath = conjurapi.DefaultOidcTokenPath
 	}
 	os.Remove(config.OidcTokenPath)
 

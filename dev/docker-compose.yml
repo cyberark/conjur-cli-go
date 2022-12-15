@@ -6,7 +6,7 @@ services:
       POSTGRES_HOST_AUTH_METHOD: trust
 
   conjur:
-    image: cyberark/conjur:1.19.1-3325
+    image: cyberark/conjur:edge
     command: server
     environment:
       DATABASE_URL: postgres://postgres@pg/postgres
@@ -21,7 +21,7 @@ services:
     
   cli-dev:
     image: golang:1.19
-    command: bash -c "cd ${PWD}/..; make install_dev; sleep infinity"
+    command: bash -c "cd ${PWD}/..; make install; sleep infinity"
     working_dir: ${PWD}/..
     restart: on-failure
     volumes:

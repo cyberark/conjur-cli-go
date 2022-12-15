@@ -11,6 +11,10 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
+type oidcConjurClient interface {
+	ListOidcProviders() ([]conjurapi.OidcProvider, error)
+}
+
 // Login attempts to login to Conjur and prompts the user for credentials interactively
 func Login(conjurClient ConjurClient, decoratePrompt func(prompt *promptui.Prompt) *promptui.Prompt) (ConjurClient, error) {
 	authenticatePair, err := LoginWithPromptFallback(decoratePrompt, conjurClient, "", "")
@@ -78,18 +82,14 @@ func oidcLogin(conjurClient ConjurClient, oidcPromptHandler func(string) error) 
 	return conjurClient, nil
 }
 
-func getOidcProviderInfo(conjurClient ConjurClient, serviceID string) (*conjurapi.OidcProviderResponse, error) {
-	if serviceID == "" {
-		return nil, fmt.Errorf("%s", "Missing required configuration service ID for OIDC authenticator")
-	}
-
+func getOidcProviderInfo(conjurClient oidcConjurClient, serviceID string) (*conjurapi.OidcProvider, error) {
 	data, err := conjurClient.ListOidcProviders()
 	if err != nil {
 		return nil, err
 	}
 
 	// Find the provider that matches the service id
-	var oidcProvider *conjurapi.OidcProviderResponse
+	var oidcProvider *conjurapi.OidcProvider
 	for _, provider := range data {
 		if provider.ServiceID == serviceID {
 			oidcProvider = &provider

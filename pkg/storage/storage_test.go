@@ -87,6 +87,13 @@ machine http://conjur/authn
 		assert.NoError(t, err)
 	})
 
+	t.Run("Does not error if file does not exist", func(t *testing.T) {
+		os.Remove(config.NetRCPath)
+
+		err := PurgeCredentials(config)
+		assert.NoError(t, err)
+	})
+
 	t.Run("Removes oidc token file", func(t *testing.T) {
 		_, err := os.Create(config.OidcTokenPath)
 		assert.NoError(t, err)
@@ -95,6 +102,23 @@ machine http://conjur/authn
 		assert.NoError(t, err)
 
 		_, err = os.Stat(config.OidcTokenPath)
+		assert.True(t, os.IsNotExist(err))
+	})
+
+	t.Run("Remove oidc token file at default location", func(t *testing.T) {
+		defaultConfig := conjurapi.Config{
+			ApplianceURL: "http://conjur",
+		}
+
+		err := os.MkdirAll(os.ExpandEnv("$HOME/.conjur"), 0755)
+		assert.NoError(t, err)
+		_, err = os.Create(os.ExpandEnv("$HOME/.conjur/oidc_token"))
+		assert.NoError(t, err)
+
+		err = PurgeCredentials(defaultConfig)
+		assert.NoError(t, err)
+
+		_, err = os.Stat("$HOME/.conjur/oidc_token")
 		assert.True(t, os.IsNotExist(err))
 	})
 }
