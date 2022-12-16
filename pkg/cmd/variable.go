@@ -20,24 +20,14 @@ func newVariableCmd(
 	variableCmd.AddCommand(variableGetCmd)
 	variableCmd.AddCommand(variableSetCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	variableGetCmd.Flags().StringP("id", "i", "", "Provide variable identifier")
-	variableGetCmd.MarkFlagRequired("id")
-	variableGetCmd.Flags().StringP("version", "v", "", "Specify the desired version of a single variable value")
-
-	variableSetCmd.Flags().StringP("id", "i", "", "Provide variable identifier")
-	variableSetCmd.MarkFlagRequired("id")
-	variableSetCmd.Flags().StringP("value", "v", "", "Set the value of the specified variable")
-	variableSetCmd.MarkFlagRequired("value")
+	variableGetCmd.Flags().IntP("version", "v", 0, "Specify the desired version of a single variable value")
 
 	return variableCmd
 }
 
 type variableGetClient interface {
 	RetrieveSecret(string) ([]byte, error)
+	RetrieveSecretWithVersion(string, int) ([]byte, error)
 }
 type variableSetClient interface {
 	AddSecret(string, string) error
@@ -56,11 +46,23 @@ func variableSetClientFactory(cmd *cobra.Command) (variableSetClient, error) {
 
 func newVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:          "get",
-		Short:        "Use the get subcommand to get the value of one or more Conjur variables",
+		Use:          "get <variable-id> [-v]",
+		Short:        "Retrieve the value of a Conjur variable",
+		Long:         `Retrieve the value of a Conjur variables given a <variable-id> and optional [version].
+
+Examples:
+- conjur variable get ci-staging-password
+- conjur variable get ci-staging-password -v 2`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := cmd.Flags().GetString("id")
+			if len(args) < 1 {
+				cmd.PrintErr("Error: Must specify <variable-id>")
+				return nil
+			}
+
+			variableID := args[0]
+			
+			version, err := cmd.Flags().GetInt("version")
 			if err != nil {
 				return err
 			}
@@ -70,8 +72,14 @@ func newVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Comman
 				return err
 			}
 
-			// TODO: update RetrieveSecret to accept version
-			data, err := client.RetrieveSecret(id)
+			var data []byte
+
+			if version != 0 {
+				data, err = client.RetrieveSecretWithVersion(variableID, version)
+			} else {
+				data, err = client.RetrieveSecret(variableID)
+			}
+			
 			if err != nil {
 				return err
 			}
@@ -84,31 +92,34 @@ func newVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Comman
 
 func newVariableSetCmd(clientFactory variableSetClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:          "set",
-		Short:        "Use the set subcommand to set the value of a Conjur variable",
+		Use:          "set <variable-id> <value>",
+		Short:        "Set the value of a Conjur variable given a <variable-id> and <value>",
+		Long:         `Set the value of a Conjur variable given a <variable-id> and <value>.
+
+Examples:
+- conjur variable set ci-staging-password secret-value`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := cmd.Flags().GetString("id")
-			if err != nil {
-				return err
+			if len(args) < 2 {
+				cmd.PrintErr("Error: Must specify <variable-id> and <value>")
+				return nil
 			}
 
-			value, err := cmd.Flags().GetString("value")
-			if err != nil {
-				return err
-			}
-
+			variableID := args[0]
+			value := args[1]
+			
 			client, err := clientFactory(cmd)
 			if err != nil {
 				return err
 			}
 
-			err = client.AddSecret(id, value)
+			err = client.AddSecret(variableID, value)
 			if err != nil {
 				return err
 			}
 
 			cmd.Println("Value added")
+
 			return nil
 		},
 	}

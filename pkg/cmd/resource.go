@@ -34,7 +34,6 @@ func newResourceExistsCmd(clientFactory resourceClientFactoryFunc) *cobra.Comman
 		Long: `Checks if a resource exists, given a [resource-id].
 		
 Examples:
-
 - conjur resource exists dev:variable:somevariable
 - conjur resource exists dev:host:somehost`,
 		RunE: func(cmd *cobra.Command, args []string) error {
