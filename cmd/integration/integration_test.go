@@ -36,7 +36,7 @@ func TestIntegration(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("whoami")
 		assert.Error(t, err)
 		assert.Equal(t, "", stdOut)
-		assert.Equal(t, "Error: Missing required configuration for Conjur API URL\n", stdErr)
+		assert.Equal(t, "Error: Must specify an ApplianceURL -- Must specify an Account\n", stdErr)
 	})
 
 	t.Run("init", func(t *testing.T) {

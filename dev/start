@@ -199,7 +199,7 @@ configure_oidc_authenticators() {
     client_add_secret 'conjur/authn-oidc/keycloak/claim-mapping' 'email'
     client_add_secret 'conjur/authn-oidc/keycloak/nonce' 'af88d8f8ff6631fb4cf0'
     client_add_secret 'conjur/authn-oidc/keycloak/state' 'd38e57e0fd47ccffa9c2'
-    client_add_secret 'conjur/authn-oidc/keycloak/redirect_uri' 'http://localhost:8888/callback'
+    client_add_secret 'conjur/authn-oidc/keycloak/redirect_uri' 'http://127.0.0.1:8888/callback'
 
     client_load_policy "keycloak/users.yml"
 
@@ -208,16 +208,13 @@ configure_oidc_authenticators() {
   if [[ $ENABLE_OIDC_OKTA = true ]]; then
     client_load_policy "okta/okta-2.yml"
 
-    # TODO - Okta credentials currently linked to Glen's developer account
-    # Assumes callback url is http://localhost:8888/callback
-    # Need to hand off to infra for actual integration tests
-    client_add_secret 'conjur/authn-oidc/okta-2/provider-uri' 'https://dev-89721339.okta.com/oauth2/default'
-    client_add_secret 'conjur/authn-oidc/okta-2/client-id' '0oa6wgpys3TD2c3Bz5d7'
-    client_add_secret 'conjur/authn-oidc/okta-2/client-secret' 'aTNL1FTvj9NQeLCi5sHxBxrYThNixFHdDR5vrWiy'
+    client_add_secret 'conjur/authn-oidc/okta-2/provider-uri' "${OKTA_PROVIDER_URI}oauth2/default"
+    client_add_secret 'conjur/authn-oidc/okta-2/client-id' "$OKTA_CLIENT_ID"
+    client_add_secret 'conjur/authn-oidc/okta-2/client-secret' "$OKTA_CLIENT_SECRET"
     client_add_secret 'conjur/authn-oidc/okta-2/claim-mapping' 'preferred_username'
     client_add_secret 'conjur/authn-oidc/okta-2/nonce' '1656b4264b60af659fce'
     client_add_secret 'conjur/authn-oidc/okta-2/state' '4f413476ef7e2395f0af'
-    client_add_secret 'conjur/authn-oidc/okta-2/redirect_uri' 'http://localhost:8888/callback'
+    client_add_secret 'conjur/authn-oidc/okta-2/redirect_uri' 'http://127.0.0.1:8888/callback'
 
     client_load_policy "okta/okta-users.yml"
   fi

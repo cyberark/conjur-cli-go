@@ -105,7 +105,7 @@ func fetchOidcCodeFromKeycloak(client *http.Client, username, password, provider
 		return nil
 	}
 
-	return errors.New("Unable to fetch authorization code from Keycloak")
+	return errors.New("unable to fetch authorization code from Keycloak")
 }
 
 func fetchOidcCodeFromOkta(client *http.Client, username, password, providerUrl string) error {
@@ -115,7 +115,7 @@ func fetchOidcCodeFromOkta(client *http.Client, username, password, providerUrl 
 	}
 
 	// TODO: Okta currently requires a state parameter which may not be needed
-	// Or at the very least shouldn't be hardcoded and should come from Conjur
+	// Or at the very least shouldn't be hardcoded and should be generated
 	providerUrl += "&state=4f413476ef7e2395f0af&sessionToken=" + sessionToken
 
 	req, err := http.NewRequest("GET", providerUrl, nil)
@@ -129,12 +129,18 @@ func fetchOidcCodeFromOkta(client *http.Client, username, password, providerUrl 
 	}
 	defer resp.Body.Close()
 
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
 	// If the login was successful, the provider will redirect to the callback URL with a code
 	if resp.StatusCode == 302 || resp.StatusCode == 301 {
 		callbackRedirect(resp)
 		return nil
 	}
-	return errors.New("Unable to fetch authorization code from Okta")
+	return errors.New("unable to fetch authorization code from Okta")
 }
 
 func fetchSessionTokenFromOkta(client *http.Client, providerUrl string, username string, password string) (string, error) {
@@ -174,6 +180,9 @@ func fetchSessionTokenFromOkta(client *http.Client, providerUrl string, username
 	}
 
 	sessionToken := extractValueFromJson(string(body), "sessionToken")
+	if sessionToken == "" {
+		return "", errors.New("unable to fetch session token from Okta")
+	}
 	return sessionToken, nil
 }
 
@@ -238,10 +247,9 @@ func handleOpenIDFlow(authEndpointURL string, openBrowserFn func(string) error) 
 		return "", authURLParseError
 	}
 
-	//TODO: Fail if the callback URL is not localhost:8888/callback
-	// callbackURL := "http://localhost:8888/callback"
-	if authURL.Query().Get("redirect_uri") != "http://localhost:8888/callback" {
-		return "", fmt.Errorf("redirect_uri must be http://localhost:8888/callback")
+	//TODO: Fail if the callback URL is not 127.0.0.1:8888/callback
+	if authURL.Query().Get("redirect_uri") != "http://127.0.0.1:8888/callback" {
+		return "", fmt.Errorf("redirect_uri must be http://127.0.0.1:8888/callback")
 	}
 
 	// Start the local server
