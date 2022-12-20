@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -e
+
+source "./shared.sh"
+
+# Navigate to the dev directory (where this script lives) to ensure we can run this script
+# from anywhere.
+cd "$(dirname "$0")"
+
+services=(pg conjur cli keycloak)
+
+# set the COMPOSE_PROJECT_NAME for the tests you'll be running
+COMPOSE_PROJECT_NAME="$(openssl rand -hex 3)"
+
+export COMPOSE_PROJECT_NAME
+
+cleanup_and_dump_logs() {
+  echo "Cleaning up... Saving container logs in cleanup.log"
+  docker-compose logs &> cleanup.log
+  docker-compose rm --stop --force
+}
+
+trap 'cleanup_and_dump_logs' EXIT
+
+function main() {
+
+  local conjur_account=dev
+  local admin_initial_password='SuperSecret!!!!123'
+
+  echo
+  echo "Starting Containers"
+  docker-compose up -d --no-deps "${services[@]}"
+
+  echo
+  _wait_for_pg pg
+
+  echo
+  wait_for_conjur
+
+  echo
+  echo 'Setting up Conjur...'
+  docker-compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${admin_initial_password}]"
+  echo 'Finished setting up Conjur'
+
+  echo
+  echo 'Setting up Keycloak'
+  configure_oidc_providers
+  echo 'Finished setting up Keycloak'
+
+  docker-compose exec -T cli make integration
+}
+
+main

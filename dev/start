@@ -188,9 +188,7 @@ configure_oidc_providers() {
 }
 
 configure_oidc_authenticators() {
-  # add variables' values for keycloak
-  echo "Setting keycloak variables values in conjur"
-
+    echo "Setting Keycloak policy and variables values in Conjur"
     client_load_policy "keycloak/policy.yml"
 
     client_add_secret 'conjur/authn-oidc/keycloak/provider-uri' 'https://keycloak:8443/auth/realms/master'
@@ -201,14 +199,13 @@ configure_oidc_authenticators() {
 
     client_load_policy "keycloak/users.yml"
 
-
-
   if [[ $ENABLE_OIDC_OKTA = true ]]; then
+    echo "Confuring Okta policy and variables values in Conjur"
     client_load_policy "okta/okta-2.yml"
 
-    client_add_secret 'conjur/authn-oidc/okta-2/provider-uri' 'https://dev-92899796.okta.com/oauth2/default'
-    client_add_secret 'conjur/authn-oidc/okta-2/client-id' '0oa3w3xig6rHiu9yT5d7'
-    client_add_secret 'conjur/authn-oidc/okta-2/client-secret' 'e349BMTTIpLO-rPuPqLLkLyH_pO-loUzhIVJCrHj'
+    client_add_secret 'conjur/authn-oidc/okta-2/provider-uri' "${OKTA_PROVIDER_URI}oauth2/default"
+    client_add_secret 'conjur/authn-oidc/okta-2/client-id' "$OKTA_CLIENT_ID"
+    client_add_secret 'conjur/authn-oidc/okta-2/client-secret' "$OKTA_CLIENT_SECRET"
     client_add_secret 'conjur/authn-oidc/okta-2/claim-mapping' 'preferred_username'
     client_add_secret 'conjur/authn-oidc/okta-2/redirect_uri' 'http://127.0.0.1:8888/callback'
 
