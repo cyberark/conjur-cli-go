@@ -36,7 +36,8 @@ func TestIntegration(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("whoami")
 		assert.Error(t, err)
 		assert.Equal(t, "", stdOut)
-		assert.Equal(t, "Error: Missing required configuration for Conjur API URL\n", stdErr)
+		assert.Contains(t, stdErr, "Must specify an ApplianceURL")
+		assert.Contains(t, stdErr, "Must specify an Account")
 	})
 
 	t.Run("init", func(t *testing.T) {
@@ -48,27 +49,17 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("login", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("login", "-u", "admin", "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": account + ":user:admin"}))
-		assert.NoError(t, err)
-		assert.Equal(t, "Logged in\n", stdOut)
-		assert.Equal(t, "", stdErr)
+		assertLoginCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("whoami after login", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("whoami")
-		assert.NoError(t, err)
-		assert.Contains(t, stdOut, "token_issued_at")
-		assert.Contains(t, stdOut, "client_ip")
-		assert.Contains(t, stdOut, "user_agent")
-		assert.Contains(t, stdOut, "account")
-		assert.Contains(t, stdOut, "username")
-		assert.Equal(t, "", stdErr)
+		assertWhoamiCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("get variable before policy load", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("variable", "get", "-i", "meow")
-		assert.Error(t, err)
-		assert.Equal(t, "", stdOut)
-		assert.Contains(t, stdErr, "Error: 404 Not Found.")
+		assertNotFound(t, err, stdOut, stdErr)
 	})
 
 	t.Run("policy load", func(t *testing.T) {
@@ -76,10 +67,7 @@ func TestIntegration(t *testing.T) {
 			bytes.NewReader([]byte("- !variable meow")),
 			"policy", "load", "-b", "root", "-f", "-",
 		)
-		assert.NoError(t, err)
-		assert.Contains(t, stdOut, "created_roles")
-		assert.Contains(t, stdOut, "version")
-		assert.Equal(t, "Loaded policy 'root'\n", stdErr)
+		assertPolicyLoadCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("set variable after policy load", func(t *testing.T) {
@@ -95,4 +83,33 @@ func TestIntegration(t *testing.T) {
 		assert.Equal(t, "moo\n", stdOut)
 		assert.Equal(t, "", stdErr)
 	})
+}
+
+func assertLoginCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "Logged in\n")
+	assert.Equal(t, "", stdErr)
+}
+
+func assertWhoamiCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "token_issued_at")
+	assert.Contains(t, stdOut, "client_ip")
+	assert.Contains(t, stdOut, "user_agent")
+	assert.Contains(t, stdOut, "account")
+	assert.Contains(t, stdOut, "username")
+	assert.Equal(t, "", stdErr)
+}
+
+func assertNotFound(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.Error(t, err)
+	assert.Equal(t, "", stdOut)
+	assert.Contains(t, stdErr, "Error: 404 Not Found.")
+}
+
+func assertPolicyLoadCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "created_roles")
+	assert.Contains(t, stdOut, "version")
+	assert.Equal(t, "Loaded policy 'root'\n", stdErr)
 }

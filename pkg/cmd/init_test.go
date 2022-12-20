@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -48,7 +47,7 @@ var initCmdTestCases = []struct {
 			assert.Contains(t, stdout, "Enter your organization account name:")
 			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
 
-			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
+			data, _ := os.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: dev
 appliance_url: http://conjur
 `
@@ -60,7 +59,7 @@ appliance_url: http://conjur
 		name: "writes conjurrc",
 		args: []string{"init", "-u=https://host", "-a=test-account"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
-			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
+			data, _ := os.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: test-account
 appliance_url: https://host
 `
@@ -73,7 +72,7 @@ appliance_url: https://host
 		name: "writes conjurrc for ldap",
 		args: []string{"init", "-u=https://host", "-a=test-account", "-t=ldap", "--service-id=test"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
-			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
+			data, _ := os.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: test-account
 appliance_url: https://host
 authn_type: ldap
@@ -94,11 +93,11 @@ service_id: test
 			},
 		},
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
-			ioutil.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
+			os.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			// Assert that file is not overwritten
-			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
+			data, _ := os.ReadFile(conjurrcInTmpDir)
 			assert.Equal(t, "something", string(data))
 
 			// Assert on output
@@ -116,11 +115,11 @@ service_id: test
 			},
 		},
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
-			ioutil.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
+			os.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			// Assert that file is overwritten
-			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
+			data, _ := os.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: other-test-account
 appliance_url: https://host
 `
@@ -135,11 +134,11 @@ appliance_url: https://host
 		name: "force overwrite",
 		args: []string{"init", "-u=https://host", "-a=yet-another-test-account", "--force"},
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
-			ioutil.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
+			os.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			// Assert that file is overwritten
-			data, _ := ioutil.ReadFile(conjurrcInTmpDir)
+			data, _ := os.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: yet-another-test-account
 appliance_url: https://host
 `

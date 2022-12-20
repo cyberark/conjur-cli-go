@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -56,7 +55,7 @@ func makeDevRequest(action string, params map[string]string) string {
 		log.Fatalln(err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -70,4 +69,12 @@ func prepareConjurAccount(account string) func() {
 	return func() {
 		makeDevRequest("destroy_account", map[string]string{"id": account})
 	}
+}
+
+func loadPolicy(account string, policy string) {
+	makeDevRequest("load_policy", map[string]string{"resource_id": account + ":policy:root", "policy": policy})
+}
+
+func createSecret(account string, variable string, value string) {
+	makeDevRequest("create_secret", map[string]string{"resource_id": account + ":variable:" + variable, "value": value})
 }

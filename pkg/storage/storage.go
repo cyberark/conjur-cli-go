@@ -2,7 +2,6 @@ package storage
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 
 	"github.com/bgentry/go-netrc/netrc"
@@ -21,7 +20,7 @@ func StoreCredentials(config conjurapi.Config, login string, apiKey string) erro
 	_, err := os.Stat(filePath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			err = ioutil.WriteFile(filePath, []byte{}, 0644)
+			err = os.WriteFile(filePath, []byte{}, 0600)
 			if err != nil {
 				return err
 			}
@@ -52,16 +51,28 @@ func StoreCredentials(config conjurapi.Config, login string, apiKey string) erro
 		data = append(data, byte('\n'))
 	}
 
-	return ioutil.WriteFile(filePath, data, 0644)
+	return os.WriteFile(filePath, data, 0600)
 }
 
 // PurgeCredentials purges credentials from the specified .netrc file
 func PurgeCredentials(config conjurapi.Config) error {
+	// Remove cached access token (in case user logged in with OIDC which saves the access token to a file)
+	if config.OidcTokenPath == "" {
+		config.OidcTokenPath = conjurapi.DefaultOidcTokenPath
+	}
+	os.Remove(config.OidcTokenPath)
+
+	// Remove cached credentials (username, api key) from .netrc
 	machineName := getMachineName(config)
 	filePath := config.NetRCPath
 
 	nrc, err := netrc.ParseFile(filePath)
 	if err != nil {
+		// If the .netrc file doesn't exist, we don't need to do anything
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		// Any other error should be returned
 		return err
 	}
 
@@ -72,7 +83,7 @@ func PurgeCredentials(config conjurapi.Config) error {
 		return err
 	}
 
-	return ioutil.WriteFile(filePath, data, 0644)
+	return os.WriteFile(filePath, data, 0644)
 }
 
 // TODO: Should we stat for PurgeCredentials and StoreCredentials

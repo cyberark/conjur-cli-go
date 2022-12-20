@@ -1,17 +1,64 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/conjur-api-go/conjurapi/authn"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 
 	"github.com/spf13/cobra"
 )
 
-var loginCmd = &cobra.Command{
-	Use:   "login",
-	Short: "Authenticate with Conjur using the provided username and password.",
-	Long: `Authenticate with Conjur using the provided username and password.
+type loginCmdFuncs struct {
+	LoadAndValidateConjurConfig func() (conjurapi.Config, error)
+	LoginWithPromptFallback     func(decoratePrompt prompts.DecoratePromptFunc, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error)
+	OidcLogin                   func(conjurClient clients.ConjurClient, username string, password string) (clients.ConjurClient, error)
+}
+
+var defaultLoginCmdFuncs = loginCmdFuncs{
+	LoadAndValidateConjurConfig: clients.LoadAndValidateConjurConfig,
+	LoginWithPromptFallback:     clients.LoginWithPromptFallback,
+	OidcLogin:                   clients.OidcLogin,
+}
+
+type loginCmdFlagValues struct {
+	username string
+	password string
+	verbose  bool
+}
+
+func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
+	// TODO: extract this common code for gathering configuring into a seperate package
+	// Some of the code is in conjur-api-go and needs to be made configurable so that you can pass a custom path to .conjurrc
+	username, err := cmd.Flags().GetString("username")
+	if err != nil {
+		return loginCmdFlagValues{}, err
+	}
+
+	password, err := cmd.Flags().GetString("password")
+	if err != nil {
+		return loginCmdFlagValues{}, err
+	}
+
+	verbose, err := cmd.Flags().GetBool("verbose")
+	if err != nil {
+		return loginCmdFlagValues{}, err
+	}
+
+	return loginCmdFlagValues{
+		username: username,
+		password: password,
+		verbose:  verbose,
+	}, nil
+}
+
+func newLoginCmd(funcs loginCmdFuncs) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "login",
+		Short: "Authenticate with Conjur using the provided username and password.",
+		Long: `Authenticate with Conjur using the provided username and password.
 
 The command will prompt for username and password if they are not provided via flag.
 
@@ -21,54 +68,54 @@ Examples:
 
 - conjur authn login -u alice -p My$ecretPass
 - conjur authn login`,
-	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var err error
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var err error
 
-		// TODO: extract this common code for gathering configuring into a seperate package
-		// Some of the code is in conjur-api-go and needs to be made configurable so that you can pass a custom path to .conjurrc
-		username, err := cmd.Flags().GetString("username")
-		if err != nil {
-			return err
-		}
+			cmdFlagVals, err := getLoginCmdFlagValues(cmd)
+			if err != nil {
+				return err
+			}
 
-		password, err := cmd.Flags().GetString("password")
-		if err != nil {
-			return err
-		}
+			config, err := funcs.LoadAndValidateConjurConfig()
+			if err != nil {
+				return err
+			}
 
-		config, err := clients.LoadAndValidateConjurConfig()
-		if err != nil {
-			return err
-		}
+			// TODO: I should be able to create a client and unauthenticated client
+			conjurClient, err := conjurapi.NewClient(config)
+			if err != nil {
+				return err
+			}
 
-		// TODO: I should be able to create a client and unauthenticated client
-		conjurClient, err := conjurapi.NewClient(config)
-		if err != nil {
-			return err
-		}
+			if cmdFlagVals.verbose {
+				clients.MaybeVerboseLoggingForClient(cmdFlagVals.verbose, cmd, conjurClient)
+			}
 
-		verbose, err := cmd.Flags().GetBool("verbose")
-		if err != nil {
-			return err
-		}
-		if verbose {
-			clients.MaybeVerboseLoggingForClient(verbose, cmd, conjurClient)
-		}
+			if config.AuthnType == "" || config.AuthnType == "authn" || config.AuthnType == "ldap" {
+				decoratePrompt := prompts.PromptDecoratorForCommand(cmd)
+				_, err = funcs.LoginWithPromptFallback(decoratePrompt, conjurClient, cmdFlagVals.username, cmdFlagVals.password)
+			} else if config.AuthnType == "oidc" {
+				_, err = funcs.OidcLogin(conjurClient, cmdFlagVals.username, cmdFlagVals.password)
+			} else {
+				return fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
+			}
+			if err != nil {
+				return err
+			}
 
-		_, err = clients.LoginWithPromptFallback(prompts.PromptDecoratorForCommand(cmd), conjurClient, username, password)
-		if err != nil {
-			return err
-		}
+			cmd.Println("Logged in")
+			return nil
+		},
+	}
 
-		cmd.Println("Logged in")
-		return nil
-	},
+	cmd.Flags().StringP("username", "u", "", "")
+	cmd.Flags().StringP("password", "p", "", "")
+
+	return cmd
 }
 
 func init() {
+	loginCmd := newLoginCmd(defaultLoginCmdFuncs)
 	rootCmd.AddCommand(loginCmd)
-
-	loginCmd.Flags().StringP("username", "u", "", "")
-	loginCmd.Flags().StringP("password", "p", "", "")
 }

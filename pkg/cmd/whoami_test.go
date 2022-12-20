@@ -82,8 +82,7 @@ func TestWhoamiCmd(t *testing.T) {
 			testWhoamiClientFactory := func(cmd *cobra.Command) (whoamiClient, error) {
 				return mockWhoamiClient{whoami: tc.whoami}, tc.clientFactoryError
 			}
-			cmd := NewWhoamiCommand(testWhoamiClientFactory)
-
+			cmd := newWhoamiCommand(testWhoamiClientFactory)
 			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
 			tc.assert(t, stdout, stderr, err)
 		})

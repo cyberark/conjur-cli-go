@@ -20,7 +20,7 @@ func authenticateClientFactory(cmd *cobra.Command) (authenticateClient, error) {
 type authenticateClientFactoryFunc func(*cobra.Command) (authenticateClient, error)
 
 // NewAuthenticateCommand creates an authenticate Command instance with injected dependencies.
-func NewAuthenticateCommand(clientFactory authenticateClientFactoryFunc) *cobra.Command {
+func newAuthenticateCommand(clientFactory authenticateClientFactoryFunc) *cobra.Command {
 	authenticateCmd := &cobra.Command{
 		Use:          "authenticate",
 		Short:        "Obtains an access token for the currently logged-in user.",
@@ -69,7 +69,6 @@ func NewAuthenticateCommand(clientFactory authenticateClientFactoryFunc) *cobra.
 }
 
 func init() {
-	authenticateCmd := NewAuthenticateCommand(authenticateClientFactory)
-
+	authenticateCmd := newAuthenticateCommand(authenticateClientFactory)
 	rootCmd.AddCommand(authenticateCmd)
 }
