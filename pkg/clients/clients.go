@@ -26,6 +26,7 @@ type ConjurClient interface {
 	CheckPermission(resourceID, privilege string) (bool, error)
 	Resource(resourceID string) (resource map[string]interface{}, err error)
 	ResourceIDs(filter *conjurapi.ResourceFilter) ([]string, error)
+	PermittedRoles(resourceID, privilege string) ([]string, error)
 	ListOidcProviders() ([]conjurapi.OidcProvider, error)
 	RefreshToken() error
 	GetHttpClient() *http.Client
