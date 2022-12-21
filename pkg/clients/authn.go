@@ -74,9 +74,9 @@ func oidcLogin(conjurClient ConjurClient, oidcPromptHandler func(string) error) 
 	}
 
 	// Refreshes the access token and caches it locally
-	err = conjurClient.RefreshToken()
+	err = conjurClient.ForceRefreshToken()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Unable to authenticate with Conjur. Please check your credentials.")
 	}
 
 	return conjurClient, nil

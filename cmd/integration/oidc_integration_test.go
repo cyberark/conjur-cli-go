@@ -46,16 +46,17 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 	t.Run("login", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("login", "-u", "alice", "-p", "alice")
 		assertLoginCmd(t, err, stdOut, stdErr)
-
-		// Check that the token file is created with the correct permissions
-		info, err := os.Stat(tmpDir + "/.conjur/oidc_token")
-		assert.NoError(t, err)
-		assert.Equal(t, os.FileMode(0600), info.Mode().Perm())
+		assertOidcTokenCreated(t, tmpDir)
 	})
 
 	t.Run("whoami after login", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("whoami")
 		assertWhoamiCmd(t, err, stdOut, stdErr)
+	})
+
+	t.Run("authenticate", func(t *testing.T) {
+		stdOut, stdErr, err = conjurCLI.Run("authenticate")
+		assertAuthenticateCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("get variable before policy load", func(t *testing.T) {
@@ -80,26 +81,67 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 
 	t.Run("set variable after policy load", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("variable", "set", "-i", "meow", "-v", "moo")
-		assert.NoError(t, err)
-		assert.Equal(t, "Value added\n", stdOut)
-		assert.Equal(t, "", stdErr)
+		assertSetVariableCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("get variable after policy load", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("variable", "get", "-i", "meow")
+		assertGetVariableCmd(t, err, stdOut, stdErr)
+	})
+
+	t.Run("login as another user", func(t *testing.T) {
+		// Get the modifieddate of the token file
+		info, err := os.Stat(tmpDir + "/.conjur/oidc_token")
 		assert.NoError(t, err)
-		assert.Equal(t, "moo\n", stdOut)
-		assert.Equal(t, "", stdErr)
+		modifiedDate := info.ModTime()
+
+		stdOut, stdErr, err = conjurCLI.Run("login", "-u", "bob.somebody", "-p", "bob")
+		assertLoginCmd(t, err, stdOut, stdErr)
+
+		// Check that the token file is modified
+		info, err = os.Stat(tmpDir + "/.conjur/oidc_token")
+		assert.NoError(t, err)
+		assert.NotEqual(t, modifiedDate, info.ModTime())
+	})
+
+	t.Run("whoami after login as another user", func(t *testing.T) {
+		stdOut, stdErr, err = conjurCLI.Run("whoami")
+		assertWhoamiCmd(t, err, stdOut, stdErr)
+
+		assert.Contains(t, stdOut, "bob")
+		assert.NotContains(t, stdOut, "alice")
+	})
+
+	t.Run("failed login doesn't modify token file", func(t *testing.T) {
+		// Get the modifieddate of the token file
+		info, err := os.Stat(tmpDir + "/.conjur/oidc_token")
+		assert.NoError(t, err)
+		modifiedDate := info.ModTime()
+
+		stdOut, stdErr, err = conjurCLI.Run("login", "-u", "not_in_conjur", "-p", "not_in_conjur")
+		assert.Error(t, err)
+		assert.Contains(t, stdErr, "Unable to authenticate")
+
+		// Check that the token file is not modified
+		info, err = os.Stat(tmpDir + "/.conjur/oidc_token")
+		assert.NoError(t, err)
+		assert.Equal(t, modifiedDate, info.ModTime())
 	})
 
 	t.Run("logout", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("logout")
-		assert.NoError(t, err)
-		assert.Contains(t, stdOut, "Logged out\n")
+		assertLogoutCmd(t, err, stdOut, stdErr)
 
 		// Ensure cached token is removed
 		_, err = os.Stat(tmpDir + "/.conjur/oidc_token")
 		assert.ErrorIs(t, err, os.ErrNotExist)
+	})
+
+	t.Run("whoami after logout", func(t *testing.T) {
+		stdOut, stdErr, err = conjurCLI.Run("whoami")
+		assert.Error(t, err)
+		assert.Contains(t, stdErr, "Please login again")
+		assert.Equal(t, "", stdOut)
 	})
 }
 
@@ -141,16 +183,17 @@ func TestOidcIntegrationOkta(t *testing.T) {
 	t.Run("login", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("login", "-u", os.Getenv("OKTA_USERNAME"), "-p", os.Getenv("OKTA_PASSWORD"))
 		assertLoginCmd(t, err, stdOut, stdErr)
-
-		// Check that the token file is created with the correct permissions
-		info, err := os.Stat(tmpDir + "/.conjur/oidc_token")
-		assert.NoError(t, err)
-		assert.Equal(t, os.FileMode(0600), info.Mode().Perm())
+		assertOidcTokenCreated(t, tmpDir)
 	})
 
 	t.Run("whoami after login", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("whoami")
 		assertWhoamiCmd(t, err, stdOut, stdErr)
+	})
+
+	t.Run("authenticate", func(t *testing.T) {
+		stdOut, stdErr, err = conjurCLI.Run("authenticate")
+		assertAuthenticateCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("get variable before policy load", func(t *testing.T) {
@@ -175,26 +218,19 @@ func TestOidcIntegrationOkta(t *testing.T) {
 
 	t.Run("set variable after policy load", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("variable", "set", "-i", "meow", "-v", "moo")
-		assert.NoError(t, err)
-		assert.Equal(t, "Value added\n", stdOut)
-		assert.Equal(t, "", stdErr)
+		assertSetVariableCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("get variable after policy load", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("variable", "get", "-i", "meow")
-		assert.NoError(t, err)
-		assert.Equal(t, "moo\n", stdOut)
-		assert.Equal(t, "", stdErr)
+		assertGetVariableCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("logout", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("logout")
-		assert.NoError(t, err)
-		assert.Contains(t, stdOut, "Logged out\n")
+		assertLogoutCmd(t, err, stdOut, stdErr)
 
-		// Ensure cached token is removed
-		_, err = os.Stat(tmpDir + "/.conjur/oidc_token")
-		assert.ErrorIs(t, err, os.ErrNotExist)
+		assertOidcTokenDeleted(t, err, tmpDir)
 	})
 }
 
@@ -236,4 +272,17 @@ func hasValidOktaVariables() bool {
 		}
 	}
 	return true
+}
+
+func assertOidcTokenCreated(t *testing.T, tmpDir string) {
+	// Check that the token file is created with the correct permissions
+	info, err := os.Stat(tmpDir + "/.conjur/oidc_token")
+	assert.NoError(t, err)
+	assert.Equal(t, os.FileMode(0600), info.Mode().Perm())
+}
+
+func assertOidcTokenDeleted(t *testing.T, err error, tmpDir string) {
+	// Ensure cached token is removed
+	_, err = os.Stat(tmpDir + "/.conjur/oidc_token")
+	assert.ErrorIs(t, err, os.ErrNotExist)
 }

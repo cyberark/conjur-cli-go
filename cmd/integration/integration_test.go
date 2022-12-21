@@ -57,6 +57,11 @@ func TestIntegration(t *testing.T) {
 		assertWhoamiCmd(t, err, stdOut, stdErr)
 	})
 
+	t.Run("authenticate", func(t *testing.T) {
+		stdOut, stdErr, err = conjurCLI.Run("authenticate")
+		assertAuthenticateCmd(t, err, stdOut, stdErr)
+	})
+
 	t.Run("get variable before policy load", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("variable", "get", "-i", "meow")
 		assertNotFound(t, err, stdOut, stdErr)
@@ -72,15 +77,16 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("set variable after policy load", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("variable", "set", "-i", "meow", "-v", "moo")
-		assert.NoError(t, err)
-		assert.Equal(t, "Value added\n", stdOut)
-		assert.Equal(t, "", stdErr)
+		assertSetVariableCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("get variable after policy load", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("variable", "get", "-i", "meow")
-		assert.NoError(t, err)
-		assert.Equal(t, "moo\n", stdOut)
-		assert.Equal(t, "", stdErr)
+		assertGetVariableCmd(t, err, stdOut, stdErr)
+	})
+
+	t.Run("logout", func(t *testing.T) {
+		stdOut, stdErr, err = conjurCLI.Run("logout")
+		assertLogoutCmd(t, err, stdOut, stdErr)
 	})
 }
