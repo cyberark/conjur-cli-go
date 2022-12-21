@@ -8,6 +8,9 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const pathToBinary = "conjur"
@@ -75,6 +78,43 @@ func loadPolicy(account string, policy string) {
 	makeDevRequest("load_policy", map[string]string{"resource_id": account + ":policy:root", "policy": policy})
 }
 
+func loadPolicyFile(account, policyFile string) {
+	policy, err := os.ReadFile(policyFile)
+	if err != nil {
+		panic(err)
+	}
+	loadPolicy(account, string(policy))
+}
+
 func createSecret(account string, variable string, value string) {
 	makeDevRequest("create_secret", map[string]string{"resource_id": account + ":variable:" + variable, "value": value})
+}
+
+func assertLoginCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "Logged in\n")
+	assert.Equal(t, "", stdErr)
+}
+
+func assertWhoamiCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "token_issued_at")
+	assert.Contains(t, stdOut, "client_ip")
+	assert.Contains(t, stdOut, "user_agent")
+	assert.Contains(t, stdOut, "account")
+	assert.Contains(t, stdOut, "username")
+	assert.Equal(t, "", stdErr)
+}
+
+func assertNotFound(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.Error(t, err)
+	assert.Equal(t, "", stdOut)
+	assert.Contains(t, stdErr, "Error: 404 Not Found.")
+}
+
+func assertPolicyLoadCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "created_roles")
+	assert.Contains(t, stdOut, "version")
+	assert.Equal(t, "Loaded policy 'root'\n", stdErr)
 }

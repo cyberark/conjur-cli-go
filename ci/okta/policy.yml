@@ -29,3 +29,4 @@
             role: !group authenticatable
             privilege: [ read, authenticate ]
             resource: !webservice
+

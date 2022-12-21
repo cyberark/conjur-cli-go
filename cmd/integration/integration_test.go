@@ -84,32 +84,3 @@ func TestIntegration(t *testing.T) {
 		assert.Equal(t, "", stdErr)
 	})
 }
-
-func assertLoginCmd(t *testing.T, err error, stdOut string, stdErr string) {
-	assert.NoError(t, err)
-	assert.Contains(t, stdOut, "Logged in\n")
-	assert.Equal(t, "", stdErr)
-}
-
-func assertWhoamiCmd(t *testing.T, err error, stdOut string, stdErr string) {
-	assert.NoError(t, err)
-	assert.Contains(t, stdOut, "token_issued_at")
-	assert.Contains(t, stdOut, "client_ip")
-	assert.Contains(t, stdOut, "user_agent")
-	assert.Contains(t, stdOut, "account")
-	assert.Contains(t, stdOut, "username")
-	assert.Equal(t, "", stdErr)
-}
-
-func assertNotFound(t *testing.T, err error, stdOut string, stdErr string) {
-	assert.Error(t, err)
-	assert.Equal(t, "", stdOut)
-	assert.Contains(t, stdErr, "Error: 404 Not Found.")
-}
-
-func assertPolicyLoadCmd(t *testing.T, err error, stdOut string, stdErr string) {
-	assert.NoError(t, err)
-	assert.Contains(t, stdOut, "created_roles")
-	assert.Contains(t, stdOut, "version")
-	assert.Equal(t, "Loaded policy 'root'\n", stdErr)
-}

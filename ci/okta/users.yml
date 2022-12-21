@@ -1,0 +1,14 @@
+# Users with permission to authenticate
+- !user test.user3@mycompany.com
+- !user conjur_ci_user@cyberark.com
+
+- !grant
+  members:
+    - !user test.user3@mycompany.com
+    - !user conjur_ci_user@cyberark.com
+  role: !group conjur/authn-oidc/okta-2/authenticatable
+
+- !permit
+  role: !user conjur_ci_user@cyberark.com
+  privilege: [ read, update, create ]
+  resource: !policy root

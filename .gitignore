@@ -4,6 +4,7 @@ junit.xml
 junit.output
 key.txt
 coverage.xml
+cleanup.log
 
 output/
 dist/
