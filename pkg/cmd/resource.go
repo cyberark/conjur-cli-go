@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"encoding/json"
-
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
 type resourceClient interface {
+	ResourceExists(resourceID string) (bool, error)
 	Resource(resourceID string) (resource map[string]interface{}, err error)
 	PermittedRoles(resourceID, privilege string) ([]string, error)
 }
@@ -28,7 +28,7 @@ var resourceCmd = &cobra.Command{
 }
 
 func newResourceExistsCmd(clientFactory resourceClientFactoryFunc) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "exists",
 		Short: "Checks if a resource exists",
 		Long: `Checks if a resource exists, given a [resource-id].
@@ -38,30 +38,51 @@ Examples:
 - conjur resource exists dev:variable:somevariable
 - conjur resource exists dev:host:somehost`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var resourceID string
-
 			if len(args) < 1 {
 				cmd.Help()
 				return nil
 			}
 
-			resourceID = args[0]
+			resourceID := args[0]
+
+			jsonFlag, err := cmd.Flags().GetBool("json")
+			if err != nil {
+				return err
+			}
 
 			client, err := clientFactory(cmd)
 			if err != nil {
 				return err
 			}
 
-			result, err := client.Resource(resourceID)
+			result, err := client.ResourceExists(resourceID)
 			if err != nil {
 				return err
 			}
 
-			cmd.Println(result != nil)
+			if jsonFlag {
+				data := map[string]interface{}{
+					"exists": result,
+				}
+
+				prettyData, err := utils.PrettyPrintToJSON(data)
+				if err != nil {
+					return err
+				}
+
+				cmd.Println(prettyData)
+
+			} else {
+				cmd.Println(result)
+			}
 
 			return nil
 		},
 	}
+
+	cmd.Flags().Bool("json", false, "Output a JSON response with field 'exists'")
+
+	return cmd
 }
 
 func newResourcePermittedRolesCmd(clientFactory resourceClientFactoryFunc) *cobra.Command {
@@ -77,15 +98,12 @@ Examples:
 -   conjur resource permitted-roles dev:variable:somevariable execute
 -   conjur resource permitted-roles dev:user:someuser read`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var resourceID string
-			var privilege string
-
 			if len(args) < 2 {
 				cmd.Help()
 				return nil
 			}
 
-			resourceID, privilege = args[0], args[1]
+			resourceID, privilege := args[0], args[1]
 
 			client, err := clientFactory(cmd)
 			if err != nil {
@@ -97,12 +115,12 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := json.MarshalIndent(result, "", "  ")
+			prettyResult, err := utils.PrettyPrintToJSON(result)
 			if err != nil {
 				return err
 			}
 
-			cmd.Println(string(prettyResult))
+			cmd.Println(prettyResult)
 
 			return nil
 		},
@@ -122,14 +140,12 @@ Examples:
 -   conjur resource show dev:user:someuser
 -   conjur resource show dev:host:somehost`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var resourceID string
-
 			if len(args) < 1 {
 				cmd.Help()
 				return nil
 			}
 
-			resourceID = args[0]
+			resourceID := args[0]
 
 			client, err := clientFactory(cmd)
 			if err != nil {
@@ -141,12 +157,12 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := json.MarshalIndent(result, "", "  ")
+			prettyResult, err := utils.PrettyPrintToJSON(result)
 			if err != nil {
 				return err
 			}
 
-			cmd.Println(string(prettyResult))
+			cmd.Println(prettyResult)
 
 			return nil
 		},

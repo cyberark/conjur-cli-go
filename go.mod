@@ -1,13 +1,13 @@
 module github.com/cyberark/conjur-cli-go
 
-go 1.19
+go 1.18
 
 // Use the replace below for local development with conjur-api-go
 // replace github.com/cyberark/conjur-api-go => ./conjur-api-go
 
 require (
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
-	github.com/cyberark/conjur-api-go v0.10.3-0.20221222145454-566e7c46861d // Run "go get github.com/cyberark/conjur-api-go@main" to update
+	github.com/cyberark/conjur-api-go v0.10.3-0.20221227184145-bc550ca4361d // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/cobra v1.5.0
