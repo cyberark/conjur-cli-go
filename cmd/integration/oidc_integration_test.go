@@ -111,9 +111,9 @@ func TestOidcIntegrationOkta(t *testing.T) {
 	)
 
 	// Skip these tests if the required environment variables are not set
-	if os.Getenv("OKTA_PROVIDER_URI") == "" {
-		fmt.Println("WARNING: These tests were skipped due to missing Okta variables. Run again with Summon to include these tests.")
-		return
+	if !hasValidOktaVariables() {
+		fmt.Println("Skipping tests due to missing Okta variables. Run again with Summon to include them.")
+		t.Skip()
 	}
 
 	tmpDir := t.TempDir()
@@ -219,4 +219,21 @@ func setupOktaAuthenticator(account string) {
 	createSecret(account, "conjur/authn-oidc/okta-2/client-secret", os.Getenv("OKTA_CLIENT_SECRET"))
 	createSecret(account, "conjur/authn-oidc/okta-2/claim-mapping", "preferred_username")
 	createSecret(account, "conjur/authn-oidc/okta-2/redirect_uri", "http://127.0.0.1:8888/callback")
+}
+
+func hasValidOktaVariables() bool {
+	variables := []string{
+		"OKTA_PROVIDER_URI",
+		"OKTA_CLIENT_ID",
+		"OKTA_CLIENT_SECRET",
+		"OKTA_USERNAME",
+		"OKTA_PASSWORD",
+	}
+
+	for _, variable := range variables {
+		if os.Getenv(variable) == "" {
+			return false
+		}
+	}
+	return true
 }

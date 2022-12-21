@@ -1,9 +1,0 @@
-# Users with permission to authenticate
-- !user test.user3@mycompany.com
-- !user conj_ops_dev@cyberark.com
-
-- !grant
-  members:
-    - !user test.user3@mycompany.com
-    - !user conj_ops_dev@cyberark.com
-  role: !group conjur/authn-oidc/okta-2/authenticatable

@@ -16,8 +16,6 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
-
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
 )
 
 // OidcLogin attempts to login to Conjur using the OIDC flow. Username and password can be provided to
@@ -39,9 +37,6 @@ func OidcLogin(conjurClient ConjurClient, username string, password string) (Con
 // an OIDC code. This works for Keycloak and possibly other OIDC providers but will not work if MFA is needed.
 func fetchOidcCodeFromProvider(username, password string) func(providerURL string) error {
 	return func(providerURL string) error {
-		// Note: This shouldn't be required to make keycloak work, but it doesn't matter much since it's only used for tests
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
 		// Create a client with redirect following disabled so we can handle the redirect ourselves for tests
 		httpClient := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -61,6 +56,9 @@ func fetchOidcCodeFromProvider(username, password string) func(providerURL strin
 }
 
 func fetchOidcCodeFromKeycloak(httpClient *http.Client, username, password, providerURL string) error {
+	// Note: This shouldn't be required to make keycloak work, but it doesn't matter much since it's only used for tests
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
 	// Get the provider's login page
 	resp, err := httpClient.Get(providerURL)
 
@@ -133,12 +131,12 @@ func fetchOidcCodeFromOkta(httpClient *http.Client, username, password, provider
 func fetchSessionTokenFromOkta(httpClient *http.Client, providerURL string, username string, password string) (string, error) {
 	fmt.Println("Attempting to get session token from Okta using the provided username/password")
 
-	type OktaRequestBody struct {
+	type OktaRequestData struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
 
-	requestJSON := OktaRequestBody{
+	requestJSON := OktaRequestData{
 		Username: username,
 		Password: password,
 	}
@@ -166,11 +164,20 @@ func fetchSessionTokenFromOkta(httpClient *http.Client, providerURL string, user
 		return "", err
 	}
 
-	sessionToken, err := utils.ExtractValueFromJSON(string(respBody), "sessionToken")
+	type OktaResponseData struct {
+		ExpiresAt    string `json:"expiresAt"`
+		Status       string `json:"status"`
+		SessionToken string `json:"sessionToken"`
+	}
+
+	var respJSON OktaResponseData
+
+	err = json.Unmarshal(respBody, &respJSON)
 	if err != nil {
 		return "", err
 	}
-	return sessionToken, nil
+
+	return respJSON.SessionToken, nil
 }
 
 func callbackRedirect(resp *http.Response) error {

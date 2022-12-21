@@ -15,15 +15,15 @@ services:
     volumes:
     # The files add the endpoint /dev to Conjur. This endpoint allows us to carry out typical development tasks such as fetching
     # any role's API key via an unauthenticated HTTP request to Conjur.
-      - ./conjur-hacks/dev_initializer.rb:/opt/conjur-server/config/initializers/dev_initializer.rb
-      - ./conjur-hacks/dev_controller.rb:/opt/conjur-server/app/controllers/dev_controller.rb
-      - ./keycloak:/oauth/keycloak/scripts
+      - ../ci/conjur-hacks/dev_initializer.rb:/opt/conjur-server/config/initializers/dev_initializer.rb
+      - ../ci/conjur-hacks/dev_controller.rb:/opt/conjur-server/app/controllers/dev_controller.rb
+      - ../ci/keycloak:/oauth/keycloak/scripts
     
   cli-dev:
     image: golang:1.19
     environment:
-      - OKTA_USERNAME=$OKTA_USERNAME
-      - OKTA_PASSWORD=$OKTA_PASSWORD
+      - OKTA_USERNAME=${OKTA_USERNAME:-user}
+      - OKTA_PASSWORD=${OKTA_PASSWORD:-password}
     command: bash -c "cd ${PWD}/..; make install; sleep infinity"
     working_dir: ${PWD}/..
     restart: on-failure
@@ -54,8 +54,8 @@ services:
       - "7777:8080"
       - "7788:8443"
     volumes:
-      - ./keycloak:/scripts
-      - ./keycloak/standalone.xml:/opt/jboss/keycloak/standalone/configuration/standalone.xml
+      - ../ci/keycloak:/scripts
+      - ../ci/keycloak/standalone.xml:/opt/jboss/keycloak/standalone/configuration/standalone.xml
 
 volumes:
   go-modules:

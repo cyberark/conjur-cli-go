@@ -4,7 +4,7 @@ set -eo pipefail
 
 # CC servers can't find it for some reason.  Local shellcheck is fine.
 # shellcheck disable=SC1091
-source "./keycloak/keycloak_functions.sh"
+source "../ci/keycloak/keycloak_functions.sh"
 
 # Navigate to the dev directory (where this script lives) to ensure we can run this script
 # from anywhere.
@@ -189,7 +189,7 @@ configure_oidc_providers() {
 
 configure_oidc_authenticators() {
     echo "Setting Keycloak policy and variables values in Conjur"
-    client_load_policy "keycloak/policy.yml"
+    client_load_policy "../ci/keycloak/policy.yml"
 
     client_add_secret 'conjur/authn-oidc/keycloak/provider-uri' 'https://keycloak:8443/auth/realms/master'
     client_add_secret 'conjur/authn-oidc/keycloak/client-id' 'conjurClient'
@@ -197,21 +197,42 @@ configure_oidc_authenticators() {
     client_add_secret 'conjur/authn-oidc/keycloak/claim-mapping' 'email'
     client_add_secret 'conjur/authn-oidc/keycloak/redirect_uri' 'http://127.0.0.1:8888/callback'
 
-    client_load_policy "keycloak/users.yml"
+    client_load_policy "../ci/keycloak/users.yml"
 
   if [[ $ENABLE_OIDC_OKTA = true ]]; then
     echo "Confuring Okta policy and variables values in Conjur"
-    client_load_policy "okta/okta-2.yml"
+    client_load_policy "../ci/okta/policy.yml"
 
-    # Replace these okta values with your own if not using Summon
-    client_add_secret 'conjur/authn-oidc/okta-2/provider-uri' "${OKTA_PROVIDER_URI}oauth2/default"
-    client_add_secret 'conjur/authn-oidc/okta-2/client-id' "$OKTA_CLIENT_ID"
-    client_add_secret 'conjur/authn-oidc/okta-2/client-secret' "$OKTA_CLIENT_SECRET"
+    local okta_valid=true
+    if [[ -z "$OKTA_PROVIDER_URI" ]]; then
+      echo "OKTA_PROVIDER_URI is not set"
+      okta_valid=false
+    fi
+
+    if [[ -z "$OKTA_CLIENT_ID" ]]; then
+      echo "OKTA_CLIENT_ID is not set"
+      okta_valid=false
+    fi
+
+    if [[ -z "$OKTA_CLIENT_SECRET" ]]; then
+      echo "OKTA_CLIENT_SECRET is not set"
+      okta_valid=false
+    fi
+
+    if [[ $okta_valid = true ]]; then
+      # Replace these okta values with your own if not using Summon
+      client_add_secret 'conjur/authn-oidc/okta-2/provider-uri' "${OKTA_PROVIDER_URI}oauth2/default"
+      client_add_secret 'conjur/authn-oidc/okta-2/client-id' "$OKTA_CLIENT_ID"
+      client_add_secret 'conjur/authn-oidc/okta-2/client-secret' "$OKTA_CLIENT_SECRET"
+    else
+      echo "Skipped Okta configuration due to missing environment variables"
+    fi
+
 
     client_add_secret 'conjur/authn-oidc/okta-2/claim-mapping' 'preferred_username'
     client_add_secret 'conjur/authn-oidc/okta-2/redirect_uri' 'http://127.0.0.1:8888/callback'
 
-    client_load_policy "okta/okta-users.yml"
+    client_load_policy "../ci/okta/users.yml"
   fi
 }
 
