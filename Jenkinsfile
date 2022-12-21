@@ -36,5 +36,18 @@ pipeline {
           ccCoverage("gocov", "--prefix github.com/cyberark/conjur-cli-go")
       }
     }
+    stage('Run Integration Tests') {
+      steps {
+        dir('ci') {
+          script {
+            try{
+              sh 'summon -f ./okta/secrets.yml ./test_integration'
+            } finally {
+              archiveArtifacts 'cleanup.log'
+            }
+          }
+        }
+      }
+    }
   }
 }

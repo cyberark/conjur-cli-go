@@ -203,9 +203,11 @@ configure_oidc_authenticators() {
     echo "Confuring Okta policy and variables values in Conjur"
     client_load_policy "okta/okta-2.yml"
 
+    # Replace these okta values with your own if not using Summon
     client_add_secret 'conjur/authn-oidc/okta-2/provider-uri' "${OKTA_PROVIDER_URI}oauth2/default"
     client_add_secret 'conjur/authn-oidc/okta-2/client-id' "$OKTA_CLIENT_ID"
     client_add_secret 'conjur/authn-oidc/okta-2/client-secret' "$OKTA_CLIENT_SECRET"
+
     client_add_secret 'conjur/authn-oidc/okta-2/claim-mapping' 'preferred_username'
     client_add_secret 'conjur/authn-oidc/okta-2/redirect_uri' 'http://127.0.0.1:8888/callback'
 

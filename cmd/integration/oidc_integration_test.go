@@ -218,7 +218,5 @@ func setupOktaAuthenticator(account string) {
 	createSecret(account, "conjur/authn-oidc/okta-2/client-id", os.Getenv("OKTA_CLIENT_ID"))
 	createSecret(account, "conjur/authn-oidc/okta-2/client-secret", os.Getenv("OKTA_CLIENT_SECRET"))
 	createSecret(account, "conjur/authn-oidc/okta-2/claim-mapping", "preferred_username")
-	createSecret(account, "conjur/authn-oidc/okta-2/nonce", "1656b4264b60af659fce")
-	createSecret(account, "conjur/authn-oidc/okta-2/state", "4f413476ef7e2395f0af")
 	createSecret(account, "conjur/authn-oidc/okta-2/redirect_uri", "http://127.0.0.1:8888/callback")
 }

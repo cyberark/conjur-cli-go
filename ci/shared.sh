@@ -43,25 +43,6 @@ wait_for_conjur() {
   docker-compose exec -T conjur conjurctl wait
 }
 
-client_init_and_login() {
-  local conjur_account=$1
-  local admin_password=$2
-
-  docker-compose exec -T cli conjur init -u http://conjur -a "$conjur_account"
-  docker-compose exec -T cli conjur login -u admin -p "$admin_password"
-}
-
-load_policy_file() {
-  local policy_file=$1
-  # Loading policy via the CLI doesn't work here for some reason
-  docker-compose exec -T conjur conjurctl policy load test "$policy_file"
-}
-
-client_add_secret() {
-  local variable=$1
-  local value=$2
-  docker-compose exec -T cli conjur variable set -i "$variable" -v "$value"
-}
 
 configure_oidc_providers() {
   wait_for_keycloak_server

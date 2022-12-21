@@ -8,9 +8,10 @@ logged into Conjur as the admin user.
 `./exec` connects to a CLI container if running, otherwise it runs `start`.
 
 ## Dev Environment with Okta
+
+Note: This assumes you are able to retrieve dev secrets from ConjurOps via Summon.
 `summon -p summon-conjur -f ./okta/secrets.yml ./start --authn-oidc --oidc-okta`
 
-`conjur logout && conjur init --force -u http://conjur -a dev -t oidc --service-id okta-2 && conjur login -u $OKTA_USERNAME -p $OKTA_PASSWORD && conjur whoami`
-
 ## Run Integration Tests
+
 `summon -p summon-conjur -f ./okta/secrets.yml ./test_integration`

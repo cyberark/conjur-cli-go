@@ -19,12 +19,6 @@
           # Defines the JWT claim to use as the Conjur identifier
           - !variable claim-mapping
 
-          # Nonce and State are random strings generated to supply an
-          # additional layer of security. These values should be generated when the
-          # authenticator is created.
-          - !variable nonce
-          - !variable state
-
           # Group with permission to authenticate
           - !group
             id: authenticatable

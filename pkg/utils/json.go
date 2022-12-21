@@ -14,7 +14,8 @@ func PrettyPrintJSON(b []byte) ([]byte, error) {
 	return out.Bytes(), err
 }
 
-func ExtractValueFromJson(body string, key string) (string, error) {
+// ExtractValueFromJSON returns the value of a key from a json string. Assumes there will be only one matching key.
+func ExtractValueFromJSON(body string, key string) (string, error) {
 	keystr := "\"" + key + "\":[^,;\\]}]*"
 	r, _ := regexp.Compile(keystr)
 	match := r.FindString(body)

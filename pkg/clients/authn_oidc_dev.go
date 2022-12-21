@@ -37,9 +37,9 @@ func OidcLogin(conjurClient ConjurClient, username string, password string) (Con
 
 // fetchOidcCodeFromProvider attempts to bypass the browser by using the username and password to fetch
 // an OIDC code. This works for Keycloak and possibly other OIDC providers but will not work if MFA is needed.
-func fetchOidcCodeFromProvider(username, password string) func(providerUrl string) error {
-	return func(providerUrl string) error {
-		//FIXME: This shouldn't be required to make keycloak work
+func fetchOidcCodeFromProvider(username, password string) func(providerURL string) error {
+	return func(providerURL string) error {
+		// Note: This shouldn't be required to make keycloak work, but it doesn't matter much since it's only used for tests
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 		// Create a client with redirect following disabled so we can handle the redirect ourselves for tests
@@ -50,19 +50,19 @@ func fetchOidcCodeFromProvider(username, password string) func(providerUrl strin
 		}
 
 		switch {
-		case strings.Contains(providerUrl, "okta"):
+		case strings.Contains(providerURL, "okta"):
 			fmt.Println("Using Okta as OIDC provider")
-			return fetchOidcCodeFromOkta(httpClient, username, password, providerUrl)
+			return fetchOidcCodeFromOkta(httpClient, username, password, providerURL)
 		default:
 			fmt.Println("Using Keycloak as OIDC provider")
-			return fetchOidcCodeFromKeycloak(httpClient, username, password, providerUrl)
+			return fetchOidcCodeFromKeycloak(httpClient, username, password, providerURL)
 		}
 	}
 }
 
-func fetchOidcCodeFromKeycloak(httpClient *http.Client, username, password, providerUrl string) error {
+func fetchOidcCodeFromKeycloak(httpClient *http.Client, username, password, providerURL string) error {
 	// Get the provider's login page
-	resp, err := httpClient.Get(providerUrl)
+	resp, err := httpClient.Get(providerURL)
 
 	if err != nil {
 		return err
@@ -108,15 +108,15 @@ func fetchOidcCodeFromKeycloak(httpClient *http.Client, username, password, prov
 	return errors.New("unable to fetch code from Keycloak")
 }
 
-func fetchOidcCodeFromOkta(httpClient *http.Client, username, password, providerUrl string) error {
-	sessionToken, err := fetchSessionTokenFromOkta(httpClient, providerUrl, username, password)
+func fetchOidcCodeFromOkta(httpClient *http.Client, username, password, providerURL string) error {
+	sessionToken, err := fetchSessionTokenFromOkta(httpClient, providerURL, username, password)
 	if err != nil {
 		return err
 	}
 
-	providerUrl += "&sessionToken=" + sessionToken
+	providerURL += "&sessionToken=" + sessionToken
 
-	resp, err := httpClient.Get(providerUrl)
+	resp, err := httpClient.Get(providerURL)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func fetchOidcCodeFromOkta(httpClient *http.Client, username, password, provider
 	return errors.New("unable to fetch authorization code from Okta")
 }
 
-func fetchSessionTokenFromOkta(httpClient *http.Client, providerUrl string, username string, password string) (string, error) {
+func fetchSessionTokenFromOkta(httpClient *http.Client, providerURL string, username string, password string) (string, error) {
 	fmt.Println("Attempting to get session token from Okta using the provided username/password")
 
 	type OktaRequestBody struct {
@@ -138,13 +138,13 @@ func fetchSessionTokenFromOkta(httpClient *http.Client, providerUrl string, user
 		Password string `json:"password"`
 	}
 
-	requestJson := OktaRequestBody{
+	requestJSON := OktaRequestBody{
 		Username: username,
 		Password: password,
 	}
 
-	payload, _ := json.Marshal(requestJson)
-	authEndpoint := extractHostname(providerUrl) + "/api/v1/authn"
+	payload, _ := json.Marshal(requestJSON)
+	authEndpoint := extractHostname(providerURL) + "/api/v1/authn"
 	req, err := http.NewRequest("POST", authEndpoint, bytes.NewBuffer(payload))
 
 	if err != nil {
@@ -166,7 +166,7 @@ func fetchSessionTokenFromOkta(httpClient *http.Client, providerUrl string, user
 		return "", err
 	}
 
-	sessionToken, err := utils.ExtractValueFromJson(string(respBody), "sessionToken")
+	sessionToken, err := utils.ExtractValueFromJSON(string(respBody), "sessionToken")
 	if err != nil {
 		return "", err
 	}
@@ -187,8 +187,8 @@ func callbackRedirect(resp *http.Response) error {
 	return nil
 }
 
-func extractHostname(providerUrl string) string {
-	url, err := url.Parse(providerUrl)
+func extractHostname(providerURL string) string {
+	url, err := url.Parse(providerURL)
 	if err != nil {
 		fmt.Println(err)
 		return ""
