@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 package main
 
 import (
@@ -106,6 +109,14 @@ func assertWhoamiCmd(t *testing.T, err error, stdOut string, stdErr string) {
 	assert.Equal(t, "", stdErr)
 }
 
+func assertAuthenticateCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "protected")
+	assert.Contains(t, stdOut, "payload")
+	assert.Contains(t, stdOut, "signature")
+	assert.Equal(t, "", stdErr)
+}
+
 func assertNotFound(t *testing.T, err error, stdOut string, stdErr string) {
 	assert.Error(t, err)
 	assert.Equal(t, "", stdOut)
@@ -117,4 +128,22 @@ func assertPolicyLoadCmd(t *testing.T, err error, stdOut string, stdErr string) 
 	assert.Contains(t, stdOut, "created_roles")
 	assert.Contains(t, stdOut, "version")
 	assert.Equal(t, "Loaded policy 'root'\n", stdErr)
+}
+
+func assertSetVariableCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Equal(t, "Value added\n", stdOut)
+	assert.Equal(t, "", stdErr)
+}
+
+func assertGetVariableCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Equal(t, "moo\n", stdOut)
+	assert.Equal(t, "", stdErr)
+}
+
+func assertLogoutCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "Logged out\n")
+	assert.Equal(t, "", stdErr)
 }

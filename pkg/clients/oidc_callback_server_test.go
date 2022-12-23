@@ -92,6 +92,36 @@ func TestHandleOidcFlow(t *testing.T) {
 
 		assert.False(t, openBrowserCalled)
 	})
+
+	t.Run("Stops server after timeout", func(t *testing.T) {
+		t.Cleanup(func() {
+			// Restore the timeout
+			callbackServerTimeout = 5 * time.Minute
+		})
+
+		openBrowserCalled := false
+
+		mockOpenBrowser := func(url string) error {
+			openBrowserCalled = true
+			return nil
+		}
+
+		// Decrease the timeout
+		callbackServerTimeout = 1 * time.Second
+		// Start the local server
+		http.DefaultServeMux = http.NewServeMux()
+		go func() {
+			handleOpenIDFlow("https://example.com?redirect_uri=http%3A%2F%2F127.0.0.1%3A8888%2Fcallback", mockGenerateState, mockOpenBrowser)
+		}()
+
+		// Wait for the server to start up asynchronously
+		time.Sleep(1 * time.Second)
+		// Ensure the open browser function was called
+		assert.True(t, openBrowserCalled)
+		// Ensure server is shut down
+		time.Sleep(100 * time.Millisecond)
+		assert.False(t, isServerRunning())
+	})
 }
 
 func isServerRunning() bool {

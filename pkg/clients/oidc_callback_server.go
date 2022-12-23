@@ -13,6 +13,8 @@ import (
 	"github.com/pkg/browser"
 )
 
+var callbackServerTimeout = 5 * time.Minute
+
 type callbackEndpoint struct {
 	server         *http.Server
 	shutdownSignal chan string
@@ -99,7 +101,7 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 	}
 
 	// Set a timeout and shut down the server if we don't get a response in time
-	timeout := time.NewTimer(300 * time.Second)
+	timeout := time.NewTimer(callbackServerTimeout)
 	defer timeout.Stop()
 
 	select {

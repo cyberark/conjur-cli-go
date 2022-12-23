@@ -1,4 +1,5 @@
 - !user alice@conjur.net
+- !user bob@conjur.net
 
 - !policy
   id: keycloak
@@ -8,10 +9,17 @@
       annotations:
         authn-oidc/identity: 'alice@conjur.net'
 
+    - !user
+      id: bob.somebody
+      annotations:
+        authn-oidc/identity: 'bob@conjur.net'
+
 - !grant
   members:
     - !user alice@conjur.net
     - !user alice@keycloak
+    - !user bob.somebody@keycloak
+    - !user bob@conjur.net
   role: !group conjur/authn-oidc/keycloak/authenticatable
 
 - !permit

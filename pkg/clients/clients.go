@@ -29,6 +29,7 @@ type ConjurClient interface {
 	PermittedRoles(resourceID, privilege string) ([]string, error)
 	ListOidcProviders() ([]conjurapi.OidcProvider, error)
 	RefreshToken() error
+	ForceRefreshToken() error
 	GetHttpClient() *http.Client
 }
 
@@ -73,10 +74,10 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 	client, err = conjurapi.NewClientFromEnvironment(config)
 	decorateConjurClient(client)
 	if err != nil {
-		cmd.Printf("warn: %s\n", err)
+		return nil, err
 	}
 
-	if err == nil && client.GetAuthenticator() == nil {
+	if client.GetAuthenticator() == nil {
 		client, err = conjurapi.NewClient(config)
 		if err != nil {
 			return nil, err
