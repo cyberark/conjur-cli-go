@@ -21,9 +21,13 @@ func MaybeVerboseLoggingForClient(
 	if client == nil {
 		return
 	}
-	// TODO: check to see if the transport has already been decorated to make this idempotent
 
 	httpClient := client.GetHttpClient()
+	if httpClient == nil {
+		return
+	}
+
+	// TODO: check to see if the transport has already been decorated to make this idempotent
 	transport := httpClient.Transport
 	if transport == nil {
 		transport = http.DefaultTransport

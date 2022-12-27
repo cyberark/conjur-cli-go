@@ -80,6 +80,22 @@ var loginTestCases = []struct {
 		},
 	},
 	{
+		name:         "login with verbose flag",
+		args:         []string{"--verbose", "login", "-u", "alice", "-p", "secret"},
+		conjurConfig: defaultConjurConfig,
+		loginWithPromptFallback: func(t *testing.T, decoratePrompt prompts.DecoratePromptFunc, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error) {
+			// Perform the login request which should cause the HTTP request and response to be printed
+			client.Login(username, password)
+			return &authn.LoginPair{}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			// Stderr should contain the verbose output which includes the HTTP request and response
+			assert.Contains(t, stderr, "GET /authn/dev/login")
+			assert.Contains(t, stdout, "Logged in")
+		},
+	},
+	{
 		name:         "login with oidc",
 		args:         []string{"login", "-u", "alice", "-p", "secret"},
 		conjurConfig: oidcConjurConfig,

@@ -72,10 +72,10 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 
 	var client ConjurClient
 	client, err = conjurapi.NewClientFromEnvironment(config)
-	decorateConjurClient(client)
 	if err != nil {
 		return nil, err
 	}
+	decorateConjurClient(client)
 
 	if client.GetAuthenticator() == nil {
 		client, err = conjurapi.NewClient(config)
@@ -93,10 +93,10 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 			return nil, fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
 		}
 
-		decorateConjurClient(client)
 		if err != nil {
 			return nil, err
 		}
+		decorateConjurClient(client)
 	}
 
 	return client, nil

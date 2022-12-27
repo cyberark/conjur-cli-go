@@ -117,8 +117,4 @@ func newVariableSetCmd(clientFactory variableSetClientFactoryFunc) *cobra.Comman
 func init() {
 	variableCmd := newVariableCmd(variableGetClientFactory, variableSetClientFactory)
 	rootCmd.AddCommand(variableCmd)
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// variableCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
