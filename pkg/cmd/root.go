@@ -18,7 +18,6 @@ func newRootCommand() *cobra.Command {
 	to quickly create a Cobra application.`,
 	}
 
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.PersistentFlags().Bool("verbose", false, "Verbose logging enabled")
 	return rootCmd
 }
