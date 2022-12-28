@@ -18,6 +18,15 @@ services:
       - ../ci/conjur-hacks/dev_initializer.rb:/opt/conjur-server/config/initializers/dev_initializer.rb
       - ../ci/conjur-hacks/dev_controller.rb:/opt/conjur-server/app/controllers/dev_controller.rb
       - ../ci/keycloak:/oauth/keycloak/scripts
+  
+  proxy:
+    image: nginx:1.13.6-alpine
+    volumes:
+      - ../ci/conf/:/etc/nginx/conf.d/:ro
+      - ../ci/conf/tls/:/etc/nginx/tls/:ro
+    depends_on:
+    - conjur
+    restart: on-failure
     
   cli-dev:
     image: golang:1.19

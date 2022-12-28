@@ -119,7 +119,7 @@ func TestHandleOidcFlow(t *testing.T) {
 		// Ensure the open browser function was called
 		assert.True(t, openBrowserCalled)
 		// Ensure server is shut down
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(250 * time.Millisecond)
 		assert.False(t, isServerRunning())
 	})
 }

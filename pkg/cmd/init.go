@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-cli-go/pkg/conjurrc"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
+	"github.com/cyberark/conjur-cli-go/pkg/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -18,7 +19,9 @@ type initCmdFlagValues struct {
 	authnType          string
 	serviceID          string
 	conjurrcFilePath   string
+	certFilePath       string
 	forceFileOverwrite bool
+	selfSigned         bool
 }
 
 func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
@@ -42,6 +45,14 @@ func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
 	if err != nil {
 		return initCmdFlagValues{}, err
 	}
+	certFilePath, err := cmd.Flags().GetString("cert-file")
+	if err != nil {
+		return initCmdFlagValues{}, err
+	}
+	selfSigned, err := cmd.Flags().GetBool("self-signed")
+	if err != nil {
+		return initCmdFlagValues{}, err
+	}
 	forceFileOverwrite, err := cmd.Flags().GetBool("force")
 	if err != nil {
 		return initCmdFlagValues{}, err
@@ -53,6 +64,8 @@ func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
 		authnType:          authnType,
 		serviceID:          serviceID,
 		conjurrcFilePath:   conjurrcFilePath,
+		certFilePath:       certFilePath,
+		selfSigned:         selfSigned,
 		forceFileOverwrite: forceFileOverwrite,
 	}, nil
 }
@@ -88,6 +101,14 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	err = fetchCertIfNeeded(&config, cmdFlagVals, setCommandStreamsOnPrompt)
+	if err != nil {
+		return err
+	}
+	if config.SSLCertPath != "" {
+		cmd.Printf("Wrote certificate to %s", config.SSLCertPath)
+	}
+
 	err = writeConjurrc(
 		config,
 		cmdFlagVals,
@@ -101,24 +122,56 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func fetchCertIfNeeded(config *conjurapi.Config, cmdFlagVals initCmdFlagValues, setCommandStreamsOnPrompt prompts.DecoratePromptFunc) error {
+	// Get TLS certificate from Conjur server
+	url, err := url.Parse(config.ApplianceURL)
+	if err != nil {
+		return err
+	}
+
+	// Only fetch certificate if using HTTPS
+	if url.Scheme != "https" {
+		return nil
+	}
+
+	cert, err := utils.GetServerCert(url.Host, cmdFlagVals.selfSigned)
+	if err != nil {
+		return fmt.Errorf("Unable to retrieve certificate from %s: %s", url.Host, err)
+	}
+
+	// Prompt user to accept certificate
+	err = prompts.AskToTrustCert(setCommandStreamsOnPrompt, cert.Fingerprint)
+	if err != nil {
+		return fmt.Errorf("You decided not to trust the certificate")
+	}
+
+	certPath := cmdFlagVals.certFilePath
+
+	err = writeFile(certPath, []byte(cert.Cert), cmdFlagVals.forceFileOverwrite, setCommandStreamsOnPrompt)
+	if err != nil {
+		return err
+	}
+
+	config.SSLCert = cert.Cert
+	config.SSLCertPath = certPath
+
+	return nil
+}
+
 func writeConjurrc(config conjurapi.Config, cmdFlagVals initCmdFlagValues, setCommandStreamsOnPrompt prompts.DecoratePromptFunc) error {
-	return conjurrc.WriteConjurrc(
-		config,
-		cmdFlagVals.conjurrcFilePath,
-		func(filePath string) error {
-			if cmdFlagVals.forceFileOverwrite {
-				return nil
-			}
+	filePath := cmdFlagVals.conjurrcFilePath
+	fileContents := config.Conjurrc()
 
-			err := prompts.AskToOverwriteFile(setCommandStreamsOnPrompt, filePath)
-			if err != nil {
-				// TODO: make all the errors lowercase to make Go static check happy, then have something higher up that capitalizes the first letter
-				// of errors from commands
-				return fmt.Errorf("Not overwriting %s", filePath)
-			}
+	return writeFile(filePath, fileContents, cmdFlagVals.forceFileOverwrite, setCommandStreamsOnPrompt)
+}
 
-			return nil
-		})
+func writeFile(filePath string, fileContents []byte, forceFileOverwrite bool, setCommandStreamsOnPrompt prompts.DecoratePromptFunc) error {
+	err := prompts.MaybeAskToOverwriteFile(setCommandStreamsOnPrompt, filePath, forceFileOverwrite)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(filePath, fileContents, 0644)
 }
 
 func newInitCommand() *cobra.Command {
@@ -143,8 +196,10 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 	cmd.Flags().StringP("url", "u", "", "URL of the Conjur service")
 	cmd.Flags().StringP("certificate", "c", "", "Conjur SSL certificate (will be obtained from host unless provided by this option)")
 	cmd.Flags().StringP("file", "f", filepath.Join(userHomeDir, ".conjurrc"), "File to write the configuration to")
+	cmd.Flags().String("cert-file", filepath.Join(userHomeDir, "conjur-server.pem"), "File to write the server's certificate to")
 	cmd.Flags().StringP("authn-type", "t", "", "Authentication type to use")
-	cmd.Flags().StringP("service-id", "", "", "Service ID if using alternative authentication type")
+	cmd.Flags().String("service-id", "", "Service ID if using alternative authentication type")
+	cmd.Flags().BoolP("self-signed", "s", false, "Allow self-signed certificates (insecure)")
 	cmd.Flags().Bool("force", false, "Force overwrite of existing file")
 
 	return cmd

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
 
@@ -52,6 +53,26 @@ func newFileExistsPrompt(filePath string) *promptui.Prompt {
 func AskToOverwriteFile(decoratePrompt DecoratePromptFunc, filePath string) error {
 	fileExistsPrompt := decoratePrompt(newFileExistsPrompt(filePath))
 	_, err := runPrompt(fileExistsPrompt)
+	return err
+}
+
+func newTrustCertPrompt() *promptui.Prompt {
+	return &promptui.Prompt{
+		Label:     "Trust this certificate",
+		IsConfirm: true,
+	}
+}
+
+// AskToTrustCert presents a prompt to get confirmation from a user to trust a certificate
+func AskToTrustCert(decoratePrompt DecoratePromptFunc, fingerprint string) error {
+	warning := fmt.Sprintf("\nThe server's certificate fingerprint is %s.\n", fingerprint) +
+		"Please verify this certificate on the appliance using command:\n" +
+		"openssl x509 -fingerprint -noout -in ~conjur/etc/ssl/conjur.pem\n\n"
+
+	trustCertPrompt := decoratePrompt(newTrustCertPrompt())
+	// The prompt label doesn't support newlines, so we write the warning to stdout directly
+	trustCertPrompt.Stdout.Write([]byte(warning))
+	_, err := runPrompt(trustCertPrompt)
 	return err
 }
 
@@ -141,4 +162,25 @@ func MaybeAskForConnectionDetails(decoratePrompt DecoratePromptFunc, account str
 	}
 
 	return account, applianceURL, err
+}
+
+// MaybeAskToOverwriteFile checks if a file exists and asks the user if they want to overwrite it. Returns `nil` if
+// the file does not exist or if the user confirms they want to overwrite it.
+func MaybeAskToOverwriteFile(decoratePrompt DecoratePromptFunc, filePath string, forceOverwrite bool) error {
+	if forceOverwrite {
+		return nil
+	}
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return nil
+	}
+
+	err := AskToOverwriteFile(decoratePrompt, filePath)
+	if err != nil {
+		// TODO: make all the errors lowercase to make Go static check happy, then have something higher up that capitalizes the first letter
+		// of errors from commands
+		return fmt.Errorf("Not overwriting %s", filePath)
+	}
+
+	return nil
 }

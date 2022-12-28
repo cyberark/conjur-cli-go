@@ -17,7 +17,7 @@ ENABLE_AUTHN_OIDC=false
 ENABLE_OIDC_OKTA=false
 
 # Minimal set of services.  We add to this list based on cmd line flags.
-services=(pg conjur cli-dev)
+services=(pg conjur proxy cli-dev)
 
 default_authenticators="authn"
 enabled_authenticators="$default_authenticators"
