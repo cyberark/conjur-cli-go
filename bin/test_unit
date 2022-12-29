@@ -9,8 +9,6 @@ function main() {
   retrieve_cyberark_ca_cert
   build_docker_ut_image
   run_unit_tests
-  build_docker_junit_image
-  run_junit_report
 }
 
 function build_docker_ut_image() {
@@ -20,7 +18,6 @@ function build_docker_ut_image() {
 
 function run_unit_tests() {
   echo "Running unit tests..."
-  set +e
   docker run --rm -t \
              --volume "$PWD"/:/conjur-cli-go/test/ \
              conjur-cli-go-test-runner:latest \
@@ -28,24 +25,6 @@ function run_unit_tests() {
              ./... \
              | tee -a "$junit_output_file"
   echo "Unit test exit status: $?"
-}
-
-function build_docker_junit_image() {
-  set -e
-  rm -f junit.xml
-  echo "Building junit image..."
-  docker build -f Dockerfile.junit -t conjur-cli-go-junit:latest .
-}
-
-function run_junit_report() {
-  echo "Creating junit report and coverage output XML"
-  docker run --rm \
-    -v "$PWD"/:/test \
-    conjur-cli-go-junit:latest \
-    bash -exc "
-      cat ./junit.output | go-junit-report > ./junit.xml ;
-      gocov convert ./c.out | gocov-xml > ./coverage.xml
-    "
 }
 
 main
