@@ -53,7 +53,7 @@ func LoadAndValidateConjurConfig() (conjurapi.Config, error) {
 func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, error) {
 	var err error
 
-	verbose, err := cmd.Flags().GetBool("verbose")
+	debug, err := cmd.Flags().GetBool("debug")
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 	// temporary Conjur client being created at that point in time. We should really not be creating so many Conjur clients
 	// we should just have one then the rest is an attempt to get an authenticator
 	decorateConjurClient := func(client ConjurClient) {
-		MaybeVerboseLoggingForClient(verbose, cmd, client)
+		MaybeDebugLoggingForClient(debug, cmd, client)
 	}
 
 	config, err := LoadAndValidateConjurConfig()
