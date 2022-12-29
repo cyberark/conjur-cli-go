@@ -37,6 +37,15 @@ func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 		return loginCmdFlagValues{}, err
 	}
 
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	if username == "" {
+		username, err = cmd.Flags().GetString("id")
+		if err != nil {
+			return loginCmdFlagValues{}, err
+		}
+	}
+	// END COMPATIBILITY WITH PYTHON CLI
+
 	password, err := cmd.Flags().GetString("password")
 	if err != nil {
 		return loginCmdFlagValues{}, err
@@ -111,6 +120,11 @@ Examples:
 
 	cmd.Flags().StringP("username", "u", "", "")
 	cmd.Flags().StringP("password", "p", "", "")
+
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	cmd.Flags().StringP("id", "i", "", "")
+	cmd.Flags().MarkDeprecated("id", "use -u/--username instead")
+	// END COMPATIBILITY WITH PYTHON CLI
 
 	return cmd
 }
