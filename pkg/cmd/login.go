@@ -26,7 +26,7 @@ var defaultLoginCmdFuncs = loginCmdFuncs{
 type loginCmdFlagValues struct {
 	username string
 	password string
-	verbose  bool
+	debug    bool
 }
 
 func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
@@ -42,7 +42,7 @@ func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 		return loginCmdFlagValues{}, err
 	}
 
-	verbose, err := cmd.Flags().GetBool("verbose")
+	debug, err := cmd.Flags().GetBool("debug")
 	if err != nil {
 		return loginCmdFlagValues{}, err
 	}
@@ -50,7 +50,7 @@ func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 	return loginCmdFlagValues{
 		username: username,
 		password: password,
-		verbose:  verbose,
+		debug:    debug,
 	}, nil
 }
 
@@ -88,8 +88,8 @@ Examples:
 				return err
 			}
 
-			if cmdFlagVals.verbose {
-				clients.MaybeVerboseLoggingForClient(cmdFlagVals.verbose, cmd, conjurClient)
+			if cmdFlagVals.debug {
+				clients.MaybeDebugLoggingForClient(cmdFlagVals.debug, cmd, conjurClient)
 			}
 
 			if config.AuthnType == "" || config.AuthnType == "authn" || config.AuthnType == "ldap" {

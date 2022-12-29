@@ -80,8 +80,8 @@ var loginTestCases = []struct {
 		},
 	},
 	{
-		name:         "login with verbose flag",
-		args:         []string{"--verbose", "login", "-u", "alice", "-p", "secret"},
+		name:         "login with debug flag",
+		args:         []string{"--debug", "login", "-u", "alice", "-p", "secret"},
 		conjurConfig: defaultConjurConfig,
 		loginWithPromptFallback: func(t *testing.T, decoratePrompt prompts.DecoratePromptFunc, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error) {
 			// Perform the login request which should cause the HTTP request and response to be printed
@@ -90,7 +90,7 @@ var loginTestCases = []struct {
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.NoError(t, err)
-			// Stderr should contain the verbose output which includes the HTTP request and response
+			// Stderr should contain the debug output which includes the HTTP request and response
 			assert.Contains(t, stderr, "GET /authn/dev/login")
 			assert.Contains(t, stdout, "Logged in")
 		},
