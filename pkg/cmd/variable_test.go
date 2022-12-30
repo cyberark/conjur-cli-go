@@ -9,10 +9,10 @@ import (
 )
 
 type mockVariableClient struct {
-	t   *testing.T
-	get func(*testing.T, string) ([]byte, error)
+	t              *testing.T
+	get            func(*testing.T, string) ([]byte, error)
 	getWithVersion func(*testing.T, string, int) ([]byte, error)
-	set func(*testing.T, string, string) error
+	set            func(*testing.T, string, string) error
 }
 
 func (m mockVariableClient) RetrieveSecret(path string) ([]byte, error) {
@@ -71,6 +71,20 @@ var variableCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "get subcommand with version",
+		args: []string{"variable", "get", "meow", "-v", "2"},
+		getWithVersion: func(t *testing.T, path string, version int) ([]byte, error) {
+			// Assert on arguments
+			assert.Equal(t, "meow", path)
+			assert.Equal(t, 2, version)
+
+			return []byte("moo"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "moo")
+		},
+	},
+	{
 		name: "get subcommand error",
 		args: []string{"variable", "get", "meow"},
 		get: func(t *testing.T, path string) ([]byte, error) {
@@ -84,7 +98,7 @@ var variableCmdTestCases = []struct {
 		name: "get subcommand missing required argument",
 		args: []string{"variable", "get"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "Error: Must specify <variable-id>")
+			assert.Contains(t, stderr, "Error")
 		},
 	},
 	{
@@ -123,7 +137,7 @@ var variableCmdTestCases = []struct {
 		name: "set subcommand missing required arguments",
 		args: []string{"variable", "set"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "Error: Must specify <variable-id> and <value>")
+			assert.Contains(t, stderr, "Error")
 		},
 	},
 	{
@@ -142,7 +156,7 @@ func TestVariableCmd(t *testing.T) {
 	for _, tc := range variableCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockClient := mockVariableClient{
-				t: t, set: tc.set, getWithVersion: tc.getWithVersion, get: tc.get,
+				t: t, get: tc.get, set: tc.set, getWithVersion: tc.getWithVersion,
 			}
 
 			cmd := newVariableCmd(

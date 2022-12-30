@@ -46,9 +46,9 @@ func variableSetClientFactory(cmd *cobra.Command) (variableSetClient, error) {
 
 func newVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:          "get <variable-id> [-v]",
-		Short:        "Retrieve the value of a Conjur variable",
-		Long:         `Retrieve the value of a Conjur variables given a <variable-id> and optional [version].
+		Use:   "get <variable-id> [-v]",
+		Short: "Retrieve the value of a Conjur variable",
+		Long: `Retrieve the value of a Conjur variables given a <variable-id> and optional [version].
 
 Examples:
 - conjur variable get ci-staging-password
@@ -56,12 +56,13 @@ Examples:
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				cmd.PrintErr("Error: Must specify <variable-id>")
+				cmd.PrintErr("Error: Command 'variable get' requires <variable-id>")
+				cmd.Help()
 				return nil
 			}
 
 			variableID := args[0]
-			
+
 			version, err := cmd.Flags().GetInt("version")
 			if err != nil {
 				return err
@@ -79,7 +80,7 @@ Examples:
 			} else {
 				data, err = client.RetrieveSecret(variableID)
 			}
-			
+
 			if err != nil {
 				return err
 			}
@@ -92,22 +93,23 @@ Examples:
 
 func newVariableSetCmd(clientFactory variableSetClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:          "set <variable-id> <value>",
-		Short:        "Set the value of a Conjur variable given a <variable-id> and <value>",
-		Long:         `Set the value of a Conjur variable given a <variable-id> and <value>.
+		Use:   "set <variable-id> <value>",
+		Short: "Set the value of a Conjur variable given a <variable-id> and <value>",
+		Long: `Set the value of a Conjur variable given a <variable-id> and <value>.
 
 Examples:
 - conjur variable set ci-staging-password secret-value`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 2 {
-				cmd.PrintErr("Error: Must specify <variable-id> and <value>")
+				cmd.PrintErr("Error: Command 'variable set' requires <variable-id> and <value>")
+				cmd.Help()
 				return nil
 			}
 
 			variableID := args[0]
 			value := args[1]
-			
+
 			client, err := clientFactory(cmd)
 			if err != nil {
 				return err
