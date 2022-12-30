@@ -32,7 +32,7 @@ var initCmdTestCases = []struct {
 	},
 	{
 		name: "prompts for account and URL",
-		args: []string{"init"},
+		args: []string{"init", "-i"},
 		promptResponses: []promptResponse{
 			{
 				prompt:   "Enter the URL of your Conjur service:",
@@ -58,7 +58,7 @@ appliance_url: http://conjur
 	},
 	{
 		name: "writes conjurrc",
-		args: []string{"init", "-u=http://host", "-a=test-account"},
+		args: []string{"init", "-u=http://host", "-a=test-account", "-i"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			data, _ := os.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: test-account
@@ -73,7 +73,7 @@ appliance_url: http://host
 	},
 	{
 		name: "writes conjurrc for ldap",
-		args: []string{"init", "-u=http://host", "-a=test-account", "-t=ldap", "--service-id=test"},
+		args: []string{"init", "-u=http://host", "-a=test-account", "-t=ldap", "--service-id=test", "-i"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			data, _ := os.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: test-account
@@ -88,7 +88,7 @@ service_id: test
 	},
 	{
 		name: "prompts for overwrite, reject",
-		args: []string{"init", "-u=http://host", "-a=other-test-account"},
+		args: []string{"init", "-u=http://host", "-a=other-test-account", "-i"},
 		promptResponses: []promptResponse{
 			{
 				prompt:   ".conjurrc exists. Overwrite? [y/N]",
@@ -110,7 +110,7 @@ service_id: test
 	},
 	{
 		name: "prompts for overwrite, accept",
-		args: []string{"init", "-u=http://host", "-a=other-test-account"},
+		args: []string{"init", "-u=http://host", "-a=other-test-account", "-i"},
 		promptResponses: []promptResponse{
 			{
 				prompt:   "",
@@ -135,7 +135,7 @@ appliance_url: http://host
 	},
 	{
 		name: "force overwrite",
-		args: []string{"init", "-u=http://host", "-a=yet-another-test-account", "--force"},
+		args: []string{"init", "-u=http://host", "-a=yet-another-test-account", "--force", "-i"},
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
 			os.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
 		},
@@ -154,7 +154,7 @@ appliance_url: http://host
 	},
 	{
 		name: "errors on missing conjurrc file directory",
-		args: []string{"init", "-u=http://host", "-a=test-account", "-f=/no/such/dir/file"},
+		args: []string{"init", "-u=http://host", "-a=test-account", "-f=/no/such/dir/file", "-i"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			assert.Contains(t, stderr, "no such file or directory")
 		},
@@ -215,8 +215,33 @@ appliance_url: http://host
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			assert.NoError(t, err)
-			assert.Equal(t, "", stderr)
+			assert.Equal(t, "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data\n", stderr)
 			assertCertWritten(t, conjurrcInTmpDir, stdout)
+		},
+	},
+	{
+		name: "fails for http urls",
+		args: []string{"init", "-u=http://example.com", "-a=test-account"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
+			assert.Contains(t, stderr, "Cannot fetch certificate from non-HTTPS URL")
+			assertFetchCertFailed(t, conjurrcInTmpDir)
+		},
+	},
+	{
+		name: "allows http urls when specified",
+		args: []string{"init", "-u=http://example.com", "-a=test-account", "--insecure"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Contains(t, stderr, "Warning: Running the command with '--insecure' makes your system vulnerable to security attacks")
+			assert.Contains(t, stderr, "If you prefer to communicate with the server securely you must reinitialize the client in secure mode.")
+		},
+	},
+	{
+		name: "fails if both --insecure and --self-signed are specified",
+		args: []string{"init", "-u=http://example.com", "-a=test-account", "--insecure", "--self-signed"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
+			assert.Contains(t, stderr, "Cannot specify both --insecure and --self-signed")
+			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
 }

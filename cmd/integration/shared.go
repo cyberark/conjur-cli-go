@@ -18,6 +18,9 @@ import (
 
 const pathToBinary = "conjur"
 
+const insecureModeWarning = "Warning: Running the command with '--insecure' makes your system vulnerable to security attacks\n" +
+	"If you prefer to communicate with the server securely you must reinitialize the client in secure mode.\n"
+
 func newConjurCLI(homeDir string) *conjurCLI {
 	return &conjurCLI{
 		homeDir: homeDir,

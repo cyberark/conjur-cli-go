@@ -36,11 +36,11 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 			"-u", "http://conjur",
 			"-t", "oidc",
 			"--service-id", "keycloak",
-			"--force",
+			"-i", "--force",
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, "Wrote configuration to "+tmpDir+"/.conjurrc\n", stdOut)
-		assert.Equal(t, "", stdErr)
+		assert.Equal(t, insecureModeWarning, stdErr)
 	})
 
 	t.Run("login", func(t *testing.T) {
@@ -173,11 +173,11 @@ func TestOidcIntegrationOkta(t *testing.T) {
 			"-u", "http://conjur",
 			"-t", "oidc",
 			"--service-id", "okta-2",
-			"--force",
+			"-i", "--force",
 		)
 		assert.NoError(t, err)
 		assert.Equal(t, "Wrote configuration to "+tmpDir+"/.conjurrc\n", stdOut)
-		assert.Equal(t, "", stdErr)
+		assert.Equal(t, insecureModeWarning, stdErr)
 	})
 
 	t.Run("login", func(t *testing.T) {
