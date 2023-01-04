@@ -8,12 +8,14 @@ import (
 
 func newRootCommand() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:   "conjur",
-		Short: "Conjur CLI",
-		Long:  "Command-line toolkit for managing Conjur resources and performing common tasks.",
+		Use:     "conjur",
+		Short:   "Conjur CLI",
+		Long:    "Command-line toolkit for managing Conjur resources and performing common tasks.",
+		Version: "8.0.0",
 	}
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug logging enabled")
+	rootCmd.SetVersionTemplate("Conjur CLI version {{.Version}}\n")
 	return rootCmd
 }
 
