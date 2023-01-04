@@ -68,6 +68,39 @@ var userRotateAPIKeyCmdTestCases = []struct {
 			assert.Contains(t, stdout, "test-api-key")
 		},
 	},
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	{
+		name: "rotate API key for specified user with -i flag",
+		args: []string{"user", "rotate-api-key", "-i", "dev-user"},
+		userRotateAPIKey: func(t *testing.T, userID string) ([]byte, error) {
+			// Assert on arguments
+			assert.Equal(t, "dev-user", userID)
+
+			return []byte("test-api-key"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "test-api-key")
+			assert.Contains(t, stdout, "test-api-key")
+			assert.Contains(t, stdout, "deprecated")
+			assert.Contains(t, stdout, "use -u/--user-id instead")
+		},
+	},
+	{
+		name: "rotate API key for specified user with --id flag",
+		args: []string{"user", "rotate-api-key", "--id=dev-user"},
+		userRotateAPIKey: func(t *testing.T, userID string) ([]byte, error) {
+			// Assert on arguments
+			assert.Equal(t, "dev-user", userID)
+
+			return []byte("test-api-key"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "test-api-key")
+			assert.Contains(t, stdout, "deprecated")
+			assert.Contains(t, stdout, "use -u/--user-id instead")
+		},
+	},
+	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name: "client error when rotating API key",
 		args: []string{"user", "rotate-api-key", "--user-id=dev-user"},

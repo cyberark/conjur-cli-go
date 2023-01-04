@@ -60,6 +60,16 @@ Examples:
 - conjur user rotate-api-key`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			userID, err := cmd.Flags().GetString("user-id")
+
+			// BEGIN COMPATIBILITY WITH PYTHON CLI
+			if userID == "" {
+				userID, err = cmd.Flags().GetString("id")
+				if err != nil {
+					return err
+				}
+			}
+			// END COMPATIBILITY WITH PYTHON CLI
+
 			if err != nil {
 				return err
 			}
@@ -100,6 +110,11 @@ Examples:
 		"user-id", "u", "",
 		"ID of user whose API key should be rotated (e.g. alice). Defaults to logged-in user.",
 	)
+
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	cmd.Flags().StringP("id", "i", "", "")
+	cmd.Flags().MarkDeprecated("id", "use -u/--user-id instead")
+	// END COMPATIBILITY WITH PYTHON CLI
 
 	return cmd
 }
