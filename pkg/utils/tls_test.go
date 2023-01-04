@@ -85,4 +85,14 @@ tGKrYDGt0pH8iF6rzbp9Q4HQXMZXkNxg+brjWxnaOVGTDNwNH7048+s/hT9bUQ==
 
 		assert.Equal(t, selfSignedFingerprint, cert.Fingerprint)
 	})
+
+	t.Run("Fails for incorrect hostname even when self-signed is allowed", func(t *testing.T) {
+		_, err := GetServerCert("https://wrong.host.badssl.com/", true)
+		assert.Error(t, err)
+	})
+
+	t.Run("Fails for untrusted root even when self-signed is allowed", func(t *testing.T) {
+		_, err := GetServerCert("https://untrusted-root.badssl.com/", true)
+		assert.Error(t, err)
+	})
 }
