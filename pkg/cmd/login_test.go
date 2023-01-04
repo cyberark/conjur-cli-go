@@ -95,6 +95,44 @@ var loginTestCases = []struct {
 			assert.Contains(t, stdout, "Logged in")
 		},
 	},
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	{
+		name:         "login with -i flag",
+		args:         []string{"login", "-i", "alice", "-p", "secret"},
+		conjurConfig: defaultConjurConfig,
+		loginWithPromptFallback: func(t *testing.T, decoratePrompt prompts.DecoratePromptFunc, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error) {
+			// Assert on arguments
+			assert.Equal(t, "alice", username)
+			assert.Equal(t, "secret", password)
+
+			return &authn.LoginPair{}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Contains(t, stdout, "deprecated")
+			assert.Contains(t, stdout, "use -u/--username instead")
+			assert.Contains(t, stdout, "Logged in")
+		},
+	},
+	{
+		name:         "login with --id flag",
+		args:         []string{"login", "--id", "alice", "-p", "secret"},
+		conjurConfig: defaultConjurConfig,
+		loginWithPromptFallback: func(t *testing.T, decoratePrompt prompts.DecoratePromptFunc, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error) {
+			// Assert on arguments
+			assert.Equal(t, "alice", username)
+			assert.Equal(t, "secret", password)
+
+			return &authn.LoginPair{}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Contains(t, stdout, "deprecated")
+			assert.Contains(t, stdout, "use -u/--username instead")
+			assert.Contains(t, stdout, "Logged in")
+		},
+	},
+	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name:         "login with oidc",
 		args:         []string{"login", "-u", "alice", "-p", "secret"},
