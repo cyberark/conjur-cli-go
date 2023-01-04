@@ -13,7 +13,7 @@ func newRootCommand() *cobra.Command {
 		Long:  "Command-line toolkit for managing Conjur resources and performing common tasks.",
 	}
 
-	rootCmd.PersistentFlags().Bool("debug", false, "Debug logging enabled")
+	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug logging enabled")
 	return rootCmd
 }
 
