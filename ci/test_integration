@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -eox pipefail
 
 source "./shared.sh"
 
@@ -7,7 +7,7 @@ source "./shared.sh"
 # from anywhere.
 cd "$(dirname "$0")"
 
-services=(pg conjur cli keycloak)
+services=(pg conjur proxy cli keycloak)
 
 # set the COMPOSE_PROJECT_NAME for the tests you'll be running
 COMPOSE_PROJECT_NAME="$(openssl rand -hex 3)"
