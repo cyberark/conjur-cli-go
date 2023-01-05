@@ -7,7 +7,6 @@ import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-api-go/conjurapi/authn"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
-	"github.com/cyberark/conjur-cli-go/pkg/storage"
 	"github.com/manifoldco/promptui"
 )
 
@@ -45,11 +44,6 @@ func LoginWithPromptFallback(
 	}
 
 	authenticatePair := &authn.LoginPair{Login: username, APIKey: string(data)}
-
-	err = storage.StoreCredentials(client.GetConfig(), authenticatePair.Login, authenticatePair.APIKey)
-	if err != nil {
-		return nil, err
-	}
 
 	return authenticatePair, nil
 }

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-cli-go/pkg/storage"
 
 	"github.com/spf13/cobra"
 )
@@ -21,7 +20,7 @@ func newLogoutCmd(loadConfig configLoaderFn) *cobra.Command {
 				return err
 			}
 
-			err = storage.PurgeCredentials(config)
+			err = conjurapi.PurgeCredentials(config)
 			if err != nil {
 				return err
 			}
