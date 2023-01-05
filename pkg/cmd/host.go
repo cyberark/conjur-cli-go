@@ -42,6 +42,16 @@ Examples:
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			hostID, err := cmd.Flags().GetString("host-id")
+
+			// BEGIN COMPATIBILITY WITH PYTHON CLI
+			if hostID == "" {
+				hostID, err = cmd.Flags().GetString("id")
+				if err != nil {
+					return err
+				}
+			}
+			// END COMPATIBILITY WITH PYTHON CLI
+
 			if err != nil {
 				return err
 			}
@@ -63,6 +73,11 @@ Examples:
 	}
 
 	cmd.Flags().StringP("host-id", "", "", "ID of host whose API key will be rotated (e.g. prod-db)")
+
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	cmd.Flags().StringP("id", "i", "", "")
+	cmd.Flags().MarkDeprecated("id", "use --host-id instead")
+	// END COMPATIBILITY WITH PYTHON CLI
 
 	return cmd
 }

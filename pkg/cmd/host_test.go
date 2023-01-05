@@ -44,6 +44,38 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 			assert.Contains(t, stdout, "test-api-key")
 		},
 	},
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	{
+		name: "deprecated --id flag",
+		args: []string{"host", "rotate-api-key", "--id=dev-host"},
+		hostRotateAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
+			// Assert on arguments
+			assert.Equal(t, "dev-host", hostID)
+
+			return []byte("test-api-key"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "test-api-key")
+			assert.Contains(t, stdout, "deprecated")
+			assert.Contains(t, stdout, "use --host-id instead")
+		},
+	},
+	{
+		name: "deprecated -i flag",
+		args: []string{"host", "rotate-api-key", "-i", "dev-host"},
+		hostRotateAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
+			// Assert on arguments
+			assert.Equal(t, "dev-host", hostID)
+
+			return []byte("test-api-key"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "test-api-key")
+			assert.Contains(t, stdout, "deprecated")
+			assert.Contains(t, stdout, "use --host-id instead")
+		},
+	},
+	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name: "client error",
 		args: []string{"host", "rotate-api-key", "--host-id=dev-host"},

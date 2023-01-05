@@ -201,4 +201,13 @@ func TestInitCmd(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "/root/.conjurrc", f)
 	})
+
+	t.Run("version flag", func(t *testing.T) {
+		rootCmd := newRootCommand()
+		stdout, stderr, err := executeCommandForTest(t, rootCmd, "--version")
+
+		assert.NoError(t, err)
+		assert.Equal(t, "", stderr)
+		assert.Equal(t, "Conjur CLI version 8.0.0\n", stdout)
+	})
 }
