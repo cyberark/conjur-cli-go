@@ -10,8 +10,13 @@ import (
 
 type mockResourceClient struct {
 	t              *testing.T
+	resourceExists func(t *testing.T, resourceID string) (bool, error)
 	resource       func(t *testing.T, resourceID string) (resource map[string]interface{}, err error)
 	permittedRoles func(t *testing.T, resourceID, privilege string) ([]string, error)
+}
+
+func (m mockResourceClient) ResourceExists(resourceID string) (bool, error) {
+	return m.resourceExists(m.t, resourceID)
 }
 
 func (m mockResourceClient) Resource(resourceID string) (resource map[string]interface{}, err error) {
@@ -25,6 +30,7 @@ func (m mockResourceClient) PermittedRoles(resourceID, privilege string) ([]stri
 type resourceCmdTestCase struct {
 	name               string
 	args               []string
+	resourceExists     func(t *testing.T, resourceID string) (bool, error)
 	resource           func(t *testing.T, resourceID string) (resource map[string]interface{}, err error)
 	permittedRoles     func(t *testing.T, resourceID, privilege string) ([]string, error)
 	clientFactoryError error
@@ -47,12 +53,19 @@ var resourceExistsCmdTestCases = []resourceCmdTestCase{
 		},
 	},
 	{
+		name: "resource exists missing resource-id with json flag",
+		args: []string{"exists", "--json"},
+		assert: func(t *testing.T, stdout string, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
 		name: "resource exists return true",
 		args: []string{"exists", "meow"},
-		resource: func(t *testing.T, resourceID string) (resource map[string]interface{}, err error) {
+		resourceExists: func(t *testing.T, resourceID string) (bool, error) {
 			assert.Equal(t, "meow", resourceID)
 
-			return map[string]interface{}{"key": "value"}, nil
+			return true, nil
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "true")
@@ -61,20 +74,44 @@ var resourceExistsCmdTestCases = []resourceCmdTestCase{
 	{
 		name: "resource exists return false",
 		args: []string{"exists", "meow"},
-		resource: func(t *testing.T, resourceID string) (resource map[string]interface{}, err error) {
+		resourceExists: func(t *testing.T, resourceID string) (bool, error) {
 			assert.Equal(t, "meow", resourceID)
 
-			return nil, nil
+			return false, nil
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "false")
 		},
 	},
 	{
+		name: "resource exists returns json true",
+		args: []string{"exists", "--json", "meow"},
+		resourceExists: func(t *testing.T, roleID string) (bool, error) {
+			assert.Equal(t, "meow", roleID)
+
+			return true, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "{\n  \"exists\": true\n}\n")
+		},
+	},
+	{
+		name: "resource exists returns json false",
+		args: []string{"exists", "--json", "meow"},
+		resourceExists: func(t *testing.T, roleID string) (bool, error) {
+			assert.Equal(t, "meow", roleID)
+
+			return false, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "{\n  \"exists\": false\n}\n")
+		},
+	},
+	{
 		name: "resource exists client error",
 		args: []string{"exists", "abcdefg"},
-		resource: func(t *testing.T, resourceID string) (resource map[string]interface{}, err error) {
-			return nil, fmt.Errorf("%s", "an error")
+		resourceExists: func(t *testing.T, resourceID string) (bool, error) {
+			return false, fmt.Errorf("%s", "an error")
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stderr, "Error: an error\n")
@@ -220,7 +257,7 @@ var resourceShowCmdTestCases = []resourceCmdTestCase{
 func TestResourceExistsCmd(t *testing.T) {
 	for _, tc := range resourceExistsCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockClient := mockResourceClient{t: t, resource: tc.resource}
+			mockClient := mockResourceClient{t: t, resourceExists: tc.resourceExists}
 
 			cmd := newResourceExistsCmd(
 				func(cmd *cobra.Command) (resourceClient, error) {

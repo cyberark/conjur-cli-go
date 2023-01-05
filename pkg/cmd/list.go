@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"encoding/json"
-
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -75,12 +74,12 @@ Examples:
 				return err
 			}
 
-			res, err := json.MarshalIndent(data, "", "  ")
+			prettyResult, err := utils.PrettyPrintToJSON(data)
 			if err != nil {
 				return err
 			}
 
-			cmd.Println(string(res))
+			cmd.Println(prettyResult)
 
 			return nil
 		},

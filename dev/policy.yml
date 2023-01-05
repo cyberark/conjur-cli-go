@@ -1,6 +1,7 @@
 - !host test-host
 
 - !user alice
+- !layer test-layer
 
 - !variable secret
 
@@ -10,3 +11,8 @@
   privileges: [read]
   resource: !variable secret
   
+- !grant
+  role: !layer test-layer
+  members: 
+  - !host test-host
+  - !user alice

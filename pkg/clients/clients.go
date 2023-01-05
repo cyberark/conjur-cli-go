@@ -24,6 +24,7 @@ type ConjurClient interface {
 	AddSecret(variableID string, secretValue string) error
 	RetrieveSecret(variableID string) ([]byte, error)
 	CheckPermission(resourceID, privilege string) (bool, error)
+	ResourceExists(resourceID string) (bool, error)
 	Resource(resourceID string) (resource map[string]interface{}, err error)
 	ResourceIDs(filter *conjurapi.ResourceFilter) ([]string, error)
 	PermittedRoles(resourceID, privilege string) ([]string, error)
@@ -31,6 +32,10 @@ type ConjurClient interface {
 	RefreshToken() error
 	ForceRefreshToken() error
 	GetHttpClient() *http.Client
+	RoleExists(roleID string) (bool, error)
+	Role(roleID string) (role map[string]interface{}, err error)
+	RoleMembers(roleID string) (members []map[string]interface{}, err error)
+	RoleMemberships(roleID string) (memberships []map[string]interface{}, err error)
 }
 
 // LoadAndValidateConjurConfig loads and validate Conjur configuration

@@ -85,6 +85,11 @@ func TestIntegration(t *testing.T) {
 		assertGetVariableCmd(t, err, stdOut, stdErr)
 	})
 
+	t.Run("exists returns false", func(t *testing.T) {
+		stdOut, stdErr, err = conjurCLI.Run("role", "exists", "dev:user:meow")
+		assertExistsCmd(t, err, stdOut, stdErr)
+	})
+
 	t.Run("logout", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("logout")
 		assertLogoutCmd(t, err, stdOut, stdErr)

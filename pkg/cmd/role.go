@@ -1,66 +1,260 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
+type roleClient interface {
+	RoleExists(roleID string) (bool, error)
+	Role(roleID string) (role map[string]interface{}, err error)
+	RoleMembers(roleID string) (members []map[string]interface{}, err error)
+	RoleMemberships(roleID string) (memberships []map[string]interface{}, err error)
+}
+
+type roleClientFactoryFunc func(*cobra.Command) (roleClient, error)
+
+func roleClientFactory(cmd *cobra.Command) (roleClient, error) {
+	return clients.AuthenticatedConjurClientForCommand(cmd)
+}
+
 var roleCmd = &cobra.Command{
 	Use:   "role",
-	Short: "A brief description of your command",
+	Short: "Manage roles",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Print --help if called without subcommand
 		cmd.Help()
 	},
 }
 
-var roleExistsCmd = &cobra.Command{
-	Use:   "exists",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+func newRoleExistsCmd(clientFactory roleClientFactoryFunc) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exists",
+		Short: "Checks if a role exists",
+		Long: `Checks if a role exists
+		
+This command requires a [role-id] and includes an optional [--json] 
+flag to return a JSON-formatted result.
+		
+Examples:
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("role exists called")
-	},
+- conjur role exists dev:host:somehost
+- conjur role exists --json dev:layer:somelayer`,
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				cmd.Help()
+				return nil
+			}
+
+			roleID := args[0]
+
+			jsonFlag, err := cmd.Flags().GetBool("json")
+			if err != nil {
+				return err
+			}
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			result, err := client.RoleExists(roleID)
+			if err != nil {
+				return err
+			}
+
+			if jsonFlag {
+				data := map[string]interface{}{
+					"exists": result,
+				}
+
+				prettyData, err := utils.PrettyPrintToJSON(data)
+				if err != nil {
+					return err
+				}
+
+				cmd.Println(prettyData)
+
+			} else {
+				cmd.Println(result)
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().Bool("json", false, "Output a JSON response with field 'exists'")
+
+	return cmd
 }
 
-var roleMembersCmd = &cobra.Command{
-	Use:   "members",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+func newRoleShowCmd(clientFactory roleClientFactoryFunc) *cobra.Command {
+	return &cobra.Command{
+		Use:   "show",
+		Short: "Show a role",
+		Long: `Show a role
+		
+This command requires one argument, a [role-id].
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("role members called")
-	},
+Examples:
+
+-   conjur role show dev:user:someuser
+-   conjur role show dev:group:somegroup`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				cmd.Help()
+				return nil
+			}
+
+			roleID := args[0]
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			result, err := client.Role(roleID)
+			if err != nil {
+				return err
+			}
+
+			prettyResult, err := utils.PrettyPrintToJSON(result)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(prettyResult)
+
+			return nil
+		},
+	}
 }
 
-var roleMembershipsCmd = &cobra.Command{
-	Use:   "memberships",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+func newRoleMembersCmd(clientFactory roleClientFactoryFunc) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "members",
+		Short: "List members within a role",
+		Long: `List members within a role
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("role memberships called")
-	},
+This command requires a [role-id] and includes an optional [-v|--verbose] 
+flag to return the full members object.
+
+Examples:
+
+-   conjur role members dev:user:alice
+-   conjur role members --verbose dev:host:bob`,
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				cmd.Help()
+				return nil
+			}
+
+			roleID := args[0]
+
+			verboseFlag, err := cmd.Flags().GetBool("verbose")
+			if err != nil {
+				return err
+			}
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			result, err := client.RoleMembers(roleID)
+			if err != nil {
+				return err
+			}
+
+			var members []interface{}
+			if verboseFlag {
+				for _, m := range result {
+					tmp := make(map[string]interface{}, 0)
+					tmp["role"], tmp["member"], tmp["admin_option"] = m["role"], m["member"], m["admin_option"]
+					members = append(members, tmp)
+				}
+			} else {
+				for _, element := range result {
+					members = append(members, element["member"].(string))
+				}
+			}
+
+			prettyResult, _ := utils.PrettyPrintToJSON(members)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(prettyResult)
+
+			return nil
+		},
+	}
+
+	cmd.Flags().BoolP("verbose", "v", false, "Display verbose members object")
+
+	return cmd
+}
+
+func newRoleMembershipsCmd(clientFactory roleClientFactoryFunc) *cobra.Command {
+	return &cobra.Command{
+		Use:   "memberships",
+		Short: "List memberships of a role",
+		Long: `List memberships of a role
+		
+This command requires one argument, a [role-id].
+
+Examples:
+
+-   conjur role memberships dev:layer:somelayer
+-   conjur role memberships dev:group:somegroup`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				cmd.Help()
+				return nil
+			}
+
+			roleID := args[0]
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			result, err := client.RoleMemberships(roleID)
+			if err != nil {
+				return err
+			}
+
+			memberships := make([]string, 0)
+			for _, element := range result {
+				memberships = append(memberships, element["role"].(string))
+			}
+
+			prettyResult, _ := utils.PrettyPrintToJSON(memberships)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(prettyResult)
+
+			return nil
+		},
+	}
 }
 
 func init() {
 	rootCmd.AddCommand(roleCmd)
 
+	roleExistsCmd := newRoleExistsCmd(roleClientFactory)
+	roleShowCmd := newRoleShowCmd(roleClientFactory)
+	roleMembersCmd := newRoleMembersCmd(roleClientFactory)
+	roleMembershipsCmd := newRoleMembershipsCmd(roleClientFactory)
+
 	roleCmd.AddCommand(roleExistsCmd)
+	roleCmd.AddCommand(roleShowCmd)
 	roleCmd.AddCommand(roleMembersCmd)
 	roleCmd.AddCommand(roleMembershipsCmd)
 }
