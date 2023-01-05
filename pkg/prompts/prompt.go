@@ -166,11 +166,7 @@ func MaybeAskForConnectionDetails(decoratePrompt DecoratePromptFunc, account str
 
 // MaybeAskToOverwriteFile checks if a file exists and asks the user if they want to overwrite it. Returns `nil` if
 // the file does not exist or if the user confirms they want to overwrite it.
-func MaybeAskToOverwriteFile(decoratePrompt DecoratePromptFunc, filePath string, forceOverwrite bool) error {
-	if forceOverwrite {
-		return nil
-	}
-
+func MaybeAskToOverwriteFile(decoratePrompt DecoratePromptFunc, filePath string) error {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return nil
 	}

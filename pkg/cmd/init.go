@@ -166,9 +166,11 @@ func writeConjurrc(config conjurapi.Config, cmdFlagVals initCmdFlagValues, setCo
 }
 
 func writeFile(filePath string, fileContents []byte, forceFileOverwrite bool, setCommandStreamsOnPrompt prompts.DecoratePromptFunc) error {
-	err := prompts.MaybeAskToOverwriteFile(setCommandStreamsOnPrompt, filePath, forceFileOverwrite)
-	if err != nil {
-		return err
+	if !forceFileOverwrite {
+		err := prompts.MaybeAskToOverwriteFile(setCommandStreamsOnPrompt, filePath)
+		if err != nil {
+			return err
+		}
 	}
 
 	return os.WriteFile(filePath, fileContents, 0644)
