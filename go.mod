@@ -6,7 +6,7 @@ go 1.19
 // replace github.com/cyberark/conjur-api-go => ./conjur-api-go
 
 require (
-	github.com/cyberark/conjur-api-go v0.10.3-0.20230117153247-01571256efc3 // Run "go get github.com/cyberark/conjur-api-go@main" to update
+	github.com/cyberark/conjur-api-go v0.10.3-0.20230119183450-0702b34d417f // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/cobra v1.5.0

@@ -36,6 +36,9 @@ type ConjurClient interface {
 	Role(roleID string) (role map[string]interface{}, err error)
 	RoleMembers(roleID string) (members []map[string]interface{}, err error)
 	RoleMemberships(roleID string) (memberships []map[string]interface{}, err error)
+	CreateToken(durationStr string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error)
+	DeleteToken(token string) error
+	CreateHost(id string, token string) (conjurapi.HostFactoryHostResponse, error)
 }
 
 // LoadAndValidateConjurConfig loads and validate Conjur configuration
