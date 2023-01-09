@@ -41,10 +41,10 @@ func TestIntegration(t *testing.T) {
 	})
 
 	t.Run("init", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("init", "-a", account, "-u", "http://conjur", "--force")
+		stdOut, stdErr, err = conjurCLI.Run("init", "-a", account, "-u", "http://conjur", "-i", "--force")
 		assert.NoError(t, err)
 		assert.Equal(t, "Wrote configuration to "+tmpDir+"/.conjurrc\n", stdOut)
-		assert.Equal(t, "", stdErr)
+		assert.Equal(t, insecureModeWarning, stdErr)
 	})
 
 	t.Run("login", func(t *testing.T) {

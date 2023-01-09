@@ -21,6 +21,7 @@ type initCmdFlagValues struct {
 	conjurrcFilePath   string
 	certFilePath       string
 	forceFileOverwrite bool
+	insecure           bool
 	selfSigned         bool
 }
 
@@ -53,6 +54,10 @@ func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
 	if err != nil {
 		return initCmdFlagValues{}, err
 	}
+	insecure, err := cmd.Flags().GetBool("insecure")
+	if err != nil {
+		return initCmdFlagValues{}, err
+	}
 	forceFileOverwrite, err := cmd.Flags().GetBool("force")
 	if err != nil {
 		return initCmdFlagValues{}, err
@@ -66,14 +71,35 @@ func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
 		conjurrcFilePath:   conjurrcFilePath,
 		certFilePath:       certFilePath,
 		selfSigned:         selfSigned,
+		insecure:           insecure,
 		forceFileOverwrite: forceFileOverwrite,
 	}, nil
+}
+
+func validateCmdFlags(cmdFlagVals initCmdFlagValues, cmd *cobra.Command) error {
+	if cmdFlagVals.insecure && cmdFlagVals.selfSigned {
+		return fmt.Errorf("Cannot specify both --insecure and --self-signed")
+	}
+
+	if cmdFlagVals.selfSigned {
+		cmd.PrintErrln("Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data")
+	}
+	if cmdFlagVals.insecure {
+		cmd.PrintErrln("Warning: Running the command with '--insecure' makes your system vulnerable to security attacks")
+		cmd.PrintErrln("If you prefer to communicate with the server securely you must reinitialize the client in secure mode.")
+	}
+	return nil
 }
 
 func runInitCommand(cmd *cobra.Command, args []string) error {
 	var err error
 
 	cmdFlagVals, err := getInitCmdFlagValues(cmd)
+	if err != nil {
+		return err
+	}
+
+	err = validateCmdFlags(cmdFlagVals, cmd)
 	if err != nil {
 		return err
 	}
@@ -131,7 +157,10 @@ func fetchCertIfNeeded(config *conjurapi.Config, cmdFlagVals initCmdFlagValues, 
 
 	// Only fetch certificate if using HTTPS
 	if url.Scheme != "https" {
-		return nil
+		if cmdFlagVals.insecure {
+			return nil
+		}
+		return fmt.Errorf("Cannot fetch certificate from non-HTTPS URL %s", url)
 	}
 
 	cert, err := utils.GetServerCert(url.Host, cmdFlagVals.selfSigned)
@@ -202,6 +231,7 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 	cmd.Flags().StringP("authn-type", "t", "", "Authentication type to use")
 	cmd.Flags().String("service-id", "", "Service ID if using alternative authentication type")
 	cmd.Flags().BoolP("self-signed", "s", false, "Allow self-signed certificates (insecure)")
+	cmd.Flags().BoolP("insecure", "i", false, "Allow non-HTTPS connections (insecure)")
 	cmd.Flags().Bool("force", false, "Force overwrite of existing file")
 
 	return cmd

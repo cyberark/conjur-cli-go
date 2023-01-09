@@ -125,7 +125,7 @@ EOL
   if [ "$ENABLE_AUTHN_OIDC" = true ]; then
     echo "Setting up Conjur for OIDC"
     docker-compose exec cli-dev bash -c 'conjur logout
-conjur init --force -u http://conjur -a dev -t oidc --service-id keycloak
+conjur init --force -u http://conjur -i -a dev -t oidc --service-id keycloak
 conjur login -u alice -p alice'
   fi
 
