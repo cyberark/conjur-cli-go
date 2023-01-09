@@ -26,14 +26,16 @@ type callbackEndpoint struct {
 func openBrowser(url string) error {
 	err := browser.OpenURL(url)
 	if err != nil {
-		return fmt.Errorf("Error opening browser")
+		// Open browser failed, so print the URL to the console instead
+		fmt.Printf("Error opening browser\n")
+		fmt.Printf("Please open a browser to %s\n", url)
 	}
 	return nil
 }
 
 func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Verify request is coming from local machine
-	if !strings.HasPrefix(r.RemoteAddr, "[::1]:") && !strings.HasPrefix(r.RemoteAddr, "127.0.0.1:") {
+	// Verify request is coming from local machine or Docker host
+	if !isLocalhost(r.RemoteAddr) && !isDocker(r.RemoteAddr) {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, "Failed to log in. You may close the browser and try again.")
 		return
@@ -61,7 +63,7 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 	callbackEndpoint.state = generateStateFn()
 	callbackEndpoint.shutdownSignal = make(chan string)
 	server := &http.Server{
-		Addr:         "127.0.0.1:8888",
+		Addr:         ":8888",
 		Handler:      nil,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -79,7 +81,7 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 
 	// TODO: What if this port isn't available? Should this be configurable?
 	if queryVals.Get("redirect_uri") != "http://127.0.0.1:8888/callback" {
-		return "", fmt.Errorf("redirect_uri must be http://127.0.0.1:8888/callback")
+		return "", fmt.Errorf("redirect_uri must be http://127.0.0.1:8888/callback. Current value: %s", queryVals.Get("redirect_uri"))
 	}
 
 	queryVals.Set("state", callbackEndpoint.state)
@@ -119,4 +121,14 @@ func generateState() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return base64.StdEncoding.EncodeToString(b)
+}
+
+func isLocalhost(remoteAddr string) bool {
+	return strings.HasPrefix(remoteAddr, "[::1]:") || strings.HasPrefix(remoteAddr, "127.0.0.1:")
+}
+
+func isDocker(remoteAddr string) bool {
+	// TODO: is it safe to assume the default docker bridge IP of 172.17.0.1?
+	// Otherwise we may have to parse the output of `docker network inspect bridge`
+	return strings.HasPrefix(remoteAddr, "172.17.0.1:")
 }
