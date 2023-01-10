@@ -46,7 +46,7 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 	t.Run("login", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("login", "-u", "alice", "-p", "alice")
 		assertLoginCmd(t, err, stdOut, stdErr)
-		assertOidcTokenCreated(t, tmpDir)
+		assertAuthTokenCached(t, tmpDir)
 	})
 
 	t.Run("whoami after login", func(t *testing.T) {
@@ -90,8 +90,8 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 	})
 
 	t.Run("login as another user", func(t *testing.T) {
-		// Get the modifieddate of the token file
-		info, err := os.Stat(tmpDir + "/.conjur/oidc_token")
+		// Get the modifieddate of the netrc file
+		info, err := os.Stat(tmpDir + "/.netrc")
 		assert.NoError(t, err)
 		modifiedDate := info.ModTime()
 
@@ -99,7 +99,7 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 		assertLoginCmd(t, err, stdOut, stdErr)
 
 		// Check that the token file is modified
-		info, err = os.Stat(tmpDir + "/.conjur/oidc_token")
+		info, err = os.Stat(tmpDir + "/.netrc")
 		assert.NoError(t, err)
 		assert.NotEqual(t, modifiedDate, info.ModTime())
 	})
@@ -112,9 +112,9 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 		assert.NotContains(t, stdOut, "alice")
 	})
 
-	t.Run("failed login doesn't modify token file", func(t *testing.T) {
-		// Get the modifieddate of the token file
-		info, err := os.Stat(tmpDir + "/.conjur/oidc_token")
+	t.Run("failed login doesn't modify netrc file", func(t *testing.T) {
+		// Get the modifieddate of the netrc file
+		info, err := os.Stat(tmpDir + "/.netrc")
 		assert.NoError(t, err)
 		modifiedDate := info.ModTime()
 
@@ -122,8 +122,8 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, stdErr, "Unable to authenticate")
 
-		// Check that the token file is not modified
-		info, err = os.Stat(tmpDir + "/.conjur/oidc_token")
+		// Check that the netrc file is not modified
+		info, err = os.Stat(tmpDir + "/.netrc")
 		assert.NoError(t, err)
 		assert.Equal(t, modifiedDate, info.ModTime())
 	})
@@ -131,10 +131,7 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 	t.Run("logout", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("logout")
 		assertLogoutCmd(t, err, stdOut, stdErr)
-
-		// Ensure cached token is removed
-		_, err = os.Stat(tmpDir + "/.conjur/oidc_token")
-		assert.ErrorIs(t, err, os.ErrNotExist)
+		assertAuthTokenPurged(t, err, tmpDir)
 	})
 
 	t.Run("whoami after logout", func(t *testing.T) {
@@ -183,7 +180,7 @@ func TestOidcIntegrationOkta(t *testing.T) {
 	t.Run("login", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("login", "-u", os.Getenv("OKTA_USERNAME"), "-p", os.Getenv("OKTA_PASSWORD"))
 		assertLoginCmd(t, err, stdOut, stdErr)
-		assertOidcTokenCreated(t, tmpDir)
+		assertAuthTokenCached(t, tmpDir)
 	})
 
 	t.Run("whoami after login", func(t *testing.T) {
@@ -230,7 +227,7 @@ func TestOidcIntegrationOkta(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("logout")
 		assertLogoutCmd(t, err, stdOut, stdErr)
 
-		assertOidcTokenDeleted(t, err, tmpDir)
+		assertAuthTokenPurged(t, err, tmpDir)
 	})
 }
 
@@ -274,15 +271,16 @@ func hasValidOktaVariables() bool {
 	return true
 }
 
-func assertOidcTokenCreated(t *testing.T, tmpDir string) {
-	// Check that the token file is created with the correct permissions
-	info, err := os.Stat(tmpDir + "/.conjur/oidc_token")
+func assertAuthTokenCached(t *testing.T, tmpDir string) {
+	// Check that the netrc file contains the entry for the conjur server
+	contents, err := os.ReadFile(tmpDir + "/.netrc")
 	assert.NoError(t, err)
-	assert.Equal(t, os.FileMode(0600), info.Mode().Perm())
+	assert.Contains(t, string(contents), "http://conjur")
 }
 
-func assertOidcTokenDeleted(t *testing.T, err error, tmpDir string) {
-	// Ensure cached token is removed
-	_, err = os.Stat(tmpDir + "/.conjur/oidc_token")
-	assert.ErrorIs(t, err, os.ErrNotExist)
+func assertAuthTokenPurged(t *testing.T, err error, tmpDir string) {
+	// Ensure that the netrc file does not contain the entry for the conjur server
+	contents, err := os.ReadFile(tmpDir + "/.netrc")
+	assert.NoError(t, err)
+	assert.NotContains(t, string(contents), "http://conjur")
 }
