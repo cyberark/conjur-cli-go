@@ -7,7 +7,7 @@ go 1.19
 
 require (
 	github.com/chzyer/readline v1.5.1
-	github.com/cyberark/conjur-api-go v0.10.3-0.20230119183450-0702b34d417f // Run "go get github.com/cyberark/conjur-api-go@main" to update
+	github.com/cyberark/conjur-api-go v0.10.3-0.20230110163356-49b3ca82eaed // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/cobra v1.5.0
