@@ -36,6 +36,7 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 			"-u", "http://conjur",
 			"-t", "oidc",
 			"--service-id", "keycloak",
+			"--force-netrc",
 			"-i", "--force",
 		)
 		assert.NoError(t, err)
@@ -170,6 +171,7 @@ func TestOidcIntegrationOkta(t *testing.T) {
 			"-u", "http://conjur",
 			"-t", "oidc",
 			"--service-id", "okta-2",
+			"--force-netrc",
 			"-i", "--force",
 		)
 		assert.NoError(t, err)
