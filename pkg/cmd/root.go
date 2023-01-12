@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/cyberark/conjur-cli-go/pkg/version"
 	"github.com/spf13/cobra"
 )
 
@@ -11,7 +12,7 @@ func newRootCommand() *cobra.Command {
 		Use:     "conjur",
 		Short:   "Conjur CLI",
 		Long:    "Command-line toolkit for managing Conjur resources and performing common tasks.",
-		Version: "8.0.0",
+		Version: version.FullVersionName,
 	}
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug logging enabled")

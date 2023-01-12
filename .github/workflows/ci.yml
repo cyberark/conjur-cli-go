@@ -14,14 +14,10 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: '1.19'
-      - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v3
-        with:
-          install-only: true
       - name: Run GoReleaser
-        run: GORELEASER_CURRENT_TAG=v0.0.0 goreleaser release --snapshot --rm-dist
+        run: bin/build_release --skip-validate --snapshot --rm-dist
       - name: Upload assets
         uses: actions/upload-artifact@v3
         with:
           name: binaries
-          path: dist/binaries/*
+          path: dist/goreleaser/binaries/*
