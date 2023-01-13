@@ -71,7 +71,7 @@ pipeline {
     }
 
     // Generates a VERSION file based on the current build number and latest version in CHANGELOG.md
-    stage('Validate Changelog and set version') {
+    stage('Validate changelog and set version') {
       steps {
         updateVersion("CHANGELOG.md", "${BUILD_NUMBER}")
       }
@@ -83,7 +83,7 @@ pipeline {
       }
     }
 
-    stage('Run Unit Tests') {
+    stage('Run unit tests') {
       steps {
         sh './bin/test_unit'
       }
@@ -108,7 +108,7 @@ pipeline {
         }
       }
     }
-    stage('Run Integration Tests') {
+    stage('Run integration tests') {
       steps {
         dir('ci') {
           script {
@@ -122,32 +122,15 @@ pipeline {
       }
     }
 
-    stage('Build Release Artifacts') {
-      when {
-        expression {
-          MODE == "RELEASE"
-        }
-      }
-
-      steps {
-        sh './bin/build_release --snapshot'
-        archiveArtifacts 'dist/goreleaser/'
-      }
-    }
-
-    stage('Create Release Assets') {
-      when {
-        expression {
-          MODE == "RELEASE"
-        }
-      }
+    stage('Build release artifacts') {
       steps {
         dir('./pristine-checkout') {
           // Go releaser requires a pristine checkout
           checkout scm
-          sh 'git submodule update --init --recursive'
+
           // Create release packages without releasing to Github
-          sh "./bin/build_release --skip-validate"
+          sh "cp ../VERSION ./VERSION"
+          sh "./bin/build_release --skip-validate --rm-dist"
           archiveArtifacts 'dist/goreleaser/'
         }
       }
@@ -165,10 +148,10 @@ pipeline {
           // Copy any artifacts to assetDirectory to attach them to the Github release
 
           // Copy assets to be published in Github release.
-          sh "./bin/copy_release_assets ${assetDirectory}"
+          sh "./bin/copy_release_artifacts ${assetDirectory}"
 
           // Create Go application SBOM using the go.mod version for the golang container image
-          sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur-cli-go/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
+          sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
           // Create Go module SBOM
           sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --output "${billOfMaterialsDirectory}/go-mod-bom.json" """
           // sh 'summon -e production ./bin/publish --edge'

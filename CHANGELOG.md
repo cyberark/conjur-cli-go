@@ -13,5 +13,3 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Initial release of Conjur CLI written in Golang
-
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.0...HEAD

@@ -1,11 +1,11 @@
-name: goreleaser
+name: ci
 
 on:
   # Run this on pushes to any branch
   push:
 
 jobs:
-  goreleaser:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -14,8 +14,10 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: '1.19'
+      - name: Run unit tests
+        run: bin/test_unit
       - name: Run GoReleaser
-        run: bin/build_release --skip-validate --snapshot --rm-dist
+        run: bin/build_release --snapshot --skip-validate --rm-dist
       - name: Upload assets
         uses: actions/upload-artifact@v3
         with:
