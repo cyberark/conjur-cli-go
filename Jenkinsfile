@@ -17,13 +17,6 @@ if (params.MODE == "PROMOTE") {
     // Any version number updates from sourceVersion to targetVersion occur here
     // Any publishing of stargetVersion artifacts occur here
     // Anything added to assetDirectory will be attached to the Github Release
-
-    // // Pull existing images from internal registry in order to promote
-    // sh "docker pull registry.tld/secretless-broker:${sourceVersion}"
-    // sh "docker pull registry.tld/secretless-broker-quickstart:${sourceVersion}"
-    // sh "docker pull registry.tld/secretless-broker-redhat:${sourceVersion}"
-    // // Promote source version to target version.
-    // sh "summon ./bin/publish --promote --source ${sourceVersion} --target ${targetVersion}"
   }
   return
 }
@@ -154,7 +147,6 @@ pipeline {
           sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
           // Create Go module SBOM
           sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --output "${billOfMaterialsDirectory}/go-mod-bom.json" """
-          // sh 'summon -e production ./bin/publish --edge'
         }
       }
     }
