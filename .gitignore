@@ -16,3 +16,5 @@ build_ca_certificate
 conjur
 # Exclude binary entrypoint
 !cmd/conjur
+
+VERSION

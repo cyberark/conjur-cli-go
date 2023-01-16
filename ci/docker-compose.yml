@@ -29,6 +29,7 @@ services:
     - conjur
     restart: on-failure
 
+  # TODO: integration tests should be carried out against release asset binary (not the one created by make install)!
   cli:
     image: golang:1.19
     environment:

@@ -18,7 +18,7 @@ function build_docker_ut_image() {
 
 function run_unit_tests() {
   echo "Running unit tests..."
-  docker run --rm -t \
+  docker run --rm \
              --volume "$PWD"/:/conjur-cli-go/test/ \
              conjur-cli-go-test-runner:latest \
              -coverprofile="./test/c.out" \

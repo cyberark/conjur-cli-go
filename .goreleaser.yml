@@ -29,6 +29,7 @@ builds:
   ldflags:
     - -w
     - -X "github.com/cyberark/conjur-cli-go/pkg/version.Tag={{ .ShortCommit }}"
+    - -X "github.com/cyberark/conjur-cli-go/pkg/version.Version={{ .Env.VERSION }}"
   hooks:
     post:
       # Copy the binary out into the <dist> path, and give the copy the name we want
@@ -42,7 +43,7 @@ builds:
       - cp "{{ .Path }}" "{{ dir .Path }}/../binaries/conjur_{{ .Target }}{{ .Ext }}"
 
 archives:
-  - id: conjur-cli-archive
+  - id: conjur-cli-go-archive
     files:
       - CHANGELOG.md
       - LICENSE
@@ -50,7 +51,7 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
-    name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}_{{.Arch}}"
+    name_template: "{{.ProjectName}}_{{.Env.VERSION}}_{{.Os}}_{{.Arch}}"
     wrap_in_directory: true
 
 checksum:
@@ -59,20 +60,20 @@ checksum:
 brews:
   - description: CyberArk Conjur command line interface (Golang)
     homepage: https://conjur.org
-    url_template: https://github.com/cyberark/conjur-cli-go/releases/download/v{{.Version}}/conjur-cli-go_{{.Version}}_{{.Os}}_{{.Arch}}.tar.gz
+    url_template: https://github.com/cyberark/conjur-cli-go/releases/download/v{{.Env.VERSION}}/conjur-cli-go_{{.Env.VERSION}}_{{.Os}}_{{.Arch}}.tar.gz
     install: |
-      bin.install "conjur-cli-go"
+      bin.install "conjur"
     test: |
-      system "#{bin}/conjur-cli-go", "-version"
-    # github:
-    #   owner: cyberark
-    #   name: homebrew-tools
+      system "#{bin}/conjur", "-version"
+    tap:
+      owner: cyberark
+      name: homebrew-tools
     skip_upload: true
 
 nfpms:
   - bindir: /usr/bin
     description: CyberArk Conjur command line interface (Golang)
-    file_name_template: "{{.ProjectName}}_{{.Version}}_{{.Arch}}"
+    file_name_template: "{{.ProjectName}}_{{.Env.VERSION}}_{{.Arch}}"
     formats:
     - deb
     - rpm
@@ -84,12 +85,14 @@ nfpms:
 snapshot:
   name_template: "{{ .Tag }}-next"
 
+dist: dist/goreleaser/
+
 release:
   disable: true
   draft: true
   extra_files:
+    - glob: NOTICES.txt
     - glob: CHANGELOG.md
     - glob: LICENSE
-    - glob: README.md
-    - glob: dist/binaries
+    - glob: dist/goreleaser/binaries
 
