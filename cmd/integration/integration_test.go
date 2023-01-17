@@ -41,7 +41,7 @@ func TestIntegration(t *testing.T) {
 	})
 
 	t.Run("init", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("init", "-a", account, "-u", "http://conjur", "-i", "--force")
+		stdOut, stdErr, err = conjurCLI.Run("init", "-a", account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
 		assert.NoError(t, err)
 		assert.Equal(t, "Wrote configuration to "+tmpDir+"/.conjurrc\n", stdOut)
 		assert.Equal(t, insecureModeWarning, stdErr)

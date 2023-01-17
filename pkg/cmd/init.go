@@ -23,6 +23,7 @@ type initCmdFlagValues struct {
 	forceFileOverwrite bool
 	insecure           bool
 	selfSigned         bool
+	forceNetrc         bool
 }
 
 func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
@@ -62,6 +63,10 @@ func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
 	if err != nil {
 		return initCmdFlagValues{}, err
 	}
+	forceNetrc, err := cmd.Flags().GetBool("force-netrc")
+	if err != nil {
+		return initCmdFlagValues{}, err
+	}
 
 	return initCmdFlagValues{
 		account:            account,
@@ -73,6 +78,7 @@ func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
 		selfSigned:         selfSigned,
 		insecure:           insecure,
 		forceFileOverwrite: forceFileOverwrite,
+		forceNetrc:         forceNetrc,
 	}, nil
 }
 
@@ -120,6 +126,11 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 		ApplianceURL: applianceURL,
 		AuthnType:    cmdFlagVals.authnType,
 		ServiceID:    cmdFlagVals.serviceID,
+	}
+
+	// If the user has specified the --force-netrc flag, don't try to use the native keychain
+	if cmdFlagVals.forceNetrc {
+		config.CredentialStorage = conjurapi.CredentialStorageFile
 	}
 
 	err = config.Validate()
@@ -232,6 +243,7 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 	cmd.Flags().String("service-id", "", "Service ID if using alternative authentication type")
 	cmd.Flags().BoolP("self-signed", "s", false, "Allow self-signed certificates (insecure)")
 	cmd.Flags().BoolP("insecure", "i", false, "Allow non-HTTPS connections (insecure)")
+	cmd.Flags().Bool("force-netrc", false, "Use a file-based credential storage rather than OS-native keystore (for compatibility with Summon)")
 	cmd.Flags().Bool("force", false, "Force overwrite of existing file")
 
 	return cmd
