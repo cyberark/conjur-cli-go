@@ -18,8 +18,8 @@ if (params.MODE == "PROMOTE") {
     // Any publishing of targetVersion artifacts occur here
     // Anything added to assetDirectory will be attached to the Github Release
     sh "docker pull registry.tld/cyberark/conjur-cli:${sourceVersion}"
-    sh "docker tag registry.tld/cyberark/conjur-cli:${sourceVersion} conjur-cli:${sourceVersion}"
-    sh "./bin/push_image --promote --dockerhub --base-version=${sourceVersion} --version=${targetVersion}"
+    sh "docker tag registry.tld/cyberark/conjur-cli:${sourceVersion} cyberark/conjur-cli:${sourceVersion}"
+    sh "./bin/publish_image --promote --dockerhub --base-version=${sourceVersion} --version=${targetVersion}"
   }
   return
 }
@@ -120,7 +120,7 @@ pipeline {
 
     stage('Build image') {
       steps {
-        sh './bin/build_image'
+        sh './bin/build_image --jenkins'
       }
     }
 
@@ -128,12 +128,12 @@ pipeline {
       parallel {
         stage("Scan Docker Image for fixable issues") {
           steps {
-            scanAndReport("cyberark/conjur-cli:latest}", "HIGH", false)
+            scanAndReport("conjur-cli:${tagWithSHA()}", "HIGH", false)
           }
         }
         stage("Scan Docker image for total issues") {
           steps {
-            scanAndReport("cyberark/conjur-cli:latest}", "NONE", true)
+            scanAndReport("conjur-cli:${tagWithSHA()}", "NONE", true)
           }
         }
       }
@@ -162,20 +162,32 @@ pipeline {
       steps {
         release { billOfMaterialsDirectory, assetDirectory, toolsDirectory ->
           // Publish release artifacts to all the appropriate locations
+
+          // Publish docker images
+          sh './bin/publish_image --edge --dockerhub'
+
           // Copy any artifacts to assetDirectory to attach them to the Github release
 
           // Copy assets to be published in Github release.
           sh "./bin/copy_release_artifacts ${assetDirectory}"
-
           // Create Go application SBOM using the go.mod version for the golang container image
           sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
           // Create Go module SBOM
           sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --output "${billOfMaterialsDirectory}/go-mod-bom.json" """
 
-          // Publish docker images
-          sh './bin/publish_image --edge --dockerhub'
         }
       }
     }
   }
+}
+
+////////////////////////////////////////////
+// Functions
+////////////////////////////////////////////
+
+def tagWithSHA() {
+  sh(
+    returnStdout: true,
+    script: 'echo $(git rev-parse --short=8 HEAD)'
+  )
 }

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 
 . bin/build_utils
@@ -26,6 +27,8 @@ DOCKERHUB=false
 VERSION=$(<VERSION)
 
 LOCAL_TAG="$(version_tag)"
+LOCAL_IMAGE="conjur-cli:${LOCAL_TAG}"
+IMAGE_NAME="cyberark/conjur-cli"
 
 for arg in "$@"; do
   case $arg in
@@ -60,9 +63,6 @@ for arg in "$@"; do
       ;;
     esac
 done
-
-LOCAL_IMAGE="cyberark/conjur-cli:${LOCAL_TAG}"
-IMAGE_NAME="cyberark/conjur-cli"
 
 # Normalize version number in the case of '+' included
 VERSION="$(echo -n "${VERSION}" | tr "+" "_")"

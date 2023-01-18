@@ -1,10 +1,61 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 
-IMAGE="cyberark/conjur-cli"
+set -ex
 
-# Build the cli standalone container image
-echo "Building image $IMAGE"
+. bin/build_utils
 
-docker build . \
-       --file Dockerfile \
-       --tag "$IMAGE:latest"
+IMAGE="conjur-cli"
+TAG="$(version_tag)"
+jenkins=false # Running on Jenkins (vs local dev machine)
+
+while [[ $# -gt 0 ]]
+do
+key="$1"
+case $key in
+    --jenkins)
+    jenkins=true
+    ;;
+    *)
+    ;;
+esac
+shift # past argument or value
+done
+
+# Flatten resulting image.
+function flatten() {
+  local image="$1"
+  echo "Flattening image '$image'..."
+
+  # Since `--squash` is still experimental, we have to flatten the image
+  # by exporting and importing a container based on the source image. By
+  # doing this though, we lose a lot of the Dockerfile variables that are
+  # required for running the image (ENV, EXPOSE, WORKDIR, etc) so we
+  # manually rebuild them.
+  # See here for more details: https://github.com/moby/moby/issues/8334
+  local container
+  container=$(docker create "$image")
+  docker export "$container" | docker import \
+    --change "WORKDIR /src" \
+    --change "ENV PATH /go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
+    - "$image"
+  docker rm "$container"
+}
+
+# We want to build an image:
+# 1. Always, when we're developing locally
+if [[ $jenkins = false ]]; then
+  echo "Building image cli-dev"
+  docker build --file Dockerfile --tag cli-dev .
+  exit 0
+fi
+
+# 2. Only if it doesn't already exist, when on Jenkins
+image_doesnt_exist() {
+  [[ "$(docker images -q "$1" 2> /dev/null)" == "" ]]
+}
+
+if image_doesnt_exist "$IMAGE:$TAG"; then
+  echo "Building image $IMAGE:$TAG"
+  docker build . --file Dockerfile --tag "$IMAGE:$TAG"
+  flatten "$IMAGE:$TAG"
+fi
