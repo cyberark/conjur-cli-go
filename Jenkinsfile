@@ -15,8 +15,11 @@ if (params.MODE == "PROMOTE") {
   release.promote(params.VERSION_TO_PROMOTE) { sourceVersion, targetVersion, assetDirectory ->
     // Any assets from sourceVersion Github release are available in assetDirectory
     // Any version number updates from sourceVersion to targetVersion occur here
-    // Any publishing of stargetVersion artifacts occur here
+    // Any publishing of targetVersion artifacts occur here
     // Anything added to assetDirectory will be attached to the Github Release
+    sh "docker pull registry.tld/cyberark/conjur-cli:${sourceVersion}"
+    sh "docker tag registry.tld/cyberark/conjur-cli:${sourceVersion} conjur-cli:${sourceVersion}"
+    sh "./bin/push_image --promote --dockerhub --base-version=${sourceVersion} --version=${targetVersion}"
   }
   return
 }
@@ -106,10 +109,31 @@ pipeline {
         dir('ci') {
           script {
             try{
-              sh 'summon -f ./okta/secrets.yml ./test_integration'
+              sh 'summon -f ./okta/secrets.yml -e ci ./test_integration'
             } finally {
               archiveArtifacts 'cleanup.log'
             }
+          }
+        }
+      }
+    }
+
+    stage('Build image') {
+      steps {
+        sh './bin/build_image'
+      }
+    }
+
+    stage('Scan Docker Image') {
+      parallel {
+        stage("Scan Docker Image for fixable issues") {
+          steps {
+            scanAndReport("cyberark/conjur-cli:latest}", "HIGH", false)
+          }
+        }
+        stage("Scan Docker image for total issues") {
+          steps {
+            scanAndReport("cyberark/conjur-cli:latest}", "NONE", true)
           }
         }
       }
@@ -147,6 +171,9 @@ pipeline {
           sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
           // Create Go module SBOM
           sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --output "${billOfMaterialsDirectory}/go-mod-bom.json" """
+
+          // Publish docker images
+          sh './bin/publish_image --edge --dockerhub'
         }
       }
     }

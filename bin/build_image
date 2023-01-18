@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+IMAGE="cyberark/conjur-cli"
+
+# Build the cli standalone container image
+echo "Building image $IMAGE"
+
+docker build . \
+       --file Dockerfile \
+       --tag "$IMAGE:latest"
