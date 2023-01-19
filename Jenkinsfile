@@ -132,7 +132,7 @@ pipeline {
 
     stage('Run integration tests') {
       steps {
-        dir('ci') {
+        dir('./pristine-checkout/ci') {
           script {
             try{
               sh 'summon -f ./okta/secrets.yml ./test_integration'

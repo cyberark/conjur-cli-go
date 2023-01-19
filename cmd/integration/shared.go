@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const pathToBinary = "conjur"
+var pathToBinary = os.Getenv("PATH_TO_CONJUR_BINARY")
 
 const insecureModeWarning = "Warning: Running the command with '--insecure' makes your system vulnerable to security attacks\n" +
 	"If you prefer to communicate with the server securely you must reinitialize the client in secure mode.\n"

@@ -29,23 +29,21 @@ services:
     - conjur
     restart: on-failure
 
-  # TODO: integration tests should be carried out against release asset binary (not the one created by make install)!
-  cli:
-    image: golang:1.19
+  test:
+    image: alpine
     environment:
       - OKTA_CLIENT_ID=$OKTA_CLIENT_ID
       - OKTA_CLIENT_SECRET=$OKTA_CLIENT_SECRET
       - OKTA_PROVIDER_URI=$OKTA_PROVIDER_URI
       - OKTA_USERNAME=$OKTA_USERNAME
       - OKTA_PASSWORD=$OKTA_PASSWORD
-    command: bash -c "cd ${PWD}/..; make install; sleep infinity"
     working_dir: ${PWD}/..
     restart: on-failure
     ports:
       - 8080
     volumes:
       - ${PWD}/..:${PWD}/..
-      - go-modules:/go/pkg/mod # Put modules cache into a separate volume
+
   keycloak:
     image: jboss/keycloak:4.3.0.Final
     environment:
@@ -72,5 +70,3 @@ services:
       - ./keycloak:/scripts
       - ./keycloak/standalone.xml:/opt/jboss/keycloak/standalone/configuration/standalone.xml
 
-volumes:
-  go-modules:

@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 set -eox pipefail
 
-source "./shared.sh"
-
 # Navigate to the ci directory (where this script lives) to ensure we can run this script
 # from anywhere.
 cd "$(dirname "$0")"
 
-services=(pg conjur proxy cli keycloak)
+source "./shared.sh"
+
+services=(pg conjur proxy keycloak)
 
 # set the COMPOSE_PROJECT_NAME for the tests you'll be running
 COMPOSE_PROJECT_NAME="$(openssl rand -hex 3)"
-
 export COMPOSE_PROJECT_NAME
 
 cleanup_and_dump_logs() {
@@ -47,7 +46,9 @@ function main() {
   configure_oidc_providers
   echo 'Finished setting up Keycloak'
 
-  docker-compose exec -T cli make integration
+  docker-compose run -T \
+    -e PATH_TO_CONJUR_BINARY="${PWD}/../dist/goreleaser/conjur-cli-go_linux_amd64_v1/conjur" \
+    test "${PWD}/../dist/goreleaser/integration_linux_amd64_v1/integration" -test.v -test.parallel=1 -test.count=1
 }
 
 main

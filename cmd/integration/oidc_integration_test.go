@@ -234,8 +234,8 @@ func TestOidcIntegrationOkta(t *testing.T) {
 }
 
 func setupKeycloakAuthenticator(account string) {
-	loadPolicyFile(account, "../../ci/keycloak/policy.yml")
-	loadPolicyFile(account, "../../ci/keycloak/users.yml")
+	loadPolicyFile(account, "./ci/keycloak/policy.yml")
+	loadPolicyFile(account, "./ci/keycloak/users.yml")
 
 	createSecret(account, "conjur/authn-oidc/keycloak/provider-uri", "https://keycloak:8443/auth/realms/master")
 	createSecret(account, "conjur/authn-oidc/keycloak/client-id", "conjurClient")
@@ -246,8 +246,8 @@ func setupKeycloakAuthenticator(account string) {
 
 // NOTE: Depends on Summon variables in CLI container
 func setupOktaAuthenticator(account string) {
-	loadPolicyFile(account, "../../ci/okta/policy.yml")
-	loadPolicyFile(account, "../../ci/okta/users.yml")
+	loadPolicyFile(account, "./ci/okta/policy.yml")
+	loadPolicyFile(account, "./ci/okta/users.yml")
 
 	createSecret(account, "conjur/authn-oidc/okta-2/provider-uri", os.Getenv("OKTA_PROVIDER_URI")+"oauth2/default")
 	createSecret(account, "conjur/authn-oidc/okta-2/client-id", os.Getenv("OKTA_CLIENT_ID"))
