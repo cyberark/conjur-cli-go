@@ -7,7 +7,8 @@ before:
     # you may remove this if you don't need go generate
     - go generate ./...
 builds:
-- main: ./cmd/conjur
+- id: conjur-cli-go
+  main: ./cmd/conjur
   binary: conjur
   env:
   - CGO_ENABLED=0
@@ -21,7 +22,7 @@ builds:
   - linux
   - darwin
   - windows
-  goamd64: 
+  goamd64:
    - v1
   # The `Tag` override is there to provide the git commit information in the
   # final binary. See `Static long version tags` in the `Building` section
@@ -41,9 +42,31 @@ builds:
       # binary-windows_amd64.exe.
       - mkdir -p "{{ dir .Path }}/../binaries"
       - cp "{{ .Path }}" "{{ dir .Path }}/../binaries/conjur_{{ .Target }}{{ .Ext }}"
+- id: integration
+  command: test
+  main: ./cmd/integration
+  binary: integration
+  no_main_check: true
+  env:
+  - CGO_ENABLED=0
+  # Tag 'netgo' is a Go build tag that ensures a pure Go networking stack
+  # in the resulting binary instead of using the default host's stack to
+  # ensure a fully static artifact that has no dependencies.
+  flags:
+  - -tags=netgo,dev,integration
+  - -a
+  - -c
+  - -v
+  goos:
+  - linux
+  goarch:
+  - amd64
+  goamd64:
+  - v1
 
 archives:
   - id: conjur-cli-go-archive
+    builds: [conjur-cli-go]
     files:
       - CHANGELOG.md
       - LICENSE
