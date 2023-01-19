@@ -323,7 +323,7 @@ func assertCertWritten(t *testing.T, conjurrcInTmpDir string, stdout string) {
 	assert.Contains(t, string(data), "cert_file: "+expectedCertPath)
 
 	// Assert that certificate is written
-	assert.Contains(t, stdout, "Wrote certificate to "+expectedCertPath)
+	assert.Contains(t, stdout, "Wrote certificate to "+expectedCertPath+"\n")
 	data, _ = os.ReadFile(expectedCertPath)
 	assert.Contains(t, string(data), "-----BEGIN CERTIFICATE-----")
 }

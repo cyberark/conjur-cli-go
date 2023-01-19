@@ -143,7 +143,7 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if config.SSLCertPath != "" {
-		cmd.Printf("Wrote certificate to %s", config.SSLCertPath)
+		cmd.Printf("Wrote certificate to %s\n", config.SSLCertPath)
 	}
 
 	err = writeConjurrc(
