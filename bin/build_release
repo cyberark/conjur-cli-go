@@ -2,31 +2,36 @@
 
 set -eo pipefail
 
-PROJECT_NAME=conjur-cli-go
-REPO_ROOT="$(git rev-parse --show-toplevel)"
+# Navigate to the bin directory (where this script lives) to ensure we can run this script
+# from anywhere.
+cd "$(dirname "$0")"
 
-# Get the version of Go specified by the "go directive" in go.mod
-# Grep it to avoid Go binary dependency
-GO_VERSION="v$(grep "^\bgo\b" "${REPO_ROOT}/go.mod" | awk '{print $2}')"
+. ./build_utils
 
-# Determine where VERSION file is based on goreleaser argument
-VERSION=$(<"${REPO_ROOT}/VERSION")
+function main() {
+    local REPO_ROOT="$(repo_root)"
+    local PROJECT_WD="github.com/cyberark/conjur-cli-go"
+    local VERSION="$(project_semantic_version)"
 
-# Remove Jenkins build number from VERSION
-VERSION="${VERSION/-*/}"
+    # Get the version of Go specified by the "go directive" in go.mod
+    # Grep it to avoid Go binary dependency
+    local GO_VERSION="v$(grep "^\bgo\b" "${REPO_ROOT}/go.mod" | awk '{print $2}')"
 
-# Use a GoReleaser Docker image containing cross-compilation tools
-# This image is recommended by the official GoReleaser docs
-# https://goreleaser.com/cookbooks/cgo-and-crosscompiling/
-GORELEASER_IMAGE="goreleaser/goreleaser-cross:latest"
+    # Use a GoReleaser Docker image containing cross-compilation tools
+    # This image is recommended by the official GoReleaser docs
+    # https://goreleaser.com/cookbooks/cgo-and-crosscompiling/
+    local GORELEASER_IMAGE="goreleaser/goreleaser-cross:latest"
 
-echo "Docker image for release build: ${GORELEASER_IMAGE}"
+    # Compile binaries with Go Releaser
+    #
+    echo "Docker image for release build: ${GORELEASER_IMAGE}"
+    docker run --rm \
+      --env VERSION="${VERSION}" \
+      --env GO_VERSION="${GO_VERSION}" \
+      --volume "${REPO_ROOT}:/${PROJECT_WD}" \
+      --workdir /${PROJECT_WD} \
+      "${GORELEASER_IMAGE}" --rm-dist "$@"
+    echo "Releases built. Archives can be found in dist/goreleaser"
+}
 
-docker run --rm \
-  --env VERSION="${VERSION}" \
-  --env GO_VERSION="${GO_VERSION}" \
-  --volume "${REPO_ROOT}:/${PROJECT_NAME}" \
-  --workdir /${PROJECT_NAME} \
-  "${GORELEASER_IMAGE}" --rm-dist "$@"
-
-echo "Releases built. Archives can be found in dist/goreleaser"
+main "$@"

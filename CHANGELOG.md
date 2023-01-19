@@ -10,7 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.0] - 2023-01-12
+## [8.0.0] - 2023-01-20
 
 ### Added
 - Initial release of Conjur CLI written in Golang
+
+## [0.0.0] - 2023-01-01
+
+### Added
+- Placeholder version to capture the reset of the repository
