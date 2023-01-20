@@ -10,8 +10,9 @@ logged into Conjur as the admin user.
 ## Dev Environment with Okta
 
 Note: This assumes you are able to retrieve dev secrets from ConjurOps via Summon.
-`summon -p summon-conjur -f ../ci/okta/secrets.yml ./start --authn-oidc --oidc-okta`
+
+`summon -p summon-conjur -f ../ci/okta/secrets.yml -e development ./start --authn-oidc --oidc-okta`
 
 ## Run Integration Tests
 
-`cd ci && summon -p summon-conjur -f ./okta/secrets.yml ./test_integration`
+`cd ci && summon -p summon-conjur -f ./okta/secrets.yml -e ci ./test_integration`

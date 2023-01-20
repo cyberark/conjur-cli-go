@@ -2,13 +2,13 @@
 
 set -eo pipefail
 
-# CC servers can't find it for some reason.  Local shellcheck is fine.
-# shellcheck disable=SC1091
-source "../ci/keycloak/keycloak_functions.sh"
-
 # Navigate to the dev directory (where this script lives) to ensure we can run this script
 # from anywhere.
 cd "$(dirname "$0")"
+
+# CC servers can't find it for some reason.  Local shellcheck is fine.
+# shellcheck disable=SC1091
+source "../ci/keycloak/keycloak_functions.sh"
 
 # TODO: add a prompt and an -f flag to give the user control over destroying an already existing development environment.
 # It can be such a pain to mistakenly destroy your environment.
@@ -122,8 +122,13 @@ EOL
   docker-compose exec cli-dev go mod download || true
 
   echo
-  if [ "$ENABLE_AUTHN_OIDC" = true ]; then
-    echo "Setting up Conjur for OIDC"
+  if [ "$ENABLE_OIDC_OKTA" = true ]; then
+    echo "Setting up Conjur for OIDC (Okta)"
+    docker-compose exec cli-dev bash -c 'conjur logout
+conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id okta-2
+conjur login -u $OKTA_USERNAME -p $OKTA_PASSWORD'
+  elif [ "$ENABLE_AUTHN_OIDC" = true ]; then
+    echo "Setting up Conjur for OIDC (Keycloak)"
     docker-compose exec cli-dev bash -c 'conjur logout
 conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id keycloak
 conjur login -u alice -p alice'
