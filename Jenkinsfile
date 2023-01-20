@@ -15,8 +15,13 @@ if (params.MODE == "PROMOTE") {
   release.promote(params.VERSION_TO_PROMOTE) { sourceVersion, targetVersion, assetDirectory ->
     // Any assets from sourceVersion Github release are available in assetDirectory
     // Any version number updates from sourceVersion to targetVersion occur here
-    // Any publishing of stargetVersion artifacts occur here
+    // Any publishing of targetVersion artifacts occur here
     // Anything added to assetDirectory will be attached to the Github Release
+
+    // Promote source version to target version.
+
+    // NOTE: the use of --pull to ensure source images are pulled from internal registry
+    sh "source ./bin/build_utils && ./bin/publish_container_images --promote --source ${sourceVersion}-\$(git_commit) --target ${targetVersion} --pull"
   }
   return
 }
@@ -76,55 +81,83 @@ pipeline {
       }
     }
 
-    stage('Run unit tests') {
-      steps {
-        sh './bin/test_unit'
-      }
-      post {
-        always {
-          sh './bin/coverage'
-          junit 'junit.xml'
+    stage('Build while unit testing') {
+      parallel {
+        stage('Run unit tests') {
+          steps {
+            sh './bin/test_unit'
+          }
+          post {
+            always {
+              sh './bin/coverage'
+              junit 'junit.xml'
 
-          cobertura autoUpdateHealth: false,
-            autoUpdateStability: false,
-            coberturaReportFile: 'coverage.xml',
-            conditionalCoverageTargets: '70, 0, 0',
-            failUnhealthy: false,
-            failUnstable: false,
-            maxNumberOfBuilds: 0,
-            lineCoverageTargets: '70, 0, 0',
-            methodCoverageTargets: '70, 0, 0',
-            onlyStable: false,
-            sourceEncoding: 'ASCII',
-            zoomCoverageChart: false
-            ccCoverage("gocov", "--prefix github.com/cyberark/conjur-cli-go")
+              cobertura autoUpdateHealth: false,
+                autoUpdateStability: false,
+                coberturaReportFile: 'coverage.xml',
+                conditionalCoverageTargets: '70, 0, 0',
+                failUnhealthy: false,
+                failUnstable: false,
+                maxNumberOfBuilds: 0,
+                lineCoverageTargets: '70, 0, 0',
+                methodCoverageTargets: '70, 0, 0',
+                onlyStable: false,
+                sourceEncoding: 'ASCII',
+                zoomCoverageChart: false
+                ccCoverage("gocov", "--prefix github.com/cyberark/conjur-cli-go")
+            }
+          }
         }
-      }
-    }
-    stage('Run integration tests') {
-      steps {
-        dir('ci') {
-          script {
-            try{
-              sh 'summon -f ./okta/secrets.yml ./test_integration'
-            } finally {
-              archiveArtifacts 'cleanup.log'
+
+        stage('Build release artifacts') {
+          steps {
+            dir('./pristine-checkout') {
+              // Go releaser requires a pristine checkout
+              checkout scm
+
+              // Copy VERSION info into prisitine folder
+              sh "cp ../VERSION ./VERSION"
+
+              // Create release artifacts without releasing to Github
+              sh "./bin/build_release --skip-validate --rm-dist"
+
+              // Build container images
+              sh "./bin/build_container_images"
+
+              // Archive release artifacts
+              archiveArtifacts 'dist/goreleaser/'
             }
           }
         }
       }
     }
 
-    stage('Build release artifacts') {
-      steps {
-        dir('./pristine-checkout') {
-          // Go releaser requires a pristine checkout
-          checkout scm
+    stage('Integration test while scanning') {
+      parallel {
+        stage('Run integration tests') {
+          steps {
+            dir('ci') {
+              script {
+                try{
+                  sh 'summon -f ./okta/secrets.yml ./test_integration'
+                } finally {
+                  archiveArtifacts 'cleanup.log'
+                }
+              }
+            }
+          }
+        }
 
-          // Create release packages without releasing to Github
-          sh "cp ../VERSION ./VERSION"
-          sh "./bin/build_release --skip-validate --rm-dist"
-          archiveArtifacts 'dist/goreleaser/'
+        stage("Scan container images for fixable issues") {
+          steps {
+            scanAndReport("${containerImageWithTag()}", "HIGH", false)
+          }
+        }
+
+        stage("Scan container images for total issues") {
+          steps {
+            scanAndReport("${containerImageWithTag()}", "NONE", true)
+          }
         }
       }
     }
@@ -147,8 +180,18 @@ pipeline {
           sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
           // Create Go module SBOM
           sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --output "${billOfMaterialsDirectory}/go-mod-bom.json" """
+
+          // Publish container images to internal registry
+          sh './bin/publish_container_images --internal'
         }
       }
     }
   }
+}
+
+def containerImageWithTag() {
+  sh(
+    returnStdout: true,
+    script: 'source ./bin/build_utils && echo "conjur-cli:$(project_version_with_commit)"'
+  )
 }
