@@ -139,7 +139,7 @@ pipeline {
             dir('ci') {
               script {
                 try{
-                  sh 'summon -f ./okta/secrets.yml ./test_integration'
+                  sh 'summon -f ./okta/secrets.yml -e ci ./test_integration'
                 } finally {
                   archiveArtifacts 'cleanup.log'
                 }
