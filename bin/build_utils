@@ -59,8 +59,10 @@ function project_version_with_commit() {
 # (note: the argument itself is not printed, append it explicitly if needed)
 function gen_versions() {
   local version="${1}"
+
+  # echo "${version%%.*}-latest"
   while [[ "${version}" = *.* ]]; do
-    version=${version%.*}
+    version="${version%.*}"
     echo "${version}"
   done
 }

@@ -115,8 +115,10 @@ pipeline {
               // Go releaser requires a pristine checkout
               checkout scm
 
-              // Create release artifacts without releasing to Github
+              // Copy VERSION info into prisitine folder
               sh "cp ../VERSION ./VERSION"
+
+              // Create release artifacts without releasing to Github
               sh "./bin/build_release --skip-validate --rm-dist"
 
               // Build container images
@@ -130,15 +132,31 @@ pipeline {
       }
     }
 
-    stage('Run integration tests') {
-      steps {
-        dir('ci') {
-          script {
-            try{
-              sh 'summon -f ./okta/secrets.yml ./test_integration'
-            } finally {
-              archiveArtifacts 'cleanup.log'
+    stage('Integration test while scanning') {
+      parallel {
+        stage('Run integration tests') {
+          steps {
+            dir('ci') {
+              script {
+                try{
+                  sh 'summon -f ./okta/secrets.yml ./test_integration'
+                } finally {
+                  archiveArtifacts 'cleanup.log'
+                }
+              }
             }
+          }
+        }
+
+        stage("Scan container images for fixable issues") {
+          steps {
+            scanAndReport("${containerImageWithTag()}", "HIGH", false)
+          }
+        }
+
+        stage("Scan container images for total issues") {
+          steps {
+            scanAndReport("${containerImageWithTag()}", "NONE", true)
           }
         }
       }
@@ -169,4 +187,11 @@ pipeline {
       }
     }
   }
+}
+
+def containerImageWithTag() {
+  sh(
+    returnStdout: true,
+    script: 'source ./bin/build_utils && echo "conjur-cli:$(project_version_with_commit)"'
+  )
 }
