@@ -75,8 +75,8 @@ On successful login, the password is exchanged for the user's API key, which is 
 
 Examples:
 
-- conjur authn login -u alice -p My$ecretPass
-- conjur authn login`,
+- conjur login -u alice -p My$ecretPass
+- conjur login`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
