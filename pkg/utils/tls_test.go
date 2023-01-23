@@ -42,7 +42,7 @@ EHdV5Vk8bLMBW1Q6S7Ga2SbFuoVXs6zFMAoGCCqGSM49BAMDA2gAMGUCMCiVhqft
 tGKrYDGt0pH8iF6rzbp9Q4HQXMZXkNxg+brjWxnaOVGTDNwNH7048+s/hT9bUQ==
 -----END CERTIFICATE-----`
 
-	selfSignedFingerprint := "EC:4A:07:99:B0:2D:E6:88:DD:27:BF:78:53:6B:BA:EA:C5:5A:12:37"
+	selfSignedFingerprint := "31:CF:9F:34:65:7B:F1:A7:A2:AA:B0:4F:46:48:19:42:83:6D:84:E2"
 
 	t.Run("Returns the right certificate from github.com", func(t *testing.T) {
 		cert, err := GetServerCert("github.com", false)
