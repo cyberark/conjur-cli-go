@@ -129,6 +129,10 @@ func executeCommandForTestWithPromptResponses(
 	for _, subCmd := range c.Commands() {
 		subCmd.Short = "HELP SHORT"
 		subCmd.Long = "HELP LONG"
+		for _, nestedSubCmd := range subCmd.Commands() {
+			nestedSubCmd.Short = "HELP SHORT"
+			nestedSubCmd.Long = "HELP LONG"
+		}
 	}
 
 	cmd.SetOut(stdoutBuf)
