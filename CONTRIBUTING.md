@@ -15,5 +15,28 @@ contributor!
 
 ## Releasing
 
-To create a new release, follow the instructions in our general release
-guidelines [here](https://github.com/cyberark/community/blob/master/Conjur/CONTRIBUTING.md#release-process).
+Releases should be created by maintainers only. To create and promote a
+release, follow the instructions in this section.
+
+### Update the changelog and notices
+
+**NOTE:** If the Changelog and NOTICES.txt are already up-to-date, skip this
+step and promote the desired build from the master branch.
+
+1. Create a new branch for the version bump.
+1. Based on the changelog content, determine the new version number and update.
+1. Review the git log and ensure the [changelog](CHANGELOG.md) contains all
+   relevant recent changes with references to GitHub issues or PRs, if possible.
+1. Review the changes since the last tag, and if the dependencies have changed
+   revise the [NOTICES](NOTICES.txt) to correctly capture the included
+   dependencies and their licenses / copyrights.
+1. Commit these changes - `Bump version to x.y.z` is an acceptable commit
+   message - and open a PR for review.
+
+### Release and Promote
+
+1. Merging into the master branch will automatically trigger a release.
+   If successful, this release can be promoted at a later time.
+1. Jenkins build parameters can be utilized to promote a successful release
+   or manually trigger aditional releases as needed.
+1. Reference the [internal automated release doc](https://github.com/conjurinc/docs/blob/master/reference/infrastructure/automated_releases.md#release-and-promotion-process) for releasing and promoting.
