@@ -6,6 +6,7 @@ go 1.19
 // replace github.com/cyberark/conjur-api-go => ./conjur-api-go
 
 require (
+	github.com/chzyer/readline v1.5.1
 	github.com/cyberark/conjur-api-go v0.10.3-0.20230119183450-0702b34d417f // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/manifoldco/promptui v0.9.0
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -16,7 +17,6 @@ require (
 require (
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
-	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
