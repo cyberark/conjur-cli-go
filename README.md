@@ -30,3 +30,7 @@ go build ./cmd/conjur
 ## Adding New Commands
 
 To stub out a new command, [use the cobra-cli tool](https://github.com/spf13/cobra-cli/blob/main/README.md#add-commands-to-a-project).
+
+## Transitioning from the docker based CLI to 8.x
+
+See the [transition guide](docs/UPGRADE_from_docker_based.md)
