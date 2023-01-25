@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"runtime"
 
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
 
@@ -109,7 +110,14 @@ func newUsernamePrompt() *promptui.Prompt {
 func PromptDecoratorForCommand(cmd *cobra.Command) DecoratePromptFunc {
 	return func(prompt *promptui.Prompt) *promptui.Prompt {
 		prompt.Stdin = utils.NoopReadCloser(cmd.InOrStdin())
-		prompt.Stdout = utils.NoopWriteCloser(cmd.OutOrStdout())
+
+		// On Windows we need a WriteCloser which doesn't emit a bell character and closes the underlying writer
+		// On other terminals we can just use a no-op WriteCloser
+		if runtime.GOOS == "windows" {
+			prompt.Stdout = utils.NoBellStdout
+		} else {
+			prompt.Stdout = utils.NoopWriteCloser(cmd.OutOrStdout())
+		}
 
 		return prompt
 	}
