@@ -6,7 +6,8 @@ import (
 )
 
 type checkClient interface {
-	CheckPermission(resourceID string, roleID string, privilege string) (bool, error)
+	CheckPermission(resourceID string, privilege string) (bool, error)
+	CheckPermissionForRole(resourceID string, roleID string, privilege string) (bool, error)
 }
 
 type checkClientFactoryFunc func(*cobra.Command) (checkClient, error)
@@ -21,12 +22,17 @@ func newCheckCmd(clientFactory checkClientFactoryFunc) *cobra.Command {
 		Short: "Check a role's privilege on a resource",
 		Long: `Check a role's privilege on a resource
 
-		This command requires a [resource-id] and a [privilege], and includes an 
-		optional [-r|--role] flag to specify a particular role.
+This command requires a [resource-id] and a [privilege].
+
+By default, this command checks if the currently authenticated
+user has privilege over the resource. When the optional [-r|--role]
+flag is provided, the command checks if the specified role has
+privilege over the resource.
 
 Examples:
 
 - conjur check dev:host:somehost write
+- conjur check -r user:someuser dev:variable:somevariable read
 - conjur check -r dev:user:someuser dev:variable:somevariable read`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var resourceID string
@@ -49,7 +55,13 @@ Examples:
 				return err
 			}
 
-			result, err := client.CheckPermission(resourceID, roleID, privilege)
+			var result bool
+
+			if len(roleID) == 0 {
+				result, err = client.CheckPermission(resourceID, privilege)
+			} else {
+				result, err = client.CheckPermissionForRole(resourceID, roleID, privilege)
+			}
 			if err != nil {
 				return err
 			}
@@ -60,7 +72,7 @@ Examples:
 		},
 	}
 
-	cmd.Flags().StringP("role", "r", "", "Check a role's privilege on a resource")
+	cmd.Flags().StringP("role", "r", "", "Partially- or fully-qualified role ID to check privilege for")
 
 	return cmd
 }
