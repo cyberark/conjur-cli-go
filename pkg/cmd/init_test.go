@@ -87,6 +87,20 @@ service_id: test
 		},
 	},
 	{
+		name: "writes conjurrc with force netrc",
+		args: []string{"init", "-u=http://host", "-a=test-account", "--force-netrc", "-i"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
+			data, _ := os.ReadFile(conjurrcInTmpDir)
+			expectedConjurrc := `account: test-account
+appliance_url: http://host
+credential_storage: file
+`
+
+			assert.Equal(t, expectedConjurrc, string(data))
+			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
+		},
+	},
+	{
 		name: "prompts for overwrite, reject",
 		args: []string{"init", "-u=http://host", "-a=other-test-account", "-i"},
 		promptResponses: []promptResponse{
@@ -224,6 +238,22 @@ appliance_url: http://host
 		args: []string{"init", "-u=http://example.com", "-a=test-account"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			assert.Contains(t, stderr, "Cannot fetch certificate from non-HTTPS URL")
+			assertFetchCertFailed(t, conjurrcInTmpDir)
+		},
+	},
+	{
+		name: "fails urls without scheme",
+		args: []string{"init", "-u=invalid-url", "-a=test-account"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: Cannot fetch certificate from non-HTTPS URL")
+			assertFetchCertFailed(t, conjurrcInTmpDir)
+		},
+	},
+	{
+		name: "fails for invalid urls",
+		args: []string{"init", "-u=https://invalid:url:test", "-a=test-account"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: parse")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
