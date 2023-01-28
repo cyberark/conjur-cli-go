@@ -18,6 +18,7 @@ type ConjurClient interface {
 	GetAuthenticator() conjurapi.Authenticator
 	WhoAmI() ([]byte, error)
 	RotateUserAPIKey(userID string) ([]byte, error)
+	ChangeCurrentUserPassword(newPassword string) ([]byte, error)
 	RotateHostAPIKey(hostID string) ([]byte, error)
 	InternalAuthenticate() ([]byte, error)
 	LoadPolicy(mode conjurapi.PolicyMode, policyID string, policy io.Reader) (*conjurapi.PolicyResponse, error)
