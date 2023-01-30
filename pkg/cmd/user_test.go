@@ -161,6 +161,7 @@ func TestUserRotateAPIKeyCmd(t *testing.T) {
 var userChangePasswordCmdTestCases = []struct {
 	name                      string
 	args                      []string
+	promptResponses           []promptResponse
 	changeCurrentUserPassword func(*testing.T, string) ([]byte, error)
 	clientFactoryError        error
 	assert                    func(t *testing.T, stdout, stderr string, err error)
@@ -175,6 +176,25 @@ var userChangePasswordCmdTestCases = []struct {
 	{
 		name: "change password for logged in user",
 		args: []string{"user", "change-password", "-p", "SUp3r$3cr3t!!"},
+		changeCurrentUserPassword: func(t *testing.T, newPassword string) ([]byte, error) {
+			// Assert on arguments
+			assert.Equal(t, "SUp3r$3cr3t!!", newPassword)
+
+			return []byte(""), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "Password changed")
+		},
+	},
+	{
+		name: "change password using prompt",
+		args: []string{"user", "change-password"},
+		promptResponses: []promptResponse{
+			{
+				prompt:   "Please enter a new password (it will not be echoed)",
+				response: "SUp3r$3cr3t!!",
+			},
+		},
 		changeCurrentUserPassword: func(t *testing.T, newPassword string) ([]byte, error) {
 			// Assert on arguments
 			assert.Equal(t, "SUp3r$3cr3t!!", newPassword)
@@ -219,7 +239,9 @@ func TestUserChangePasswordCmd(t *testing.T) {
 				},
 			)
 
-			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
+			stdout, stderr, err := executeCommandForTestWithPromptResponses(
+				t, cmd, tc.promptResponses, tc.args...,
+			)
 
 			tc.assert(t, stdout, stderr, err)
 		})

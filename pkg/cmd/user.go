@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 
 	"github.com/spf13/cobra"
 )
@@ -111,16 +112,24 @@ func newUserChangePasswordCmd(clientFactory userClientFactoryFunc) *cobra.Comman
 	cmd := &cobra.Command{
 		Use:   "change-password",
 		Short: "Update the password for the currently logged-in user.",
-		Long: `Update the password for the currently logged-in user to [password]
+		Long: `Update the password for the currently logged-in user to [password].
+
+If no password flag is provided, the user will be prompted.
 
 Examples:
 - conjur user change-password -p SUp3r$3cr3t!!`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			newPassword, err := cmd.Flags().GetString("password")
 
-			if newPassword == "" {
-				cmd.Help()
-				return nil
+			setCommandStreamsOnPrompt := prompts.PromptDecoratorForCommand(cmd)
+
+			newPassword, err = prompts.MaybeAskForChangePassword(
+				setCommandStreamsOnPrompt,
+				newPassword,
+			)
+
+			if err != nil {
+				return err
 			}
 
 			client, err := clientFactory(cmd)
