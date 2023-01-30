@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 
 	"github.com/spf13/cobra"
 )
@@ -12,6 +12,7 @@ import (
 type userClient interface {
 	RotateUserAPIKey(userID string) ([]byte, error)
 	WhoAmI() ([]byte, error)
+	ChangeCurrentUserPassword(newPassword string) ([]byte, error)
 }
 
 type userClientFactoryFunc func(*cobra.Command) (userClient, error)
@@ -35,18 +36,6 @@ func newUserCmd(clientFactory userClientFactoryFunc) *cobra.Command {
 	userCmd.AddCommand(newUserRotateAPIKeyCmd(clientFactory))
 
 	return userCmd
-}
-
-func newUserChangePasswordCmd(clientFactory userClientFactoryFunc) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "change-password",
-		Short: "A brief description of your command",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("user change-password called")
-		},
-	}
-
-	return cmd
 }
 
 func newUserRotateAPIKeyCmd(clientFactory userClientFactoryFunc) *cobra.Command {
@@ -115,6 +104,51 @@ Examples:
 	cmd.Flags().StringP("id", "i", "", "")
 	cmd.Flags().MarkDeprecated("id", "use -u/--user-id instead")
 	// END COMPATIBILITY WITH PYTHON CLI
+
+	return cmd
+}
+
+func newUserChangePasswordCmd(clientFactory userClientFactoryFunc) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "change-password",
+		Short: "Update the password for the currently logged-in user.",
+		Long: `Update the password for the currently logged-in user to [password].
+
+If no password flag is provided, the user will be prompted.
+
+Examples:
+- conjur user change-password -p SUp3r$3cr3t!!`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			newPassword, err := cmd.Flags().GetString("password")
+
+			setCommandStreamsOnPrompt := prompts.PromptDecoratorForCommand(cmd)
+
+			newPassword, err = prompts.MaybeAskForChangePassword(
+				setCommandStreamsOnPrompt,
+				newPassword,
+			)
+
+			if err != nil {
+				return err
+			}
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			_, err = client.ChangeCurrentUserPassword(newPassword)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println("Password changed")
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringP("password", "p", "", "The new password")
 
 	return cmd
 }

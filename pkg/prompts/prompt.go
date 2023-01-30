@@ -105,6 +105,13 @@ func newUsernamePrompt() *promptui.Prompt {
 	}
 }
 
+func newChangePasswordPrompt() *promptui.Prompt {
+	return &promptui.Prompt{
+		Label: "Please enter a new password (it will not be echoed)",
+		Mask:  ' ',
+	}
+}
+
 // PromptDecoratorForCommand redirects the stdin and stdout from the command onto the prompt. This is to
 // ensure that command and prompt stay synchronized
 func PromptDecoratorForCommand(cmd *cobra.Command) DecoratePromptFunc {
@@ -145,6 +152,21 @@ func MaybeAskForCredentials(decoratePrompt DecoratePromptFunc, username string, 
 	}
 
 	return username, password, err
+}
+
+// MaybeAskForChangePassword optionally presents a prompt to retrieve missing new password from the user
+func MaybeAskForChangePassword(decoratePrompt DecoratePromptFunc, newPassword string) (string, error) {
+	var err error
+
+	if len(newPassword) == 0 {
+		passwordPrompt := decoratePrompt(newChangePasswordPrompt())
+		newPassword, err = runPrompt(passwordPrompt)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return newPassword, err
 }
 
 // MaybeAskForConnectionDetails presents a prompt to retrieve missing Conjur account and/or URL from the user

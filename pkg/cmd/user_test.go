@@ -9,24 +9,29 @@ import (
 )
 
 type mockUserClient struct {
-	t                *testing.T
-	userRotateAPIKey func(*testing.T, string) ([]byte, error)
-	whoAmI           func() ([]byte, error)
-}
-
-func (m mockUserClient) RotateUserAPIKey(userID string) ([]byte, error) {
-	return m.userRotateAPIKey(m.t, userID)
+	t                         *testing.T
+	whoAmI                    func() ([]byte, error)
+	rotateUserAPIKey          func(*testing.T, string) ([]byte, error)
+	changeCurrentUserPassword func(*testing.T, string) ([]byte, error)
 }
 
 func (m mockUserClient) WhoAmI() ([]byte, error) {
 	return m.whoAmI()
 }
 
+func (m mockUserClient) RotateUserAPIKey(userID string) ([]byte, error) {
+	return m.rotateUserAPIKey(m.t, userID)
+}
+
+func (m mockUserClient) ChangeCurrentUserPassword(newPassword string) ([]byte, error) {
+	return m.changeCurrentUserPassword(m.t, newPassword)
+}
+
 var userRotateAPIKeyCmdTestCases = []struct {
 	name               string
 	args               []string
-	userRotateAPIKey   func(t *testing.T, userID string) ([]byte, error)
 	whoAmI             func() ([]byte, error)
+	rotateUserAPIKey   func(t *testing.T, userID string) ([]byte, error)
 	clientFactoryError error
 	assert             func(t *testing.T, stdout, stderr string, err error)
 }{
@@ -40,7 +45,7 @@ var userRotateAPIKeyCmdTestCases = []struct {
 	{
 		name: "rotate API key for logged in user",
 		args: []string{"user", "rotate-api-key"},
-		userRotateAPIKey: func(t *testing.T, userID string) ([]byte, error) {
+		rotateUserAPIKey: func(t *testing.T, userID string) ([]byte, error) {
 			// Assert on arguments
 			assert.Equal(t, "logged-in-user", userID)
 
@@ -58,7 +63,7 @@ var userRotateAPIKeyCmdTestCases = []struct {
 	{
 		name: "rotate API key for specified user",
 		args: []string{"user", "rotate-api-key", "--user-id=dev-user"},
-		userRotateAPIKey: func(t *testing.T, userID string) ([]byte, error) {
+		rotateUserAPIKey: func(t *testing.T, userID string) ([]byte, error) {
 			// Assert on arguments
 			assert.Equal(t, "dev-user", userID)
 
@@ -72,7 +77,7 @@ var userRotateAPIKeyCmdTestCases = []struct {
 	{
 		name: "rotate API key for specified user with -i flag",
 		args: []string{"user", "rotate-api-key", "-i", "dev-user"},
-		userRotateAPIKey: func(t *testing.T, userID string) ([]byte, error) {
+		rotateUserAPIKey: func(t *testing.T, userID string) ([]byte, error) {
 			// Assert on arguments
 			assert.Equal(t, "dev-user", userID)
 
@@ -88,7 +93,7 @@ var userRotateAPIKeyCmdTestCases = []struct {
 	{
 		name: "rotate API key for specified user with --id flag",
 		args: []string{"user", "rotate-api-key", "--id=dev-user"},
-		userRotateAPIKey: func(t *testing.T, userID string) ([]byte, error) {
+		rotateUserAPIKey: func(t *testing.T, userID string) ([]byte, error) {
 			// Assert on arguments
 			assert.Equal(t, "dev-user", userID)
 
@@ -104,7 +109,7 @@ var userRotateAPIKeyCmdTestCases = []struct {
 	{
 		name: "client error when rotating API key",
 		args: []string{"user", "rotate-api-key", "--user-id=dev-user"},
-		userRotateAPIKey: func(t *testing.T, userID string) ([]byte, error) {
+		rotateUserAPIKey: func(t *testing.T, userID string) ([]byte, error) {
 			return nil, fmt.Errorf("%s", "an error")
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
@@ -136,8 +141,8 @@ func TestUserRotateAPIKeyCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockClient := mockUserClient{
 				t:                t,
-				userRotateAPIKey: tc.userRotateAPIKey,
 				whoAmI:           tc.whoAmI,
+				rotateUserAPIKey: tc.rotateUserAPIKey,
 			}
 
 			cmd := newUserCmd(
@@ -147,6 +152,96 @@ func TestUserRotateAPIKeyCmd(t *testing.T) {
 			)
 
 			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
+
+			tc.assert(t, stdout, stderr, err)
+		})
+	}
+}
+
+var userChangePasswordCmdTestCases = []struct {
+	name                      string
+	args                      []string
+	promptResponses           []promptResponse
+	changeCurrentUserPassword func(*testing.T, string) ([]byte, error)
+	clientFactoryError        error
+	assert                    func(t *testing.T, stdout, stderr string, err error)
+}{
+	{
+		name: "display help",
+		args: []string{"user", "change-password", "--help"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
+		name: "change password for logged in user",
+		args: []string{"user", "change-password", "-p", "SUp3r$3cr3t!!"},
+		changeCurrentUserPassword: func(t *testing.T, newPassword string) ([]byte, error) {
+			// Assert on arguments
+			assert.Equal(t, "SUp3r$3cr3t!!", newPassword)
+
+			return []byte(""), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "Password changed")
+		},
+	},
+	{
+		name: "change password using prompt",
+		args: []string{"user", "change-password"},
+		promptResponses: []promptResponse{
+			{
+				prompt:   "Please enter a new password (it will not be echoed)",
+				response: "SUp3r$3cr3t!!",
+			},
+		},
+		changeCurrentUserPassword: func(t *testing.T, newPassword string) ([]byte, error) {
+			// Assert on arguments
+			assert.Equal(t, "SUp3r$3cr3t!!", newPassword)
+
+			return []byte(""), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "Password changed")
+		},
+	},
+	{
+		name: "client error",
+		args: []string{"user", "change-password", "-p", "SUp3r$3cr3t!!"},
+		changeCurrentUserPassword: func(t *testing.T, newPassword string) ([]byte, error) {
+			return nil, fmt.Errorf("%s", "an error")
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: an error\n")
+		},
+	},
+	{
+		name:               "client factory error",
+		args:               []string{"user", "change-password", "-p", "SUp3r$3cr3t!!"},
+		clientFactoryError: fmt.Errorf("%s", "client factory error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: client factory error\n")
+		},
+	},
+}
+
+func TestUserChangePasswordCmd(t *testing.T) {
+	for _, tc := range userChangePasswordCmdTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockClient := mockUserClient{
+				t:                         t,
+				changeCurrentUserPassword: tc.changeCurrentUserPassword,
+			}
+
+			cmd := newUserCmd(
+				func(cmd *cobra.Command) (userClient, error) {
+					return mockClient, tc.clientFactoryError
+				},
+			)
+
+			stdout, stderr, err := executeCommandForTestWithPromptResponses(
+				t, cmd, tc.promptResponses, tc.args...,
+			)
 
 			tc.assert(t, stdout, stderr, err)
 		})
