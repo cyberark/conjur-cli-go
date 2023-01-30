@@ -113,6 +113,7 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 	account, applianceURL, err := prompts.MaybeAskForConnectionDetails(
 		cmdFlagVals.account,
 		cmdFlagVals.applianceURL,
+		cmd,
 	)
 	if err != nil {
 		return err

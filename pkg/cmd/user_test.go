@@ -164,12 +164,12 @@ var userChangePasswordCmdTestCases = []struct {
 	promptResponses           []promptResponse
 	changeCurrentUserPassword func(*testing.T, string) ([]byte, error)
 	clientFactoryError        error
-	assert                    func(t *testing.T, stdout, stderr string, err error)
+	assert                    func(t *testing.T, stdout string, err error)
 }{
 	{
 		name: "display help",
 		args: []string{"user", "change-password", "--help"},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
+		assert: func(t *testing.T, stdout string, err error) {
 			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
@@ -182,7 +182,7 @@ var userChangePasswordCmdTestCases = []struct {
 
 			return []byte(""), nil
 		},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
+		assert: func(t *testing.T, stdout string, err error) {
 			assert.Contains(t, stdout, "Password changed")
 		},
 	},
@@ -201,7 +201,7 @@ var userChangePasswordCmdTestCases = []struct {
 
 			return []byte(""), nil
 		},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
+		assert: func(t *testing.T, stdout string, err error) {
 			assert.Contains(t, stdout, "Password changed")
 		},
 	},
@@ -211,16 +211,16 @@ var userChangePasswordCmdTestCases = []struct {
 		changeCurrentUserPassword: func(t *testing.T, newPassword string) ([]byte, error) {
 			return nil, fmt.Errorf("%s", "an error")
 		},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "Error: an error\n")
+		assert: func(t *testing.T, stdout string, err error) {
+			assert.Contains(t, stdout, "Error: an error")
 		},
 	},
 	{
 		name:               "client factory error",
 		args:               []string{"user", "change-password", "-p", "SUp3r$3cr3t!!"},
 		clientFactoryError: fmt.Errorf("%s", "client factory error"),
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "Error: client factory error\n")
+		assert: func(t *testing.T, stdout string, err error) {
+			assert.Contains(t, stdout, "Error: client factory error")
 		},
 	},
 }
@@ -239,11 +239,16 @@ func TestUserChangePasswordCmd(t *testing.T) {
 				},
 			)
 
-			stdout, stderr, err := executeCommandForTestWithPromptResponses(
-				t, cmd, tc.promptResponses, tc.args...,
+			// Create command tree for user
+			rootCmd := newRootCommand()
+			rootCmd.AddCommand(cmd)
+			rootCmd.SetArgs(tc.args)
+
+			stdout, err := executeCommandForTestWithPromptResponses(
+				t, cmd, tc.promptResponses,
 			)
 
-			tc.assert(t, stdout, stderr, err)
+			tc.assert(t, stdout, err)
 		})
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/spf13/cobra"
 )
 
 func newApplianceURLPrompt() *survey.Question {
@@ -46,7 +47,7 @@ func AskToOverwriteFile(filePath string) error {
 	err := survey.AskOne(q.Prompt, &userInput, survey.WithValidator(q.Validate), survey.WithShowCursor(true))
 
 	if userInput == false {
-		return errors.New("Not trusting cert.")
+		return fmt.Errorf("Not overwriting %s", filePath)
 	}
 	return err
 }
@@ -71,7 +72,7 @@ func AskToTrustCert(fingerprint string) error {
 	err := survey.AskOne(q.Prompt, &userInput, survey.WithValidator(q.Validate), survey.WithShowCursor(true))
 
 	if userInput == false {
-		return errors.New("Not trusting cert.")
+		return errors.New("You decided not to trust the certificate.")
 	}
 	return err
 }
@@ -141,7 +142,7 @@ func MaybeAskForChangePassword(newPassword string) (string, error) {
 }
 
 // MaybeAskForConnectionDetails presents a prompt to retrieve missing Conjur account and/or URL from the user
-func MaybeAskForConnectionDetails(account string, applianceURL string) (string, string, error) {
+func MaybeAskForConnectionDetails(account string, applianceURL string, cmd *cobra.Command) (string, string, error) {
 	var err error
 	var userInput string
 
