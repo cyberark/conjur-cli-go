@@ -32,7 +32,7 @@ type resourceCmdTestCase struct {
 	args               []string
 	resourceExists     func(t *testing.T, resourceID string) (bool, error)
 	resource           func(t *testing.T, resourceID string) (resource map[string]interface{}, err error)
-	permittedRoles     func(t *testing.T, resourceID, privilege string) ([]string, error)
+	permittedRoles     func(t *testing.T, resourceID string, privilege string) ([]string, error)
 	clientFactoryError error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
 }

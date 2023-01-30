@@ -1,6 +1,10 @@
 - !host test-host
 
-- !user alice
+- !user
+  id: alice
+  public_keys:
+  - ssh-rsa test-key laptop
+
 - !layer test-layer
 
 - !variable secret
