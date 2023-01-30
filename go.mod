@@ -7,23 +7,19 @@ go 1.19
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7-0.20221124181729-2363ef255e14 // Run "go get github.com/AlecAivazis/survey/v2@debug-windows" to update (Until https://github.com/go-survey/survey/pull/474 is merged)
-	github.com/chzyer/readline v1.5.1
+	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2
+	github.com/creack/pty v1.1.18
 	github.com/cyberark/conjur-api-go v0.10.3-0.20230130140731-d627b2321cc2 // Run "go get github.com/cyberark/conjur-api-go@main" to update
+	github.com/hinshun/vt10x v0.0.0-20220301184237-5011da428d02
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.1
-)
 
-require (
-	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2
-	github.com/hinshun/vt10x v0.0.0-20220301184237-5011da428d02
-	github.com/kr/pty v1.1.8
 )
 
 require (
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
-	github.com/creack/pty v1.1.18 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect

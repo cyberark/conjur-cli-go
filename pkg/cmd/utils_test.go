@@ -9,8 +9,8 @@ import (
 	"time"
 
 	expect "github.com/Netflix/go-expect"
+	"github.com/creack/pty"
 	"github.com/hinshun/vt10x"
-	"github.com/kr/pty"
 	"github.com/spf13/cobra"
 )
 
