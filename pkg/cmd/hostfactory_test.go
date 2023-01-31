@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/cyberark/conjur-api-go/conjurapi"
 	"testing"
+
+	"github.com/cyberark/conjur-api-go/conjurapi"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -46,6 +47,13 @@ var hostfactoryCmdTestCases = []struct {
 	{
 		name: "token command help",
 		args: []string{"hostfactory", "tokens", "--help"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
+		name: "tokens without subcommand",
+		args: []string{"hostfactory", "tokens"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "HELP LONG")
 		},
@@ -150,6 +158,13 @@ var hostfactoryCmdTestCases = []struct {
 		args: []string{"hostfactory", "tokens", "revoke", "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stderr, "Error: required flag(s) \"token\" not set")
+		},
+	},
+	{
+		name: "hosts without subcommand",
+		args: []string{"hostfactory", "hosts"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
 		},
 	},
 	{

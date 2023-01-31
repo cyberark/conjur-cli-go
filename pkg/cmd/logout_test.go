@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
@@ -8,10 +9,11 @@ import (
 )
 
 var logoutTestCases = []struct {
-	name   string
-	args   []string
-	config conjurapi.Config
-	assert func(t *testing.T, stdout string, stderr string, err error)
+	name      string
+	args      []string
+	config    conjurapi.Config
+	configErr error
+	assert    func(t *testing.T, stdout string, stderr string, err error)
 }{
 	{
 		name:   "logout command help",
@@ -31,12 +33,27 @@ var logoutTestCases = []struct {
 			assert.Empty(t, stderr)
 		},
 	},
+	{
+		name:      "logout with config error",
+		args:      []string{"logout"},
+		config:    conjurapi.Config{},
+		configErr: errors.New("config error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.EqualError(t, err, "config error")
+			assert.Empty(t, stdout)
+			assert.Equal(t, "Error: config error\n", stderr)
+		},
+	},
 }
 
 func TestLogoutCmd(t *testing.T) {
 	for _, tc := range logoutTestCases {
 		// Mock out the configuration loader
 		configLoader := func() (conjurapi.Config, error) {
+			if tc.configErr != nil {
+				return conjurapi.Config{}, tc.configErr
+			}
+
 			return tc.config, nil
 		}
 
