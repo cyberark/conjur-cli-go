@@ -95,18 +95,8 @@ func mockHelpText(cmd *cobra.Command) {
 	cmd.Short = "HELP SHORT"
 	cmd.Long = "HELP LONG"
 
-	// Will have to make this recursive if we have deeper subcommands.
 	for _, subCmd := range cmd.Commands() {
-		subCmd.Short = "HELP SHORT"
-		subCmd.Long = "HELP LONG"
-		for _, nestedSubCmd := range subCmd.Commands() {
-			nestedSubCmd.Short = "HELP SHORT"
-			nestedSubCmd.Long = "HELP LONG"
-			for _, doubleNestedSubCmd := range nestedSubCmd.Commands() {
-				doubleNestedSubCmd.Short = "HELP SHORT"
-				doubleNestedSubCmd.Long = "HELP LONG"
-			}
-		}
+		mockHelpText(subCmd)
 	}
 }
 

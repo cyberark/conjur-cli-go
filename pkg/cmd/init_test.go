@@ -27,6 +27,36 @@ var initCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "writes conjurrc",
+		args: []string{"init", "-u=http://host", "-a=test-account", "-i"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
+			data, _ := os.ReadFile(conjurrcInTmpDir)
+			expectedConjurrc := `account: test-account
+appliance_url: http://host
+`
+
+			assert.Equal(t, expectedConjurrc, string(data))
+			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
+			// Shouldn't write certificate for HTTP url
+			assert.NotContains(t, stdout, "Wrote certificate to")
+		},
+	},
+	{
+		name: "writes conjurrc for ldap",
+		args: []string{"init", "-u=http://host", "-a=test-account", "-t=ldap", "--service-id=test", "-i"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
+			data, _ := os.ReadFile(conjurrcInTmpDir)
+			expectedConjurrc := `account: test-account
+appliance_url: http://host
+authn_type: ldap
+service_id: test
+`
+
+			assert.Equal(t, expectedConjurrc, string(data))
+			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
+		},
+	},
+	{
 		name: "prompts for account and URL",
 		args: []string{"init", "-i"},
 		promptResponses: []promptResponse{
@@ -341,6 +371,32 @@ func TestInitCmd(t *testing.T) {
 		},
 		)
 	}
+
+	// Other tests
+	t.Run("default flags", func(t *testing.T) {
+		cmd := newInitCommand()
+
+		rootCmd := newRootCommand()
+		rootCmd.AddCommand(cmd)
+		rootCmd.SetArgs([]string{"init"})
+		executeCommandForTest(t, rootCmd)
+
+		f, err := cmd.Flags().GetString("file")
+		assert.NoError(t, err)
+		assert.Equal(t, "/root/.conjurrc", f)
+
+		f, err = cmd.Flags().GetString("cert-file")
+		assert.NoError(t, err)
+		assert.Equal(t, "/root/conjur-server.pem", f)
+	})
+
+	t.Run("version flag", func(t *testing.T) {
+		rootCmd := newRootCommand()
+		stdout, _, err := executeCommandForTest(t, rootCmd, "--version")
+
+		assert.NoError(t, err)
+		assert.Equal(t, "Conjur CLI version unset-unset\n", stdout)
+	})
 }
 
 func assertFetchCertFailed(t *testing.T, conjurrcInTmpDir string) {
