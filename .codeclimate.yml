@@ -63,6 +63,10 @@ plugins:
     enabled: true
     # ... CONFIG CONTENT ...
     checks:
+      MD024:
+        enabled: false
+      MD032:
+        enabled: false
       MD034:
         enabled: false
 

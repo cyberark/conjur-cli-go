@@ -6,14 +6,13 @@ import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-api-go/conjurapi/authn"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
-	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 
 	"github.com/spf13/cobra"
 )
 
 type loginCmdFuncs struct {
 	LoadAndValidateConjurConfig func() (conjurapi.Config, error)
-	LoginWithPromptFallback     func(decoratePrompt prompts.DecoratePromptFunc, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error)
+	LoginWithPromptFallback     func(client clients.ConjurClient, username string, password string) (*authn.LoginPair, error)
 	OidcLogin                   func(conjurClient clients.ConjurClient, username string, password string) (clients.ConjurClient, error)
 }
 
@@ -102,8 +101,7 @@ Examples:
 			}
 
 			if config.AuthnType == "" || config.AuthnType == "authn" || config.AuthnType == "ldap" {
-				decoratePrompt := prompts.PromptDecoratorForCommand(cmd)
-				_, err = funcs.LoginWithPromptFallback(decoratePrompt, conjurClient, cmdFlagVals.username, cmdFlagVals.password)
+				_, err = funcs.LoginWithPromptFallback(conjurClient, cmdFlagVals.username, cmdFlagVals.password)
 			} else if config.AuthnType == "oidc" {
 				_, err = funcs.OidcLogin(conjurClient, cmdFlagVals.username, cmdFlagVals.password)
 			} else {
