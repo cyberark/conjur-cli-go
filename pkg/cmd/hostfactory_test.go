@@ -179,6 +179,18 @@ var hostfactoryCmdTestCases = []struct {
 			assert.Contains(t, stdout, "")
 		},
 	},
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	{
+		name: "token revoke command success",
+		args: []string{"hostfactory", "revoke", "token", "-t", "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
+		revoke: func(t *testing.T, token string) error {
+			return nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "")
+		},
+	},
+	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name: "token revoke command error",
 		args: []string{"hostfactory", "tokens", "revoke", "-t", "12345"},
@@ -271,4 +283,3 @@ func TestHostfactoryCmd(t *testing.T) {
 		})
 	}
 }
-

@@ -6,7 +6,7 @@ import (
 	"net"
 
 	"github.com/spf13/cobra"
-	
+
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 )
@@ -119,7 +119,7 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 			if err != nil {
 				return err
 			}
-			
+
 			// BEGIN COMPATIBILITY WITH PYTHON CLI
 			if hostfactoryName == "" {
 				hostfactoryName, err = cmd.Flags().GetString("hostfactoryid")
@@ -135,7 +135,7 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 				return errors.New("Must specify --hostfactory-id")
 			}
 			// END COMPATIBILITY WITH PYTHON CLI
-			
+
 			cidr, err := cmd.Flags().GetIPSlice("cidr")
 			if err != nil {
 				return err
@@ -210,15 +210,15 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	// Adds support for 'hostfactoryid' flag to 'hostfactory tokens create' command
-	
+
 	// Uncomment this line when the deprecated flag is removed
 	//tokensCreateCmd.MarkFlagRequired("hostfactory-id")
-	
+
 	tokensCreateCmd.Flags().StringP("hostfactoryid", "", "", "")
 	tokensCreateCmd.Flags().MarkDeprecated("hostfactoryid", "Use --hostfactory-id instead")
 	tokensCreateCmd.Flags().Lookup("hostfactoryid").Hidden = false
 	// END COMPATIBILITY WITH PYTHON CLI
-	
+
 	ip, _, _ := net.ParseCIDR("0.0.0.0/0")
 	ips := []net.IP{ip}
 	tokensCreateCmd.Flags().IPSliceP("cidr", "c", ips, "A comma-delimited list of CIDR addresses to restrict token to")
@@ -234,10 +234,10 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	// Adds the 'create host' and 'create token' commands.
-	
+
 	createCmd := newCreateCmd()
 	hostfactoryCmd.AddCommand(createCmd)
-	
+
 	createHostCmd := newCreateHostCmd(createHostClientFactory)
 	createCmd.AddCommand(createHostCmd)
 
@@ -255,9 +255,19 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	// Have to add this flag in to allow us to use the 'token create' logic to execute this command
 	createTokenCmd.Flags().StringP("hostfactory-id", "", "", "Fully qualified hostfactory ID")
 	createTokenCmd.Flags().Lookup("hostfactory-id").Hidden = true
-	
+
 	createTokenCmd.Flags().IPSliceP("cidr", "c", ips, "A comma-delimited list of CIDR addresses to restrict token to")
 	createTokenCmd.Flags().IntP("count", "n", 1, "Number of tokens to create")
+
+	revokeCmd := newRevokeCmd()
+	hostfactoryCmd.AddCommand(revokeCmd)
+
+	revokeTokenCmd := newRevokeTokenCmd(revokeTokenClientFactory)
+	revokeCmd.AddCommand(revokeTokenCmd)
+
+	revokeTokenCmd.Flags().StringP("token", "t", "", "The token to revoke")
+	revokeTokenCmd.MarkFlagRequired("token")
+
 	// END COMPATIBILITY WITH PYTHON CLI
 
 	return hostfactoryCmd
@@ -268,12 +278,11 @@ func init() {
 	rootCmd.AddCommand(hostfactoryCmd)
 }
 
-
 // BEGIN COMPATIBILITY WITH PYTHON CLI
 func newCreateCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "create",
-		Short: "DEPRECATED: Use hostfactory hosts create",
+		Short: "DEPRECATED: Use hostfactory (hosts / tokens) create",
 		Run: func(cmd *cobra.Command, args []string) {
 			// Print --help if called without subcommand
 			cmd.Help()
@@ -283,7 +292,7 @@ func newCreateCmd() *cobra.Command {
 
 func newCreateHostCmd(clientFactory createHostClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use: "host",
+		Use:   "host",
 		Short: "DEPRECATED: Use hostfactory hosts create",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			realCmd := newHostsCreateCmd(clientFactory)
@@ -295,7 +304,7 @@ func newCreateHostCmd(clientFactory createHostClientFactoryFunc) *cobra.Command 
 
 func newCreateTokenCmd(clientFactory createTokenClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use: "token",
+		Use:   "token",
 		Short: "DEPRECATED: Use hostfactory tokens create",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			realCmd := newTokensCreateCmd(clientFactory)
@@ -304,4 +313,28 @@ func newCreateTokenCmd(clientFactory createTokenClientFactoryFunc) *cobra.Comman
 		},
 	}
 }
+
+func newRevokeCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "revoke",
+		Short: "DEPRECATED: Use hostfactory tokens revoke",
+		Run: func(cmd *cobra.Command, args []string) {
+			// Print --help if called without subcommand
+			cmd.Help()
+		},
+	}
+}
+
+func newRevokeTokenCmd(clientFactory revokeTokenClientFactoryFunc) *cobra.Command {
+	return &cobra.Command{
+		Use:   "token",
+		Short: "DEPRECATED: Use hostfactory tokens revoke",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			realCmd := newTokensRevokeCmd(clientFactory)
+
+			return realCmd.RunE(cmd, args)
+		},
+	}
+}
+
 // END COMPATIBILITY WITH PYTHON CLI
