@@ -112,7 +112,7 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 			if err != nil {
 				return err
 			}
-			hostfactoryName, err := cmd.Flags().GetString("hostFactory")
+			hostfactoryName, err := cmd.Flags().GetString("host-factory-id")
 			if err != nil {
 				return err
 			}
@@ -186,8 +186,8 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	tokensCmd.AddCommand(tokensRevokeCmd)
 
 	tokensCreateCmd.Flags().StringP("duration", "", "10m", "Duration in which the token will expire")
-	tokensCreateCmd.Flags().StringP("hostFactory", "f", "", "Fully qualified Host Factory id")
-	tokensCreateCmd.MarkFlagRequired("hostFactory")
+	tokensCreateCmd.Flags().StringP("host-factory-id", "", "", "Fully qualified Host Factory id")
+	tokensCreateCmd.MarkFlagRequired("host-factory-id")
 	ip, _, _ := net.ParseCIDR("0.0.0.0/0")
 	ips := []net.IP{ip}
 	tokensCreateCmd.Flags().IPSliceP("cidr", "c", ips, "A comma-delimited list of CIDR addresses to restrict token to")
