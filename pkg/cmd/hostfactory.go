@@ -114,6 +114,7 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 			if err != nil {
 				return err
 			}
+
 			hostfactoryName, err := cmd.Flags().GetString("host-factory-id")
 			if err != nil {
 				return err
@@ -208,6 +209,8 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	tokensCreateCmd.Flags().StringP("host-factory-id", "", "", "Fully qualified Host Factory id")
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	// Adds support for 'hostfactoryid' flag to 'hostfactory tokens create' command
+	
 	// Uncomment this line when the deprecated flag is removed
 	//tokensCreateCmd.MarkFlagRequired("host-factory-id")
 	
@@ -230,6 +233,8 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	hostsCreateCmd.MarkFlagRequired("id")
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	// Adds the 'create host' and 'create token' commands.
+	
 	createCmd := newCreateCmd()
 	hostfactoryCmd.AddCommand(createCmd)
 	
@@ -240,6 +245,19 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	createHostCmd.MarkFlagRequired("token")
 	createHostCmd.Flags().StringP("id", "i", "", "ID")
 	createHostCmd.MarkFlagRequired("id")
+
+	createTokenCmd := newCreateTokenCmd(createTokenClientFactory)
+	createCmd.AddCommand(createTokenCmd)
+
+	createTokenCmd.Flags().StringP("duration", "", "10m", "Duration in which the token will expire")
+	createTokenCmd.Flags().StringP("hostfactoryid", "", "", "Fully qualified hostfactory ID")
+
+	// Have to add this flag in to allow us to use the 'token create' logic to execute this command
+	createTokenCmd.Flags().StringP("host-factory-id", "", "", "Fully qualified hostfactory ID")
+	createTokenCmd.Flags().Lookup("host-factory-id").Hidden = true
+	
+	createTokenCmd.Flags().IPSliceP("cidr", "c", ips, "A comma-delimited list of CIDR addresses to restrict token to")
+	createTokenCmd.Flags().IntP("count", "n", 1, "Number of tokens to create")
 	// END COMPATIBILITY WITH PYTHON CLI
 
 	return hostfactoryCmd
@@ -269,7 +287,19 @@ func newCreateHostCmd(clientFactory createHostClientFactoryFunc) *cobra.Command 
 		Short: "DEPRECATED: Use hostfactory hosts create",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			realCmd := newHostsCreateCmd(clientFactory)
-			
+
+			return realCmd.RunE(cmd, args)
+		},
+	}
+}
+
+func newCreateTokenCmd(clientFactory createTokenClientFactoryFunc) *cobra.Command {
+	return &cobra.Command{
+		Use: "token",
+		Short: "DEPRECATED: Use hostfactory tokens create",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			realCmd := newTokensCreateCmd(clientFactory)
+
 			return realCmd.RunE(cmd, args)
 		},
 	}
