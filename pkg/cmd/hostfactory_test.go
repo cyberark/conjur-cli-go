@@ -200,6 +200,22 @@ var hostfactoryCmdTestCases = []struct {
 			assert.Contains(t, stdout, "1234567890")
 		},
 	},
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	{
+		name: "create host success",
+		args: []string{"hostfactory", "create", "host", "--id", "new-host", "-t", "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
+		host: func(t *testing.T, id string, token string) (conjurapi.HostFactoryHostResponse, error) {
+			return conjurapi.HostFactoryHostResponse{
+				CreatedAt: "2023-01-01",
+				Id:        "new-host",
+				ApiKey:    "1234567890",
+			}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "1234567890")
+		},
+	},
+	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name: "host create error",
 		args: []string{"hostfactory", "hosts", "create", "--id", "new-host", "-t", "notvalidtoken"},
@@ -238,3 +254,4 @@ func TestHostfactoryCmd(t *testing.T) {
 		})
 	}
 }
+

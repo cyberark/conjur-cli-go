@@ -57,7 +57,7 @@ func newHostsCmd() *cobra.Command {
 func newHostsCreateCmd(clientFactory createHostClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
 		Use:   "create",
-		Short: " Use a token to create a host",
+		Short: "Use a token to create a host",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			token, err := cmd.Flags().GetString("token")
 			if err != nil {
@@ -229,6 +229,19 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	hostsCreateCmd.Flags().StringP("id", "i", "", "ID")
 	hostsCreateCmd.MarkFlagRequired("id")
 
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	createCmd := newCreateCmd()
+	hostfactoryCmd.AddCommand(createCmd)
+	
+	createHostCmd := newCreateHostCmd(createHostClientFactory)
+	createCmd.AddCommand(createHostCmd)
+
+	createHostCmd.Flags().StringP("token", "t", "", "Token")
+	createHostCmd.MarkFlagRequired("token")
+	createHostCmd.Flags().StringP("id", "i", "", "ID")
+	createHostCmd.MarkFlagRequired("id")
+	// END COMPATIBILITY WITH PYTHON CLI
+
 	return hostfactoryCmd
 }
 
@@ -236,3 +249,29 @@ func init() {
 	hostfactoryCmd := newHostFactoryCmd(createTokenClientFactory, revokeTokenClientFactory, createHostClientFactory)
 	rootCmd.AddCommand(hostfactoryCmd)
 }
+
+
+// BEGIN COMPATIBILITY WITH PYTHON CLI
+func newCreateCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "create",
+		Short: "DEPRECATED: Use hostfactory hosts create",
+		Run: func(cmd *cobra.Command, args []string) {
+			// Print --help if called without subcommand
+			cmd.Help()
+		},
+	}
+}
+
+func newCreateHostCmd(clientFactory createHostClientFactoryFunc) *cobra.Command {
+	return &cobra.Command{
+		Use: "host",
+		Short: "DEPRECATED: Use hostfactory hosts create",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			realCmd := newHostsCreateCmd(clientFactory)
+			
+			return realCmd.RunE(cmd, args)
+		},
+	}
+}
+// END COMPATIBILITY WITH PYTHON CLI
