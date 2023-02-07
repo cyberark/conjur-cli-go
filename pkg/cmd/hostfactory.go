@@ -115,7 +115,7 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 				return err
 			}
 
-			hostfactoryName, err := cmd.Flags().GetString("host-factory-id")
+			hostfactoryName, err := cmd.Flags().GetString("hostfactory-id")
 			if err != nil {
 				return err
 			}
@@ -132,7 +132,7 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 			// mark the non-deprecated flag as required then the cmd
 			// will fail when the deprecated flag is used.
 			if hostfactoryName == "" {
-				return errors.New("Must specify --host-factory-id")
+				return errors.New("Must specify --hostfactory-id")
 			}
 			// END COMPATIBILITY WITH PYTHON CLI
 			
@@ -206,16 +206,16 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	tokensCmd.AddCommand(tokensRevokeCmd)
 
 	tokensCreateCmd.Flags().StringP("duration", "", "10m", "Duration in which the token will expire")
-	tokensCreateCmd.Flags().StringP("host-factory-id", "", "", "Fully qualified Host Factory id")
+	tokensCreateCmd.Flags().StringP("hostfactory-id", "", "", "Fully qualified Host Factory id")
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	// Adds support for 'hostfactoryid' flag to 'hostfactory tokens create' command
 	
 	// Uncomment this line when the deprecated flag is removed
-	//tokensCreateCmd.MarkFlagRequired("host-factory-id")
+	//tokensCreateCmd.MarkFlagRequired("hostfactory-id")
 	
 	tokensCreateCmd.Flags().StringP("hostfactoryid", "", "", "")
-	tokensCreateCmd.Flags().MarkDeprecated("hostfactoryid", "Use --host-factory-id instead")
+	tokensCreateCmd.Flags().MarkDeprecated("hostfactoryid", "Use --hostfactory-id instead")
 	tokensCreateCmd.Flags().Lookup("hostfactoryid").Hidden = false
 	// END COMPATIBILITY WITH PYTHON CLI
 	
@@ -253,8 +253,8 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	createTokenCmd.Flags().StringP("hostfactoryid", "", "", "Fully qualified hostfactory ID")
 
 	// Have to add this flag in to allow us to use the 'token create' logic to execute this command
-	createTokenCmd.Flags().StringP("host-factory-id", "", "", "Fully qualified hostfactory ID")
-	createTokenCmd.Flags().Lookup("host-factory-id").Hidden = true
+	createTokenCmd.Flags().StringP("hostfactory-id", "", "", "Fully qualified hostfactory ID")
+	createTokenCmd.Flags().Lookup("hostfactory-id").Hidden = true
 	
 	createTokenCmd.Flags().IPSliceP("cidr", "c", ips, "A comma-delimited list of CIDR addresses to restrict token to")
 	createTokenCmd.Flags().IntP("count", "n", 1, "Number of tokens to create")
