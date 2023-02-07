@@ -24,7 +24,7 @@ func createHostClientFactory(cmd *cobra.Command) (createHostClient, error) {
 }
 
 type createTokenClient interface {
-	CreateToken(durationStr string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error)
+	CreateToken(durationStr string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error)
 }
 type revokeTokenClient interface {
 	DeleteToken(token string) error
@@ -116,7 +116,7 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 			if err != nil {
 				return err
 			}
-			cidrs, err := cmd.Flags().GetIPSlice("cidrs")
+			cidr, err := cmd.Flags().GetIPSlice("cidr")
 			if err != nil {
 				return err
 			}
@@ -128,7 +128,7 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 			if err != nil {
 				return err
 			}
-			tokenCreateResponse, err := client.CreateToken(duration, hostfactoryName, iPArrayToStingArray(cidrs), count)
+			tokenCreateResponse, err := client.CreateToken(duration, hostfactoryName, iPArrayToStingArray(cidr), count)
 			if err != nil {
 				return err
 			}
@@ -190,7 +190,7 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	tokensCreateCmd.MarkFlagRequired("hostFactory")
 	ip, _, _ := net.ParseCIDR("0.0.0.0/0")
 	ips := []net.IP{ip}
-	tokensCreateCmd.Flags().IPSliceP("cidrs", "c", ips, "A comma-delimited list of CIDR addresses to restrict token to")
+	tokensCreateCmd.Flags().IPSliceP("cidr", "c", ips, "A comma-delimited list of CIDR addresses to restrict token to")
 	tokensCreateCmd.Flags().IntP("count", "n", 1, "Number of tokens to create")
 
 	tokensRevokeCmd.Flags().StringP("token", "t", "", "The token to revoke")

@@ -17,8 +17,8 @@ type mockHFClient struct {
 	host   func(*testing.T, string, string) (conjurapi.HostFactoryHostResponse, error)
 }
 
-func (m mockHFClient) CreateToken(durationStr string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
-	return m.create(m.t, durationStr, hostFactory, cidrs, count)
+func (m mockHFClient) CreateToken(durationStr string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+	return m.create(m.t, durationStr, hostFactory, cidr, count)
 }
 func (m mockHFClient) DeleteToken(token string) error {
 	return m.revoke(m.t, token)
@@ -31,7 +31,7 @@ func (m mockHFClient) CreateHost(id string, token string) (conjurapi.HostFactory
 var hostfactoryCmdTestCases = []struct {
 	name               string
 	args               []string
-	create             func(t *testing.T, duration string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error)
+	create             func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error)
 	revoke             func(t *testing.T, token string) error
 	host               func(t *testing.T, id string, token string) (conjurapi.HostFactoryHostResponse, error)
 	clientFactoryError error
@@ -89,7 +89,7 @@ var hostfactoryCmdTestCases = []struct {
 	{
 		name: "token create command success",
 		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "-f", "cucumber_host_factory_factory"},
-		create: func(t *testing.T, duration string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
 			return []conjurapi.HostFactoryTokenResponse{
 				conjurapi.HostFactoryTokenResponse{
 					Expiration: "2022-12-23T20:32:46Z",
@@ -105,7 +105,7 @@ var hostfactoryCmdTestCases = []struct {
 		name: "token create with ip success",
 		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "-f", "cucumber_host_factory_factory",
 			"-c", "0.0.0.0,1.2.3.4"},
-		create: func(t *testing.T, duration string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
 			return []conjurapi.HostFactoryTokenResponse{
 				conjurapi.HostFactoryTokenResponse{
 					Expiration: "2022-12-23T20:32:46Z",
