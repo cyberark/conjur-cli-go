@@ -119,7 +119,7 @@ pipeline {
               sh "cp ../VERSION ./VERSION"
 
               // Create release artifacts without releasing to Github
-              sh "./bin/build_release --skip-validate --rm-dist"
+              sh "./bin/build_release --skip-validate --clean"
 
               // Build container images
               sh "./bin/build_container_images"

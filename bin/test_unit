@@ -21,9 +21,11 @@ function run_unit_tests() {
   docker run --rm \
              --volume "$PWD"/:/conjur-cli-go/test/ \
              conjur-cli-go-test-runner:latest \
-             -coverprofile="./test/c.out" \
+             -coverprofile="./test/c.out.tmp" \
              ./... \
-             | tee -a "$junit_output_file"
+             | tee -a "$junit_output_file" && \
+             cat c.out.tmp | grep -v "_dev.go" > c.out && \
+             rm c.out.tmp
   echo "Unit test exit status: $?"
 }
 

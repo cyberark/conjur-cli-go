@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.1] - 2023-02-06
+
 ## [8.0.0] - 2023-01-20
 
 ### Added
@@ -19,3 +21,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Placeholder version to capture the reset of the repository
+
+[Unreleased]: https://github.com/cyberark/conjur/compare/v8.0.0...HEAD

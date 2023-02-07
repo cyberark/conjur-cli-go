@@ -37,7 +37,7 @@ function main() {
       --env GO_VERSION="${GO_VERSION}" \
       --volume "${REPO_ROOT}:/${PROJECT_WD}" \
       --workdir "/${PROJECT_WD}" \
-      "${GORELEASER_IMAGE}" --rm-dist "$@"
+      "${GORELEASER_IMAGE}" --clean "$@"
     echo "Releases built. Archives can be found in dist/goreleaser"
 }
 
