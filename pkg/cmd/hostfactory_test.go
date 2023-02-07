@@ -88,7 +88,7 @@ var hostfactoryCmdTestCases = []struct {
 	},
 	{
 		name: "token create command success",
-		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "-f", "cucumber_host_factory_factory"},
+		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--host-factory-id", "cucumber_host_factory_factory"},
 		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
 			return []conjurapi.HostFactoryTokenResponse{
 				conjurapi.HostFactoryTokenResponse{
@@ -103,7 +103,7 @@ var hostfactoryCmdTestCases = []struct {
 	},
 	{
 		name: "token create with ip success",
-		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "-f", "cucumber_host_factory_factory",
+		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--host-factory-id", "cucumber_host_factory_factory",
 			"-c", "0.0.0.0,1.2.3.4"},
 		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
 			return []conjurapi.HostFactoryTokenResponse{
@@ -120,7 +120,7 @@ var hostfactoryCmdTestCases = []struct {
 	},
 	{
 		name: "token create command error",
-		args: []string{"hostfactory", "tokens", "create", "-d", "5m", "-f", "cucumber_host_factory_factory",
+		args: []string{"hostfactory", "tokens", "create", "-d", "5m", "--host-factory-id", "cucumber_host_factory_factory",
 			"-c", "0.0.0"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stderr, "invalid string being converted")
@@ -130,7 +130,7 @@ var hostfactoryCmdTestCases = []struct {
 		name: "token create missing flag",
 		args: []string{"hostfactory", "tokens", "create"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "Error: required flag(s) \"hostFactory\" not set")
+			assert.Contains(t, stderr, "Error: required flag(s) \"host-factory-id\" not set")
 		},
 	},
 	{
