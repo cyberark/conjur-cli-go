@@ -88,7 +88,7 @@ var hostfactoryCmdTestCases = []struct {
 	},
 	{
 		name: "token create command success",
-		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--host-factory-id", "cucumber_host_factory_factory"},
+		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactory-id", "cucumber_host_factory_factory"},
 		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
 			return []conjurapi.HostFactoryTokenResponse{
 				conjurapi.HostFactoryTokenResponse{
@@ -132,14 +132,14 @@ var hostfactoryCmdTestCases = []struct {
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "deprecated")
-			assert.Contains(t, stdout, "Use --host-factory-id instead")
+			assert.Contains(t, stdout, "Use --hostfactory-id instead")
 			assert.Contains(t, stdout, "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da")
 		},
 	},
 	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name: "token create with ip success",
-		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--host-factory-id", "cucumber_host_factory_factory",
+		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactory-id", "cucumber_host_factory_factory",
 			"-c", "0.0.0.0,1.2.3.4"},
 		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
 			return []conjurapi.HostFactoryTokenResponse{
@@ -156,7 +156,7 @@ var hostfactoryCmdTestCases = []struct {
 	},
 	{
 		name: "token create command error",
-		args: []string{"hostfactory", "tokens", "create", "-d", "5m", "--host-factory-id", "cucumber_host_factory_factory",
+		args: []string{"hostfactory", "tokens", "create", "-d", "5m", "--hostfactory-id", "cucumber_host_factory_factory",
 			"-c", "0.0.0"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stderr, "invalid string being converted")
@@ -166,7 +166,7 @@ var hostfactoryCmdTestCases = []struct {
 		name: "token create missing flag",
 		args: []string{"hostfactory", "tokens", "create"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "Must specify --host-factory-id")
+			assert.Contains(t, stderr, "Must specify --hostfactory-id")
 		},
 	},
 	{
