@@ -8,7 +8,7 @@ import (
 )
 
 type listClient interface {
-	ResourceIDs(filter *conjurapi.ResourceFilter) ([]string, error)
+	Resources(filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error)
 }
 
 type listClientFactoryFunc func(*cobra.Command) (listClient, error)
@@ -69,12 +69,30 @@ Examples:
 				return err
 			}
 
-			data, err := client.ResourceIDs(rf)
+			resources, err := client.Resources(rf)
 			if err != nil {
 				return err
 			}
 
-			prettyResult, err := utils.PrettyPrintToJSON(data)
+			inspect, err := cmd.Flags().GetBool("inspect")
+			if err != nil {
+				return err
+			}
+
+			var prettyResult string
+
+			if inspect {
+				prettyResult, err = utils.PrettyPrintToJSON(resources)
+			} else {
+				resourceIDs := make([]string, 0)
+
+				for _, element := range resources {
+					resourceIDs = append(resourceIDs, element["id"].(string))
+				}
+
+				prettyResult, err = utils.PrettyPrintToJSON(resourceIDs)
+			}
+
 			if err != nil {
 				return err
 			}
@@ -89,6 +107,7 @@ Examples:
 	cmd.Flags().StringP("search", "s", "", "Full-text search on resourceID and annotation values")
 	cmd.Flags().IntP("limit", "l", 0, "Maximum number of records to return")
 	cmd.Flags().IntP("offset", "o", 0, "Offset to start from")
+	cmd.Flags().BoolP("inspect", "i", false, "Show resource details")
 
 	return cmd
 }

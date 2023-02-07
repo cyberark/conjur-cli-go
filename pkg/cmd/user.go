@@ -22,7 +22,6 @@ func userClientFactory(cmd *cobra.Command) (userClient, error) {
 }
 
 func newUserCmd(clientFactory userClientFactoryFunc) *cobra.Command {
-
 	userCmd := &cobra.Command{
 		Use:   "user",
 		Short: "User commands (change-password, rotate-api-key)",
