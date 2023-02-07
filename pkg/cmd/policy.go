@@ -78,7 +78,7 @@ func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	policyCmd.MarkPersistentFlagRequired("filepath")
 
 	policyCmd.AddCommand(newPolicyLoadCommand(clientFactory))
-	policyCmd.AddCommand(newPolicyAppendCommand(clientFactory))
+	policyCmd.AddCommand(newPolicyUpdateCommand(clientFactory))
 	policyCmd.AddCommand(newPolicyReplaceCommand(clientFactory))
 
 	return policyCmd
@@ -97,14 +97,14 @@ Examples:
 	}
 }
 
-func newPolicyAppendCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
+func newPolicyUpdateCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:   "append",
+		Use:   "update",
 		Short: "Update existing resources in the policy or create new resources",
 		Long: `Update existing resources in the policy or create new resources.
 
 Examples:
-- conjur policy append -b staging -f /policy/staging.yml`,
+- conjur policy update -b staging -f /policy/staging.yml`,
 		SilenceUsage: true,
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePatch),
 	}
