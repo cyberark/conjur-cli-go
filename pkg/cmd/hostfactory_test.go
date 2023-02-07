@@ -103,6 +103,23 @@ var hostfactoryCmdTestCases = []struct {
 	},
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	{
+		name: "create token command success",
+		args: []string{"hostfactory", "create", "token", "--duration", "5m", "--hostfactoryid", "cucumber_host_factory_factory"},
+		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+			return []conjurapi.HostFactoryTokenResponse{
+				conjurapi.HostFactoryTokenResponse{
+					Expiration: "2022-12-23T20:32:46Z",
+					Cidr:       []string{"0.0.0.0/32"},
+					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
+			}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da")
+		},
+	},
+	// END COMPATIBILITY WITH PYTHON CLI
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	{
 		name: "deprecate --hostfactoryid flag",
 		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactoryid", "cucumber_host_factory_factory"},
 		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
@@ -202,7 +219,7 @@ var hostfactoryCmdTestCases = []struct {
 	},
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	{
-		name: "create host success",
+		name: "create host success (backward compatibility)",
 		args: []string{"hostfactory", "create", "host", "--id", "new-host", "-t", "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
 		host: func(t *testing.T, id string, token string) (conjurapi.HostFactoryHostResponse, error) {
 			return conjurapi.HostFactoryHostResponse{
