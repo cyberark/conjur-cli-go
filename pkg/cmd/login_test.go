@@ -110,7 +110,7 @@ var loginTestCases = []struct {
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.NoError(t, err)
 			assert.Contains(t, stdout, "deprecated")
-			assert.Contains(t, stdout, "use -u/--username instead")
+			assert.Contains(t, stdout, "Use -u / --username instead")
 			assert.Contains(t, stdout, "Logged in")
 		},
 	},
@@ -128,7 +128,7 @@ var loginTestCases = []struct {
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.NoError(t, err)
 			assert.Contains(t, stdout, "deprecated")
-			assert.Contains(t, stdout, "use -u/--username instead")
+			assert.Contains(t, stdout, "Use -u / --username instead")
 			assert.Contains(t, stdout, "Logged in")
 		},
 	},
