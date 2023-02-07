@@ -274,6 +274,35 @@ appliance_url: http://host
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
+	{
+		name: "fails if --insecure and --ca-cert are specified",
+		args: []string{"init", "-u=http://example.com", "-a=test-account", "--insecure", "--ca-cert=cert.pem"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
+			assert.Contains(t, stderr, "Cannot specify --ca-cert when using --insecure or --self-signed")
+			assertFetchCertFailed(t, conjurrcInTmpDir)
+		},
+	},
+	{
+		name: "fails if --self-signed and --ca-cert are specified",
+		args: []string{"init", "-u=http://example.com", "-a=test-account", "--self-signed", "--ca-cert=cert.pem"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
+			assert.Contains(t, stderr, "Cannot specify --ca-cert when using --insecure or --self-signed")
+			assertFetchCertFailed(t, conjurrcInTmpDir)
+		},
+	},
+	{
+		name: "allows cert specified by --ca-cert",
+		args: []string{"init", "-u=https://example.com", "-a=test-account", "--ca-cert=custom-cert.pem"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
+			data, _ := os.ReadFile(conjurrcInTmpDir)
+			pwd, _ := os.Getwd()
+			expectedConjurrc := `account: test-account
+appliance_url: https://example.com
+cert_file: ` + pwd + `/custom-cert.pem
+`
+			assert.Equal(t, expectedConjurrc, string(data))
+		},
+	},
 }
 
 func TestInitCmd(t *testing.T) {
