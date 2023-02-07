@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"errors"
 	"net"
 
 	"github.com/spf13/cobra"
+	
+	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/conjur-cli-go/pkg/clients"
 )
 
 type createTokenClientFactoryFunc func(*cobra.Command) (createTokenClient, error)
@@ -116,6 +118,23 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 			if err != nil {
 				return err
 			}
+			
+			// BEGIN COMPATIBILITY WITH PYTHON CLI
+			if hostfactoryName == "" {
+				hostfactoryName, err = cmd.Flags().GetString("hostfactoryid")
+				if err != nil {
+					return err
+				}
+			}
+
+			// Adding this explicit check temporarily because if we
+			// mark the non-deprecated flag as required then the cmd
+			// will fail when the deprecated flag is used.
+			if hostfactoryName == "" {
+				return errors.New("Must specify --host-factory-id")
+			}
+			// END COMPATIBILITY WITH PYTHON CLI
+			
 			cidr, err := cmd.Flags().GetIPSlice("cidr")
 			if err != nil {
 				return err
@@ -187,7 +206,16 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 
 	tokensCreateCmd.Flags().StringP("duration", "", "10m", "Duration in which the token will expire")
 	tokensCreateCmd.Flags().StringP("host-factory-id", "", "", "Fully qualified Host Factory id")
-	tokensCreateCmd.MarkFlagRequired("host-factory-id")
+
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	// Uncomment this line when the deprecated flag is removed
+	//tokensCreateCmd.MarkFlagRequired("host-factory-id")
+	
+	tokensCreateCmd.Flags().StringP("hostfactoryid", "", "", "")
+	tokensCreateCmd.Flags().MarkDeprecated("hostfactoryid", "Use --host-factory-id instead")
+	tokensCreateCmd.Flags().Lookup("hostfactoryid").Hidden = false
+	// END COMPATIBILITY WITH PYTHON CLI
+	
 	ip, _, _ := net.ParseCIDR("0.0.0.0/0")
 	ips := []net.IP{ip}
 	tokensCreateCmd.Flags().IPSliceP("cidr", "c", ips, "A comma-delimited list of CIDR addresses to restrict token to")
