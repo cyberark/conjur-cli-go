@@ -123,7 +123,8 @@ Examples:
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	cmd.Flags().StringP("id", "i", "", "")
-	cmd.Flags().MarkDeprecated("id", "use -u/--username instead")
+	cmd.Flags().MarkDeprecated("id", "Use -u / --username instead")
+	cmd.Flags().Lookup("id").Hidden = false
 	// END COMPATIBILITY WITH PYTHON CLI
 
 	return cmd

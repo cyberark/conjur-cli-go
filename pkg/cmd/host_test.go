@@ -64,7 +64,7 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "test-api-key")
 			assert.Contains(t, stdout, "deprecated")
-			assert.Contains(t, stdout, "use --host-id instead")
+			assert.Contains(t, stdout, "Use --host-id instead")
 		},
 	},
 	{
@@ -79,7 +79,7 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "test-api-key")
 			assert.Contains(t, stdout, "deprecated")
-			assert.Contains(t, stdout, "use --host-id instead")
+			assert.Contains(t, stdout, "Use --host-id instead")
 		},
 	},
 	// END COMPATIBILITY WITH PYTHON CLI
