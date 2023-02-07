@@ -21,15 +21,15 @@ func loadPolicyCommandRunner(
 			return err
 		}
 
-		filepath, err := cmd.Flags().GetString("filepath")
+		file, err := cmd.Flags().GetString("file")
 		if err != nil {
 			return err
 		}
 
 		var inputReader io.Reader = cmd.InOrStdin()
 		// the argument received looks like a file, we try to open it
-		if filepath != "-" {
-			file, err := os.Open(filepath)
+		if file != "-" {
+			file, err := os.Open(file)
 			if err != nil {
 				return err
 			}
@@ -73,9 +73,9 @@ func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	}
 
 	policyCmd.PersistentFlags().StringP("branch", "b", "", "The parent policy branch")
-	policyCmd.PersistentFlags().StringP("filepath", "f", "", "The policy file to load")
+	policyCmd.PersistentFlags().StringP("file", "f", "", "The policy file to load")
 	policyCmd.MarkPersistentFlagRequired("branch")
-	policyCmd.MarkPersistentFlagRequired("filepath")
+	policyCmd.MarkPersistentFlagRequired("file")
 
 	policyCmd.AddCommand(newPolicyLoadCommand(clientFactory))
 	policyCmd.AddCommand(newPolicyUpdateCommand(clientFactory))
