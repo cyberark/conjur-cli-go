@@ -5,7 +5,7 @@ test:
 	go test -tags=dev -count=1 -v ./...
 
 install:
-	go install -tags=dev ./cmd/conjur
+	go install -tags=dev -buildvcs=false ./cmd/conjur
 
 build_integration:
 	go test -tags=dev,integration -count=1 -c -v ./cmd/integration/...
