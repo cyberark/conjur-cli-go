@@ -204,7 +204,7 @@ func TestPolicyCmd(t *testing.T) {
 			conjurapi.PolicyModePost,
 		),
 		sharedPolicyCmdTestCases(
-			"append",
+			"update",
 			conjurapi.PolicyModePatch,
 		),
 		sharedPolicyCmdTestCases(
