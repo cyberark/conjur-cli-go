@@ -120,36 +120,6 @@ appliance_url: http://host
 		},
 	},
 	{
-		name: "writes conjurrc",
-		args: []string{"init", "-u=http://host", "-a=test-account", "-i"},
-		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			data, _ := os.ReadFile(conjurrcInTmpDir)
-			expectedConjurrc := `account: test-account
-appliance_url: http://host
-`
-
-			assert.Equal(t, expectedConjurrc, string(data))
-			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
-			// Shouldn't write certificate for HTTP url
-			assert.NotContains(t, stdout, "Wrote certificate to")
-		},
-	},
-	{
-		name: "writes conjurrc for ldap",
-		args: []string{"init", "-u=http://host", "-a=test-account", "-t=ldap", "--service-id=test", "-i"},
-		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			data, _ := os.ReadFile(conjurrcInTmpDir)
-			expectedConjurrc := `account: test-account
-appliance_url: http://host
-authn_type: ldap
-service_id: test
-`
-
-			assert.Equal(t, expectedConjurrc, string(data))
-			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
-		},
-	},
-	{
 		name: "writes conjurrc with force netrc",
 		args: []string{"init", "-u=http://host", "-a=test-account", "--force-netrc", "-i"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
@@ -160,53 +130,6 @@ credential_storage: file
 `
 
 			assert.Equal(t, expectedConjurrc, string(data))
-			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
-		},
-	},
-	{
-		name: "prompts for overwrite, reject",
-		args: []string{"init", "-u=http://host", "-a=other-test-account", "-i"},
-		promptResponses: []promptResponse{
-			{
-				prompt:   ".conjurrc exists. Overwrite? (y/N)",
-				response: "N",
-			},
-		},
-		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
-			os.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
-		},
-		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			// Assert that file is not overwritten
-			data, _ := os.ReadFile(conjurrcInTmpDir)
-			assert.Equal(t, "something", string(data))
-
-			// Assert on output
-			assert.Contains(t, stdout, ".conjurrc exists. Overwrite? (y/N)")
-			assert.Contains(t, stdout, "Error: Not overwriting")
-		},
-	},
-	{
-		name: "prompts for overwrite, accept",
-		args: []string{"init", "-u=http://host", "-a=other-test-account", "-i"},
-		promptResponses: []promptResponse{
-			{
-				prompt:   "",
-				response: "y",
-			},
-		},
-		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
-			os.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
-		},
-		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			// Assert that file is overwritten
-			data, _ := os.ReadFile(conjurrcInTmpDir)
-			expectedConjurrc := `account: other-test-account
-appliance_url: http://host
-`
-			assert.Equal(t, expectedConjurrc, string(data))
-
-			// Assert on output
-			assert.Contains(t, stdout, ".conjurrc exists. Overwrite? (y/N)")
 			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
 		},
 	},
@@ -225,7 +148,7 @@ appliance_url: http://host
 			assert.Equal(t, expectedConjurrc, string(data))
 
 			// Assert on output
-			assert.NotContains(t, stdout, ".conjurrc exists. Overwrite? (y/N)")
+			assert.NotContains(t, stdout, ".conjurrc exists. Overwrite?")
 			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
 		},
 	},

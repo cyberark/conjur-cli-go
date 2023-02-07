@@ -1,5 +1,5 @@
 action/mocks/*.go
-c.out
+c.out*
 junit.xml
 junit.output
 key.txt
