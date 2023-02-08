@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 
 	"github.com/spf13/cobra"
@@ -110,9 +111,41 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 			if length > 0 {
 				// positional args used
 			}
+
 			duration, err := cmd.Flags().GetString("duration")
 			if err != nil {
 				return err
+			}
+			durationDays, err := cmd.Flags().GetInt64("duration-days")
+			if err != nil {
+				return err
+			}
+
+			durationHours, err := cmd.Flags().GetInt64("duration-hours")
+			if err != nil {
+				return err
+			}
+
+			durationMinutes, err := cmd.Flags().GetInt64("duration-minutes")
+			if err != nil {
+				return err
+			}
+
+			if durationDays < 0 || durationHours < 0 || durationMinutes < 0 {
+				return fmt.Errorf("duration values must be positive")
+			}
+
+			durationIsSet := cmd.Flags().Changed("duration")
+			granularDurationIsSet := cmd.Flags().Changed("duration-days") ||
+				cmd.Flags().Changed("duration-hours") ||
+				cmd.Flags().Changed("duration-minutes")
+
+			if durationIsSet && granularDurationIsSet {
+				return fmt.Errorf("duration can not be used with duration-days, duration-hours or duration-minutes")
+			}
+
+			if granularDurationIsSet {
+				duration = fmt.Sprintf("%dh%dm", durationDays*24+durationHours, durationMinutes)
 			}
 
 			hostfactoryName, err := cmd.Flags().GetString("hostfactory-id")
@@ -205,7 +238,11 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	tokensRevokeCmd := newTokensRevokeCmd(revokeTokenClientFactory)
 	tokensCmd.AddCommand(tokensRevokeCmd)
 
-	tokensCreateCmd.Flags().StringP("duration", "", "10m", "Duration in which the token will expire")
+	tokensCreateCmd.Flags().StringP("duration", "", "10m", "The validity of the token")
+	tokensCreateCmd.Flags().Int64P("duration-days", "", 0, "The validity in days of the token")
+	tokensCreateCmd.Flags().Int64P("duration-hours", "", 0, "The validity in hours of the token")
+	tokensCreateCmd.Flags().Int64P("duration-minutes", "", 0, "The validity in minutes of the token")
+
 	tokensCreateCmd.Flags().StringP("hostfactory-id", "i", "", "Fully qualified Host Factory id")
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
