@@ -126,12 +126,12 @@ EOL
     echo "Setting up Conjur for OIDC (Okta)"
     docker-compose exec cli-dev bash -c 'conjur logout
 conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id okta-2
-conjur login -u $OKTA_USERNAME -p $OKTA_PASSWORD'
+conjur login -i $OKTA_USERNAME -p $OKTA_PASSWORD'
   elif [ "$ENABLE_AUTHN_OIDC" = true ]; then
     echo "Setting up Conjur for OIDC (Keycloak)"
     docker-compose exec cli-dev bash -c 'conjur logout
 conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id keycloak
-conjur login -u alice -p alice'
+conjur login -i alice -p alice'
   fi
 
   echo

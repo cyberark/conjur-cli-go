@@ -21,15 +21,15 @@ func loadPolicyCommandRunner(
 			return err
 		}
 
-		filepath, err := cmd.Flags().GetString("filepath")
+		file, err := cmd.Flags().GetString("file")
 		if err != nil {
 			return err
 		}
 
 		var inputReader io.Reader = cmd.InOrStdin()
 		// the argument received looks like a file, we try to open it
-		if filepath != "-" {
-			file, err := os.Open(filepath)
+		if file != "-" {
+			file, err := os.Open(file)
 			if err != nil {
 				return err
 			}
@@ -73,12 +73,12 @@ func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	}
 
 	policyCmd.PersistentFlags().StringP("branch", "b", "", "The parent policy branch")
-	policyCmd.PersistentFlags().StringP("filepath", "f", "", "The policy file to load")
+	policyCmd.PersistentFlags().StringP("file", "f", "", "The policy file to load")
 	policyCmd.MarkPersistentFlagRequired("branch")
-	policyCmd.MarkPersistentFlagRequired("filepath")
+	policyCmd.MarkPersistentFlagRequired("file")
 
 	policyCmd.AddCommand(newPolicyLoadCommand(clientFactory))
-	policyCmd.AddCommand(newPolicyAppendCommand(clientFactory))
+	policyCmd.AddCommand(newPolicyUpdateCommand(clientFactory))
 	policyCmd.AddCommand(newPolicyReplaceCommand(clientFactory))
 
 	return policyCmd
@@ -97,14 +97,14 @@ Examples:
 	}
 }
 
-func newPolicyAppendCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
+func newPolicyUpdateCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:   "append",
+		Use:   "update",
 		Short: "Update existing resources in the policy or create new resources",
 		Long: `Update existing resources in the policy or create new resources.
 
 Examples:
-- conjur policy append -b staging -f /policy/staging.yml`,
+- conjur policy update -b staging -f /policy/staging.yml`,
 		SilenceUsage: true,
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePatch),
 	}

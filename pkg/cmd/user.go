@@ -22,7 +22,6 @@ func userClientFactory(cmd *cobra.Command) (userClient, error) {
 }
 
 func newUserCmd(clientFactory userClientFactoryFunc) *cobra.Command {
-
 	userCmd := &cobra.Command{
 		Use:   "user",
 		Short: "User commands (change-password, rotate-api-key)",
@@ -42,22 +41,13 @@ func newUserRotateAPIKeyCmd(clientFactory userClientFactoryFunc) *cobra.Command 
 	cmd := &cobra.Command{
 		Use:   "rotate-api-key",
 		Short: "Rotate a user's API key",
-		Long: `Rotate the API key of the user specified by the [user-id] parameter or for the currently logged-in user if no [user-id] is provided.
+		Long: `Rotate the API key of the user specified by the [id] parameter or for the currently logged-in user if no [id] is provided.
 
 Examples:
-- conjur user rotate-api-key --user-id alice
+- conjur user rotate-api-key --id alice
 - conjur user rotate-api-key`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			userID, err := cmd.Flags().GetString("user-id")
-
-			// BEGIN COMPATIBILITY WITH PYTHON CLI
-			if userID == "" {
-				userID, err = cmd.Flags().GetString("id")
-				if err != nil {
-					return err
-				}
-			}
-			// END COMPATIBILITY WITH PYTHON CLI
+			userID, err := cmd.Flags().GetString("id")
 
 			if err != nil {
 				return err
@@ -95,15 +85,7 @@ Examples:
 		},
 	}
 
-	cmd.Flags().StringP(
-		"user-id", "u", "",
-		"ID of user whose API key should be rotated (e.g. alice). Defaults to logged-in user.",
-	)
-
-	// BEGIN COMPATIBILITY WITH PYTHON CLI
-	cmd.Flags().StringP("id", "i", "", "")
-	cmd.Flags().MarkDeprecated("id", "use -u/--user-id instead")
-	// END COMPATIBILITY WITH PYTHON CLI
+	cmd.Flags().StringP("id", "i", "", "user whose API key should be rotated (default: logged-in user)")
 
 	return cmd
 }

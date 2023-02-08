@@ -40,20 +40,6 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 	},
 	{
 		name: "successful rotation",
-		args: []string{"host", "rotate-api-key", "--host-id=dev-host"},
-		hostRotateAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
-			// Assert on arguments
-			assert.Equal(t, "dev-host", hostID)
-
-			return []byte("test-api-key"), nil
-		},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "test-api-key")
-		},
-	},
-	// BEGIN COMPATIBILITY WITH PYTHON CLI
-	{
-		name: "deprecated --id flag",
 		args: []string{"host", "rotate-api-key", "--id=dev-host"},
 		hostRotateAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
 			// Assert on arguments
@@ -63,29 +49,11 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "test-api-key")
-			assert.Contains(t, stdout, "deprecated")
-			assert.Contains(t, stdout, "use --host-id instead")
 		},
 	},
-	{
-		name: "deprecated -i flag",
-		args: []string{"host", "rotate-api-key", "-i", "dev-host"},
-		hostRotateAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
-			// Assert on arguments
-			assert.Equal(t, "dev-host", hostID)
-
-			return []byte("test-api-key"), nil
-		},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "test-api-key")
-			assert.Contains(t, stdout, "deprecated")
-			assert.Contains(t, stdout, "use --host-id instead")
-		},
-	},
-	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name: "client error",
-		args: []string{"host", "rotate-api-key", "--host-id=dev-host"},
+		args: []string{"host", "rotate-api-key", "--id=dev-host"},
 		hostRotateAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
 			return nil, fmt.Errorf("%s", "an error")
 		},
@@ -95,7 +63,7 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 	},
 	{
 		name:               "client factory error",
-		args:               []string{"host", "rotate-api-key", "--host-id=dev-host"},
+		args:               []string{"host", "rotate-api-key", "--id=dev-host"},
 		clientFactoryError: fmt.Errorf("%s", "client factory error"),
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stderr, "Error: client factory error\n")

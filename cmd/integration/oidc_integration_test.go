@@ -45,7 +45,7 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 	})
 
 	t.Run("login", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("login", "-u", "alice", "-p", "alice")
+		stdOut, stdErr, err = conjurCLI.Run("login", "-i", "alice", "-p", "alice")
 		assertLoginCmd(t, err, stdOut, stdErr)
 		assertAuthTokenCached(t, tmpDir)
 	})
@@ -96,7 +96,7 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 		assert.NoError(t, err)
 		modifiedDate := info.ModTime()
 
-		stdOut, stdErr, err = conjurCLI.Run("login", "-u", "bob.somebody", "-p", "bob")
+		stdOut, stdErr, err = conjurCLI.Run("login", "-i", "bob.somebody", "-p", "bob")
 		assertLoginCmd(t, err, stdOut, stdErr)
 
 		// Check that the token file is modified
@@ -119,7 +119,7 @@ func TestOidcIntegrationKeycloak(t *testing.T) {
 		assert.NoError(t, err)
 		modifiedDate := info.ModTime()
 
-		stdOut, stdErr, err = conjurCLI.Run("login", "-u", "not_in_conjur", "-p", "not_in_conjur")
+		stdOut, stdErr, err = conjurCLI.Run("login", "-i", "not_in_conjur", "-p", "not_in_conjur")
 		assert.Error(t, err)
 		assert.Contains(t, stdErr, "Unable to authenticate")
 
@@ -180,7 +180,7 @@ func TestOidcIntegrationOkta(t *testing.T) {
 	})
 
 	t.Run("login", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("login", "-u", os.Getenv("OKTA_USERNAME"), "-p", os.Getenv("OKTA_PASSWORD"))
+		stdOut, stdErr, err = conjurCLI.Run("login", "-i", os.Getenv("OKTA_USERNAME"), "-p", os.Getenv("OKTA_PASSWORD"))
 		assertLoginCmd(t, err, stdOut, stdErr)
 		assertAuthTokenCached(t, tmpDir)
 	})

@@ -177,10 +177,10 @@ func sharedPolicyCmdTestCases(
 			},
 		},
 		{
-			name: fmt.Sprintf("%s subcommand missing filepath", subcommand),
+			name: fmt.Sprintf("%s subcommand missing file", subcommand),
 			args: []string{"policy", subcommand, "-b", "meow"},
 			assert: func(t *testing.T, stdout, stderr string, err error) {
-				assert.Contains(t, stderr, "Error: required flag(s) \"filepath\" not set\n")
+				assert.Contains(t, stderr, "Error: required flag(s) \"file\" not set\n")
 			},
 		},
 		{
@@ -204,7 +204,7 @@ func TestPolicyCmd(t *testing.T) {
 			conjurapi.PolicyModePost,
 		),
 		sharedPolicyCmdTestCases(
-			"append",
+			"update",
 			conjurapi.PolicyModePatch,
 		),
 		sharedPolicyCmdTestCases(

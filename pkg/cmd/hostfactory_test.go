@@ -17,8 +17,8 @@ type mockHFClient struct {
 	host   func(*testing.T, string, string) (conjurapi.HostFactoryHostResponse, error)
 }
 
-func (m mockHFClient) CreateToken(durationStr string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
-	return m.create(m.t, durationStr, hostFactory, cidrs, count)
+func (m mockHFClient) CreateToken(durationStr string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+	return m.create(m.t, durationStr, hostFactory, cidr, count)
 }
 func (m mockHFClient) DeleteToken(token string) error {
 	return m.revoke(m.t, token)
@@ -31,7 +31,7 @@ func (m mockHFClient) CreateHost(id string, token string) (conjurapi.HostFactory
 var hostfactoryCmdTestCases = []struct {
 	name               string
 	args               []string
-	create             func(t *testing.T, duration string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error)
+	create             func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error)
 	revoke             func(t *testing.T, token string) error
 	host               func(t *testing.T, id string, token string) (conjurapi.HostFactoryHostResponse, error)
 	clientFactoryError error
@@ -88,29 +88,69 @@ var hostfactoryCmdTestCases = []struct {
 	},
 	{
 		name: "token create command success",
-		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "-f", "cucumber_host_factory_factory"},
-		create: func(t *testing.T, duration string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactory-id", "cucumber_host_factory_factory"},
+		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
 			return []conjurapi.HostFactoryTokenResponse{
-				conjurapi.HostFactoryTokenResponse{
+				{
 					Expiration: "2022-12-23T20:32:46Z",
 					Cidr:       []string{"0.0.0.0/32"},
-					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
+					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da",
+				},
 			}, nil
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da")
 		},
 	},
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	{
+		name: "create token command success",
+		args: []string{"hostfactory", "create", "token", "--duration", "5m", "--hostfactoryid", "cucumber_host_factory_factory"},
+		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+			return []conjurapi.HostFactoryTokenResponse{
+				{
+					Expiration: "2022-12-23T20:32:46Z",
+					Cidr:       []string{"0.0.0.0/32"},
+					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da",
+				},
+			}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da")
+		},
+	},
+	// END COMPATIBILITY WITH PYTHON CLI
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	{
+		name: "deprecate --hostfactoryid flag",
+		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactoryid", "cucumber_host_factory_factory"},
+		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+			return []conjurapi.HostFactoryTokenResponse{
+				{
+					Expiration: "2022-12-23T20:32:46Z",
+					Cidr:       []string{"0.0.0.0/32"},
+					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da",
+				},
+			}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "deprecated")
+			assert.Contains(t, stdout, "Use --hostfactory-id instead")
+			assert.Contains(t, stdout, "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da")
+		},
+	},
+	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name: "token create with ip success",
-		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "-f", "cucumber_host_factory_factory",
+		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactory-id", "cucumber_host_factory_factory",
 			"-c", "0.0.0.0,1.2.3.4"},
-		create: func(t *testing.T, duration string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
 			return []conjurapi.HostFactoryTokenResponse{
-				conjurapi.HostFactoryTokenResponse{
+				{
 					Expiration: "2022-12-23T20:32:46Z",
 					Cidr:       []string{"0.0.0.0/32", "1.2.3.4/32"},
-					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
+					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da",
+				},
 			}, nil
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
@@ -119,8 +159,34 @@ var hostfactoryCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "token create negative duration flags",
+		args: []string{"hostfactory", "tokens", "create", "-i", "cucumber_host_factory_factory", "--duration-hours", "-10"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: duration values must be positive")
+		},
+	},
+	{
+		name: "token create conflicting duration flags",
+		args: []string{"hostfactory", "tokens", "create", "-i", "cucumber_host_factory_factory", "--duration", "5m", "--duration-hours", "10"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "duration can not be used with duration-days, duration-hours or duration-minutes")
+		},
+	},
+	{
+		name: "token create granular duration flags",
+		args: []string{"hostfactory", "tokens", "create", "-i", "cucumber_host_factory_factory", "--duration-days", "2", "--duration-hours", "3", "--duration-minutes", "4"},
+		create: func(t *testing.T, duration string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+			assert.Equal(t, "51h4m", duration)
+
+			return []conjurapi.HostFactoryTokenResponse{}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+		},
+	},
+	{
 		name: "token create command error",
-		args: []string{"hostfactory", "tokens", "create", "-d", "5m", "-f", "cucumber_host_factory_factory",
+		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactory-id", "cucumber_host_factory_factory",
 			"-c", "0.0.0"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stderr, "invalid string being converted")
@@ -130,7 +196,7 @@ var hostfactoryCmdTestCases = []struct {
 		name: "token create missing flag",
 		args: []string{"hostfactory", "tokens", "create"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "Error: required flag(s) \"hostFactory\" not set")
+			assert.Contains(t, stderr, "Must specify --hostfactory-id")
 		},
 	},
 	{
@@ -143,6 +209,18 @@ var hostfactoryCmdTestCases = []struct {
 			assert.Contains(t, stdout, "")
 		},
 	},
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	{
+		name: "token revoke command success",
+		args: []string{"hostfactory", "revoke", "token", "-t", "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
+		revoke: func(t *testing.T, token string) error {
+			return nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "")
+		},
+	},
+	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name: "token revoke command error",
 		args: []string{"hostfactory", "tokens", "revoke", "-t", "12345"},
@@ -169,7 +247,7 @@ var hostfactoryCmdTestCases = []struct {
 	},
 	{
 		name: "host create success",
-		args: []string{"hostfactory", "hosts", "create", "-id", "new-host", "-t", "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
+		args: []string{"hostfactory", "hosts", "create", "--id", "new-host", "-t", "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
 		host: func(t *testing.T, id string, token string) (conjurapi.HostFactoryHostResponse, error) {
 			return conjurapi.HostFactoryHostResponse{
 				CreatedAt: "2023-01-01",
@@ -181,9 +259,25 @@ var hostfactoryCmdTestCases = []struct {
 			assert.Contains(t, stdout, "1234567890")
 		},
 	},
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	{
+		name: "create host success (backward compatibility)",
+		args: []string{"hostfactory", "create", "host", "--id", "new-host", "-t", "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
+		host: func(t *testing.T, id string, token string) (conjurapi.HostFactoryHostResponse, error) {
+			return conjurapi.HostFactoryHostResponse{
+				CreatedAt: "2023-01-01",
+				Id:        "new-host",
+				ApiKey:    "1234567890",
+			}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "1234567890")
+		},
+	},
+	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name: "host create error",
-		args: []string{"hostfactory", "hosts", "create", "-id", "new-host", "-t", "notvalidtoken"},
+		args: []string{"hostfactory", "hosts", "create", "--id", "new-host", "-t", "notvalidtoken"},
 		host: func(t *testing.T, id string, token string) (conjurapi.HostFactoryHostResponse, error) {
 			return conjurapi.HostFactoryHostResponse{}, fmt.Errorf("%s", "401 Unauthorized.")
 		},
@@ -193,7 +287,7 @@ var hostfactoryCmdTestCases = []struct {
 	},
 	{
 		name: "host create missing flag",
-		args: []string{"hostfactory", "hosts", "create", "-id", "new-host"},
+		args: []string{"hostfactory", "hosts", "create", "--id", "new-host"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stderr, "Error: required flag(s) \"token\" not set")
 		},

@@ -48,7 +48,7 @@ func TestIntegration(t *testing.T) {
 	})
 
 	t.Run("login", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("login", "-u", "admin", "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": account + ":user:admin"}))
+		stdOut, stdErr, err = conjurCLI.Run("login", "-i", "admin", "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": account + ":user:admin"}))
 		assertLoginCmd(t, err, stdOut, stdErr)
 	})
 
