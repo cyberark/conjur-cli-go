@@ -12,10 +12,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [8.0.1] - 2023-02-06
 
-### Changed
-- Refactor interactive prompts from PromptUI to Survey (fixes Windows bugs)
-  [cyberark/conjur-cli-go#90](https://github.com/cyberark/conjur-cli-go/pull/90)
-
 ## [8.0.0] - 2023-01-20
 
 ### Added

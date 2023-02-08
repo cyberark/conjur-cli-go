@@ -110,10 +110,12 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	setCommandStreamsOnPrompt := prompts.PromptDecoratorForCommand(cmd)
+
 	account, applianceURL, err := prompts.MaybeAskForConnectionDetails(
+		setCommandStreamsOnPrompt,
 		cmdFlagVals.account,
 		cmdFlagVals.applianceURL,
-		cmd,
 	)
 	if err != nil {
 		return err
@@ -136,7 +138,7 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = fetchCertIfNeeded(&config, cmdFlagVals)
+	err = fetchCertIfNeeded(&config, cmdFlagVals, setCommandStreamsOnPrompt)
 	if err != nil {
 		return err
 	}
@@ -147,6 +149,7 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 	err = writeConjurrc(
 		config,
 		cmdFlagVals,
+		setCommandStreamsOnPrompt,
 	)
 	if err != nil {
 		return err
@@ -156,7 +159,7 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func fetchCertIfNeeded(config *conjurapi.Config, cmdFlagVals initCmdFlagValues) error {
+func fetchCertIfNeeded(config *conjurapi.Config, cmdFlagVals initCmdFlagValues, setCommandStreamsOnPrompt prompts.DecoratePromptFunc) error {
 	// Get TLS certificate from Conjur server
 	url, err := url.Parse(config.ApplianceURL)
 	if err != nil {
@@ -177,14 +180,14 @@ func fetchCertIfNeeded(config *conjurapi.Config, cmdFlagVals initCmdFlagValues) 
 	}
 
 	// Prompt user to accept certificate
-	err = prompts.AskToTrustCert(cert.Fingerprint)
+	err = prompts.AskToTrustCert(setCommandStreamsOnPrompt, cert.Fingerprint)
 	if err != nil {
 		return fmt.Errorf("You decided not to trust the certificate")
 	}
 
 	certPath := cmdFlagVals.certFilePath
 
-	err = writeFile(certPath, []byte(cert.Cert), cmdFlagVals.forceFileOverwrite)
+	err = writeFile(certPath, []byte(cert.Cert), cmdFlagVals.forceFileOverwrite, setCommandStreamsOnPrompt)
 	if err != nil {
 		return err
 	}
@@ -195,16 +198,16 @@ func fetchCertIfNeeded(config *conjurapi.Config, cmdFlagVals initCmdFlagValues) 
 	return nil
 }
 
-func writeConjurrc(config conjurapi.Config, cmdFlagVals initCmdFlagValues) error {
+func writeConjurrc(config conjurapi.Config, cmdFlagVals initCmdFlagValues, setCommandStreamsOnPrompt prompts.DecoratePromptFunc) error {
 	filePath := cmdFlagVals.conjurrcFilePath
 	fileContents := config.Conjurrc()
 
-	return writeFile(filePath, fileContents, cmdFlagVals.forceFileOverwrite)
+	return writeFile(filePath, fileContents, cmdFlagVals.forceFileOverwrite, setCommandStreamsOnPrompt)
 }
 
-func writeFile(filePath string, fileContents []byte, forceFileOverwrite bool) error {
+func writeFile(filePath string, fileContents []byte, forceFileOverwrite bool, setCommandStreamsOnPrompt prompts.DecoratePromptFunc) error {
 	if !forceFileOverwrite {
-		err := prompts.MaybeAskToOverwriteFile(filePath)
+		err := prompts.MaybeAskToOverwriteFile(setCommandStreamsOnPrompt, filePath)
 		if err != nil {
 			return err
 		}
