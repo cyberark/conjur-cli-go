@@ -103,10 +103,7 @@ Examples:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			newPassword, err := cmd.Flags().GetString("password")
 
-			setCommandStreamsOnPrompt := prompts.PromptDecoratorForCommand(cmd)
-
 			newPassword, err = prompts.MaybeAskForChangePassword(
-				setCommandStreamsOnPrompt,
 				newPassword,
 			)
 

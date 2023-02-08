@@ -105,7 +105,7 @@ credential_storage: file
 		args: []string{"init", "-u=http://host", "-a=other-test-account", "-i"},
 		promptResponses: []promptResponse{
 			{
-				prompt:   ".conjurrc exists. Overwrite? [y/N]",
+				prompt:   ".conjurrc exists. Overwrite?",
 				response: "N",
 			},
 		},
@@ -118,7 +118,7 @@ credential_storage: file
 			assert.Equal(t, "something", string(data))
 
 			// Assert on output
-			assert.Contains(t, stdout, ".conjurrc exists. Overwrite? [y/N]")
+			assert.Contains(t, stdout, ".conjurrc exists. Overwrite?")
 			assert.Contains(t, stderr, "Error: Not overwriting")
 		},
 	},
@@ -143,7 +143,7 @@ appliance_url: http://host
 			assert.Equal(t, expectedConjurrc, string(data))
 
 			// Assert on output
-			assert.Contains(t, stdout, ".conjurrc exists. Overwrite? [y/N]")
+			assert.Contains(t, stdout, ".conjurrc exists. Overwrite?")
 			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
 		},
 	},
@@ -162,7 +162,7 @@ appliance_url: http://host
 			assert.Equal(t, expectedConjurrc, string(data))
 
 			// Assert on output
-			assert.NotContains(t, stdout, ".conjurrc exists. Overwrite? [y/N]")
+			assert.NotContains(t, stdout, ".conjurrc exists. Overwrite?")
 			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
 		},
 	},
@@ -178,13 +178,12 @@ appliance_url: http://host
 		args: []string{"init", "-u=https://example.com", "-a=test-account"},
 		promptResponses: []promptResponse{
 			{
-				prompt:   "Trust this certificate? [y/N]",
+				prompt:   "Trust this certificate?",
 				response: "y",
 			},
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			assert.NoError(t, err)
-			assert.Equal(t, "", stderr)
 			assertCertWritten(t, conjurrcInTmpDir, stdout)
 		},
 	},
@@ -193,7 +192,7 @@ appliance_url: http://host
 		args: []string{"init", "-u=https://example.com", "-a=test-account"},
 		promptResponses: []promptResponse{
 			{
-				prompt:   "Trust this certificate? [y/N]",
+				prompt:   "Trust this certificate?",
 				response: "n",
 			},
 		},
@@ -223,13 +222,13 @@ appliance_url: http://host
 		args: []string{"init", "-u=https://self-signed.badssl.com", "-a=test-account", "--self-signed"},
 		promptResponses: []promptResponse{
 			{
-				prompt:   "Trust this certificate? [y/N]",
+				prompt:   "Trust this certificate?",
 				response: "y",
 			},
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
 			assert.NoError(t, err)
-			assert.Equal(t, "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data\n", stderr)
+			assert.Contains(t, stderr, "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data")
 			assertCertWritten(t, conjurrcInTmpDir, stdout)
 		},
 	},
@@ -382,7 +381,7 @@ func assertCertWritten(t *testing.T, conjurrcInTmpDir string, stdout string) {
 	assert.Contains(t, string(data), "cert_file: "+expectedCertPath)
 
 	// Assert that certificate is written
-	assert.Contains(t, stdout, "Wrote certificate to "+expectedCertPath+"\n")
+	assert.Contains(t, stdout, "Wrote certificate to "+expectedCertPath)
 	data, _ = os.ReadFile(expectedCertPath)
 	assert.Contains(t, string(data), "-----BEGIN CERTIFICATE-----")
 }

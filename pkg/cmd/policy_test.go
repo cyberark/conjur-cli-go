@@ -110,7 +110,7 @@ func sharedPolicyCmdTestCases(
 			promptResponses: []promptResponse{
 				{
 					prompt:   "", // An empty prompt means to immediately write to stdin
-					response: "policy file content\n",
+					response: "policy file content",
 				},
 			},
 			args: []string{"policy", subcommand, "-b", "meow", "-f", "-"},
@@ -122,7 +122,7 @@ func sharedPolicyCmdTestCases(
 			) (*conjurapi.PolicyResponse, error) {
 				policyContents, err := io.ReadAll(policySrc)
 				assert.NoError(t, err)
-				assert.Equal(t, "policy file content\n", string(policyContents))
+				assert.Equal(t, "policy file content", string(policyContents))
 
 				return nil, nil
 			},
@@ -180,14 +180,14 @@ func sharedPolicyCmdTestCases(
 			name: fmt.Sprintf("%s subcommand missing file", subcommand),
 			args: []string{"policy", subcommand, "-b", "meow"},
 			assert: func(t *testing.T, stdout, stderr string, err error) {
-				assert.Contains(t, stderr, "Error: required flag(s) \"file\" not set\n")
+				assert.Contains(t, stderr, "Error: required flag(s) \"file\" not set")
 			},
 		},
 		{
 			name: fmt.Sprintf("%s subcommand missing branch", subcommand),
 			args: []string{"policy", subcommand, "-f", "-"},
 			assert: func(t *testing.T, stdout, stderr string, err error) {
-				assert.Contains(t, stderr, "Error: required flag(s) \"branch\" not set\n")
+				assert.Contains(t, stderr, "Error: required flag(s) \"branch\" not set")
 			},
 		},
 	}
@@ -241,6 +241,11 @@ func TestPolicyCmd(t *testing.T) {
 			stdout, stderr, err := executeCommandForTestWithPromptResponses(
 				t, cmd, tc.promptResponses, tc.args...,
 			)
+
+			// stdout, stderr, err := executeCommandForTest(
+			// 	t, cmd, tc.args...,
+			// )
+
 			if tc.assert != nil {
 				tc.assert(t, stdout, stderr, err)
 			}
