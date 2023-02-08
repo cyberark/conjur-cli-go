@@ -36,12 +36,17 @@ func getResourceFilterObject(cmd *cobra.Command) (*conjurapi.ResourceFilter, err
 	if err != nil {
 		return nil, err
 	}
+	role, err := cmd.Flags().GetString("role")
+	if err != nil {
+		return nil, err
+	}
 
 	return &conjurapi.ResourceFilter{
 		Kind:   kind,
 		Search: search,
 		Limit:  limit,
 		Offset: offset,
+		Role: role,
 	}, nil
 }
 
@@ -142,6 +147,7 @@ Examples:
 	cmd.Flags().StringP("search", "s", "", "Full-text search on resourceID and annotation values")
 	cmd.Flags().IntP("limit", "l", 0, "Maximum number of records to return")
 	cmd.Flags().IntP("offset", "o", 0, "Offset to start from")
+	cmd.Flags().StringP("role", "r", "", "Role whose resource list you want to view")
 	cmd.Flags().BoolP("inspect", "i", false, "Show resource details")
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
