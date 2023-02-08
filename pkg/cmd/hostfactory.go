@@ -206,7 +206,7 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	tokensCmd.AddCommand(tokensRevokeCmd)
 
 	tokensCreateCmd.Flags().StringP("duration", "", "10m", "Duration in which the token will expire")
-	tokensCreateCmd.Flags().StringP("hostfactory-id", "", "", "Fully qualified Host Factory id")
+	tokensCreateCmd.Flags().StringP("hostfactory-id", "i", "", "Fully qualified Host Factory id")
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	// Adds support for 'hostfactoryid' flag to 'hostfactory tokens create' command
@@ -250,7 +250,7 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	createCmd.AddCommand(createTokenCmd)
 
 	createTokenCmd.Flags().StringP("duration", "", "10m", "Duration in which the token will expire")
-	createTokenCmd.Flags().StringP("hostfactoryid", "", "", "Fully qualified hostfactory ID")
+	createTokenCmd.Flags().StringP("hostfactoryid", "i", "", "Fully qualified hostfactory ID")
 
 	// Have to add this flag in to allow us to use the 'token create' logic to execute this command
 	createTokenCmd.Flags().StringP("hostfactory-id", "", "", "Fully qualified hostfactory ID")
