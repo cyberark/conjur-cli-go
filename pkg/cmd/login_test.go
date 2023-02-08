@@ -53,7 +53,7 @@ var loginTestCases = []struct {
 	},
 	{
 		name:         "login",
-		args:         []string{"login", "-u", "alice", "-p", "secret"},
+		args:         []string{"login", "-i", "alice", "-p", "secret"},
 		conjurConfig: defaultConjurConfig,
 		loginWithPromptFallback: func(t *testing.T, decoratePrompt prompts.DecoratePromptFunc, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error) {
 			// Assert on arguments
@@ -70,7 +70,7 @@ var loginTestCases = []struct {
 	},
 	{
 		name:         "login returns error",
-		args:         []string{"login", "-u", "alice", "-p", "secret"},
+		args:         []string{"login", "-i", "alice", "-p", "secret"},
 		conjurConfig: defaultConjurConfig,
 		loginWithPromptFallback: func(t *testing.T, decoratePrompt prompts.DecoratePromptFunc, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error) {
 			return nil, assert.AnError
@@ -81,7 +81,7 @@ var loginTestCases = []struct {
 	},
 	{
 		name:         "login with debug flag",
-		args:         []string{"--debug", "login", "-u", "alice", "-p", "secret"},
+		args:         []string{"--debug", "login", "-i", "alice", "-p", "secret"},
 		conjurConfig: defaultConjurConfig,
 		loginWithPromptFallback: func(t *testing.T, decoratePrompt prompts.DecoratePromptFunc, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error) {
 			// Perform the login request which should cause the HTTP request and response to be printed
@@ -95,47 +95,9 @@ var loginTestCases = []struct {
 			assert.Contains(t, stdout, "Logged in")
 		},
 	},
-	// BEGIN COMPATIBILITY WITH PYTHON CLI
-	{
-		name:         "login with -i flag",
-		args:         []string{"login", "-i", "alice", "-p", "secret"},
-		conjurConfig: defaultConjurConfig,
-		loginWithPromptFallback: func(t *testing.T, decoratePrompt prompts.DecoratePromptFunc, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error) {
-			// Assert on arguments
-			assert.Equal(t, "alice", username)
-			assert.Equal(t, "secret", password)
-
-			return &authn.LoginPair{}, nil
-		},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.NoError(t, err)
-			assert.Contains(t, stdout, "deprecated")
-			assert.Contains(t, stdout, "Use -u / --username instead")
-			assert.Contains(t, stdout, "Logged in")
-		},
-	},
-	{
-		name:         "login with --id flag",
-		args:         []string{"login", "--id", "alice", "-p", "secret"},
-		conjurConfig: defaultConjurConfig,
-		loginWithPromptFallback: func(t *testing.T, decoratePrompt prompts.DecoratePromptFunc, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error) {
-			// Assert on arguments
-			assert.Equal(t, "alice", username)
-			assert.Equal(t, "secret", password)
-
-			return &authn.LoginPair{}, nil
-		},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.NoError(t, err)
-			assert.Contains(t, stdout, "deprecated")
-			assert.Contains(t, stdout, "Use -u / --username instead")
-			assert.Contains(t, stdout, "Logged in")
-		},
-	},
-	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name:         "login with oidc",
-		args:         []string{"login", "-u", "alice", "-p", "secret"},
+		args:         []string{"login", "-i", "alice", "-p", "secret"},
 		conjurConfig: oidcConjurConfig,
 		oidcLogin: func(t *testing.T, client clients.ConjurClient, username string, password string) (clients.ConjurClient, error) {
 			// Assert on arguments

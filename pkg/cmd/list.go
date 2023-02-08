@@ -46,7 +46,7 @@ func getResourceFilterObject(cmd *cobra.Command) (*conjurapi.ResourceFilter, err
 		Search: search,
 		Limit:  limit,
 		Offset: offset,
-		Role: role,
+		Role:   role,
 	}, nil
 }
 

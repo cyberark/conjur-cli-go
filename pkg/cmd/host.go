@@ -41,16 +41,7 @@ Examples:
 - conjur host rotate-api-key --host-id ci-staging`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			hostID, err := cmd.Flags().GetString("host-id")
-
-			// BEGIN COMPATIBILITY WITH PYTHON CLI
-			if hostID == "" {
-				hostID, err = cmd.Flags().GetString("id")
-				if err != nil {
-					return err
-				}
-			}
-			// END COMPATIBILITY WITH PYTHON CLI
+			hostID, err := cmd.Flags().GetString("id")
 
 			if err != nil {
 				return err
@@ -72,13 +63,7 @@ Examples:
 		},
 	}
 
-	cmd.Flags().StringP("host-id", "", "", "ID of host whose API key will be rotated (e.g. prod-db)")
-
-	// BEGIN COMPATIBILITY WITH PYTHON CLI
-	cmd.Flags().StringP("id", "i", "", "")
-	cmd.Flags().MarkDeprecated("id", "Use --host-id instead")
-	cmd.Flags().Lookup("id").Hidden = false
-	// END COMPATIBILITY WITH PYTHON CLI
+	cmd.Flags().StringP("id", "i", "", "host whose API key should be rotated (e.g. prod-db)")
 
 	return cmd
 }
