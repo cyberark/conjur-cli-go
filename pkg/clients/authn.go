@@ -7,6 +7,7 @@ import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-api-go/conjurapi/authn"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
+	"github.com/manifoldco/promptui"
 )
 
 type oidcConjurClient interface {
@@ -14,8 +15,8 @@ type oidcConjurClient interface {
 }
 
 // Login attempts to login to Conjur and prompts the user for credentials interactively
-func Login(conjurClient ConjurClient) (ConjurClient, error) {
-	authenticatePair, err := LoginWithPromptFallback(conjurClient, "", "")
+func Login(conjurClient ConjurClient, decoratePrompt func(prompt *promptui.Prompt) *promptui.Prompt) (ConjurClient, error) {
+	authenticatePair, err := LoginWithPromptFallback(decoratePrompt, conjurClient, "", "")
 	if err != nil {
 		return nil, err
 	}
@@ -27,11 +28,12 @@ func Login(conjurClient ConjurClient) (ConjurClient, error) {
 // If either the username or password is missing then a prompt is presented to interactively request
 // the missing information from the user
 func LoginWithPromptFallback(
+	decoratePrompt prompts.DecoratePromptFunc,
 	client ConjurClient,
 	username string,
 	password string,
 ) (*authn.LoginPair, error) {
-	username, password, err := prompts.MaybeAskForCredentials(username, password)
+	username, password, err := prompts.MaybeAskForCredentials(decoratePrompt, username, password)
 	if err != nil {
 		return nil, err
 	}

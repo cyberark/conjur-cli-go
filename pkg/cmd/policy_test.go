@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/spf13/cobra"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -238,21 +238,11 @@ func TestPolicyCmd(t *testing.T) {
 				tc.args[i] = strings.Replace(v, "$TMPFILE", pathToTmpfile, 1)
 			}
 
-			if tc.promptResponses != nil {
-				// Use the prompt responses helper to simulate user input
-				stdout, err := executeCommandForTestWithPromptResponses(
-					t, cmd, tc.promptResponses,
-				)
-				if tc.assert != nil {
-					tc.assert(t, stdout, "", err)
-				}
-			} else {
-				stdout, stderr, err := executeCommandForTest(
-					t, cmd, tc.args...,
-				)
-				if tc.assert != nil {
-					tc.assert(t, stdout, stderr, err)
-				}
+			stdout, stderr, err := executeCommandForTestWithPromptResponses(
+				t, cmd, tc.promptResponses, tc.args...,
+			)
+			if tc.assert != nil {
+				tc.assert(t, stdout, stderr, err)
 			}
 		})
 	}
