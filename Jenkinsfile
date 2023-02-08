@@ -148,11 +148,11 @@ pipeline {
           }
         }
 
-        stage("Scan container images for fixable issues") {
-          steps {
-            scanAndReport("${containerImageWithTag()}", "HIGH", false)
-          }
-        }
+//         stage("Scan container images for fixable issues") {
+//           steps {
+//             scanAndReport("${containerImageWithTag()}", "HIGH", false)
+//           }
+//         }
 
         stage("Scan container images for total issues") {
           steps {
