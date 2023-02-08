@@ -91,7 +91,7 @@ var hostfactoryCmdTestCases = []struct {
 		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactory-id", "cucumber_host_factory_factory"},
 		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
 			return []conjurapi.HostFactoryTokenResponse{
-				conjurapi.HostFactoryTokenResponse{
+				{
 					Expiration: "2022-12-23T20:32:46Z",
 					Cidr:       []string{"0.0.0.0/32"},
 					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
@@ -143,15 +143,42 @@ var hostfactoryCmdTestCases = []struct {
 			"-c", "0.0.0.0,1.2.3.4"},
 		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
 			return []conjurapi.HostFactoryTokenResponse{
-				conjurapi.HostFactoryTokenResponse{
+				{
 					Expiration: "2022-12-23T20:32:46Z",
 					Cidr:       []string{"0.0.0.0/32", "1.2.3.4/32"},
-					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da"},
+					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da",
+				},
 			}, nil
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da")
 			assert.Contains(t, stdout, "[\n      \"0.0.0.0/32\",\n      \"1.2.3.4/32\"\n    ]")
+		},
+	},
+	{
+		name: "token create negative duration flags",
+		args: []string{"hostfactory", "tokens", "create", "-f", "cucumber_host_factory_factory", "--duration-hours", "-10"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: duration values must be positive")
+		},
+	},
+	{
+		name: "token create conflicting duration flags",
+		args: []string{"hostfactory", "tokens", "create", "-f", "cucumber_host_factory_factory", "--duration", "5m", "--duration-hours", "10"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "duration can not be used with duration-days, duration-hours or duration-minutes")
+		},
+	},
+	{
+		name: "token create granular duration flags",
+		args: []string{"hostfactory", "tokens", "create", "-f", "cucumber_host_factory_factory", "--duration-days", "2", "--duration-hours", "3", "--duration-minutes", "4"},
+		create: func(t *testing.T, duration string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+			assert.Equal(t, "51h4m", duration)
+
+			return []conjurapi.HostFactoryTokenResponse{}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
 		},
 	},
 	{
