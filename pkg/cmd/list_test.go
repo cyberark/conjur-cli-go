@@ -54,6 +54,7 @@ var listCmdTestCases = []struct {
 	args               []string
 	listResources      func(t *testing.T, filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error)
 	roleMembers        func(t *testing.T, roleID string) (members []map[string]interface{}, err error)
+	permittedRoles     func(t *testing.T, resourceID, privilege string) ([]string, error)
 	clientFactoryError error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
 }{
@@ -132,7 +133,25 @@ var listCmdTestCases = []struct {
 			return []map[string]interface{}{{"admin_option": "true", "role": "dev:user:alice", "member": "dev:user:bob"}}, nil
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "Flag --members-of has been deprecated, Use role members instead")
+			assert.Contains(t, stdout, "Flag --members-of has been deprecated, Use 'role members' instead")
+			assert.Contains(t, stdout, `[
+  "dev:user:bob"
+]
+`)
+		},
+	},
+	{
+		name: "list permitted-roles",
+		args: []string{"list", "--permitted-roles", "dev:user:alice", "--privilege", "read"},
+		permittedRoles: func(t *testing.T, resourceID, privilege string) ([]string, error) {
+			assert.Equal(t, "dev:user:alice", resourceID)
+			assert.Equal(t, "read", privilege)
+
+			return []string{"dev:user:bob"}, nil
+		},
+		assert: func(t *testing.T, stdout string, stderr string, err error) {
+			assert.Contains(t, stdout, "Flag --permitted-roles has been deprecated, Use 'resource permitted-roles' instead")
+			assert.Contains(t, stdout, "Flag --privilege has been deprecated, Use 'resource permitted-roles' instead")
 			assert.Contains(t, stdout, `[
   "dev:user:bob"
 ]
@@ -205,6 +224,7 @@ func TestListCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockClient := mockListClient{t: t, listResources: tc.listResources}
 			mockRoleClient := mockRoleClient{t: t, roleMembers: tc.roleMembers}
+			mockResourceClient := mockResourceClient{t: t, permittedRoles: tc.permittedRoles}
 
 			cmd := newListCmd(
 				func(cmd *cobra.Command) (listClient, error) {
@@ -212,6 +232,9 @@ func TestListCmd(t *testing.T) {
 				},
 				func(cmd *cobra.Command) (roleClient, error) {
 					return mockRoleClient, tc.clientFactoryError
+				},
+				func(cmd *cobra.Command) (resourceClient, error) {
+					return mockResourceClient, tc.clientFactoryError
 				},
 			)
 
