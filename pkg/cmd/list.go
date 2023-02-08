@@ -43,7 +43,7 @@ func getResourceFilterObject(cmd *cobra.Command) (*conjurapi.ResourceFilter, err
 	}, nil
 }
 
-func newListCmd(clientFactory listClientFactoryFunc) *cobra.Command {
+func newListCmd(clientFactory listClientFactoryFunc, roleClientFactory roleClientFactoryFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List resources visible to the currently logged-in user",
@@ -64,6 +64,19 @@ Examples:
 				return err
 			}
 
+			// BEGIN COMPATIBILITY WITH PYTHON CLI
+			membersOf, err := cmd.Flags().GetString("members-of")
+			if err != nil {
+				return err
+			}
+			
+			if membersOf != "" {
+				realCmd := newRoleMembersCmd(roleClientFactory)
+
+				return realCmd.RunE(cmd, []string{ membersOf })
+			}
+			// END COMPATIBILITY WITH PYTHON CLI
+
 			rf, err := getResourceFilterObject(cmd)
 			if err != nil {
 				return err
@@ -73,7 +86,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-
+			
 			inspect, err := cmd.Flags().GetBool("inspect")
 			if err != nil {
 				return err
@@ -108,11 +121,21 @@ Examples:
 	cmd.Flags().IntP("limit", "l", 0, "Maximum number of records to return")
 	cmd.Flags().IntP("offset", "o", 0, "Offset to start from")
 	cmd.Flags().BoolP("inspect", "i", false, "Show resource details")
+	
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	cmd.Flags().StringP("members-of", "m", "", "List members within a role")
+	cmd.Flags().MarkDeprecated("members-of", "Use role members instead")
+	cmd.Flags().Lookup("members-of").Hidden = false
+
+	// Must add verbose flag to allow it to be read when calling 'role members'
+	cmd.Flags().BoolP("verbose", "v", false, "Display verbose members object")
+	cmd.Flags().Lookup("verbose").Hidden = true
+	// END COMPATIBILITY WITH PYTHON CLI
 
 	return cmd
 }
 
 func init() {
-	listCmd := newListCmd(listClientFactory)
+	listCmd := newListCmd(listClientFactory, roleClientFactory)
 	rootCmd.AddCommand(listCmd)
 }

@@ -53,6 +53,7 @@ var listCmdTestCases = []struct {
 	name               string
 	args               []string
 	listResources      func(t *testing.T, filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error)
+	roleMembers        func(t *testing.T, roleID string) (members []map[string]interface{}, err error)
 	clientFactoryError error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
 }{
@@ -121,6 +122,24 @@ var listCmdTestCases = []struct {
 			assert.Equal(t, stdout, clientResponseStr)
 		},
 	},
+	// BEGIN COMPATIBILITY WITH PYTHON CLI
+	{
+		name: "list members",
+		args: []string{"list", "--members-of", "dev:user:alice"},
+		roleMembers: func(t *testing.T, roleID string) (members []map[string]interface{}, err error) {
+			assert.Equal(t, "dev:user:alice", roleID)
+
+			return []map[string]interface{}{{"admin_option": "true", "role": "dev:user:alice", "member": "dev:user:bob"}}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "Flag --members-of has been deprecated, Use role members instead")
+			assert.Contains(t, stdout, `[
+  "dev:user:bob"
+]
+`)
+		},
+	},
+	// END COMPATIBILITY WITH PYTHON CLI
 	{
 		name: "list no flags",
 		args: []string{"list"},
@@ -185,10 +204,14 @@ func TestListCmd(t *testing.T) {
 	for _, tc := range listCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockClient := mockListClient{t: t, listResources: tc.listResources}
+			mockRoleClient := mockRoleClient{t: t, roleMembers: tc.roleMembers}
 
 			cmd := newListCmd(
 				func(cmd *cobra.Command) (listClient, error) {
 					return mockClient, tc.clientFactoryError
+				},
+				func(cmd *cobra.Command) (roleClient, error) {
+					return mockRoleClient, tc.clientFactoryError
 				},
 			)
 
