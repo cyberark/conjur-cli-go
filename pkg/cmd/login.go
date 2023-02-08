@@ -24,7 +24,7 @@ var defaultLoginCmdFuncs = loginCmdFuncs{
 }
 
 type loginCmdFlagValues struct {
-	username string
+	identity string
 	password string
 	debug    bool
 }
@@ -32,19 +32,10 @@ type loginCmdFlagValues struct {
 func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 	// TODO: extract this common code for gathering configuring into a seperate package
 	// Some of the code is in conjur-api-go and needs to be made configurable so that you can pass a custom path to .conjurrc
-	username, err := cmd.Flags().GetString("username")
+	identity, err := cmd.Flags().GetString("id")
 	if err != nil {
 		return loginCmdFlagValues{}, err
 	}
-
-	// BEGIN COMPATIBILITY WITH PYTHON CLI
-	if username == "" {
-		username, err = cmd.Flags().GetString("id")
-		if err != nil {
-			return loginCmdFlagValues{}, err
-		}
-	}
-	// END COMPATIBILITY WITH PYTHON CLI
 
 	password, err := cmd.Flags().GetString("password")
 	if err != nil {
@@ -57,7 +48,7 @@ func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 	}
 
 	return loginCmdFlagValues{
-		username: username,
+		identity: identity,
 		password: password,
 		debug:    debug,
 	}, nil
@@ -66,16 +57,16 @@ func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 func newLoginCmd(funcs loginCmdFuncs) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
-		Short: "Authenticate with Conjur using the provided username and password.",
-		Long: `Authenticate with Conjur using the provided username and password.
+		Short: "Authenticate with Conjur using the provided identity and password.",
+		Long: `Authenticate with Conjur using the provided identity and password.
 
-The command will prompt for username and password if they are not provided via flag.
+The command will prompt for identity and password if they are not provided via flag.
 
 On successful login, the password is exchanged for the user's API key, which is cached in the operating system user's .netrc file. Subsequent commands will authenticate using the cached credentials. To switch users, login again using new credentials. To erase credentials, use the 'logout' command.
 
 Examples:
 
-- conjur login -u alice -p My$ecretPass
+- conjur login -i alice -p My$ecretPass
 - conjur login`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -103,9 +94,9 @@ Examples:
 
 			if config.AuthnType == "" || config.AuthnType == "authn" || config.AuthnType == "ldap" {
 				decoratePrompt := prompts.PromptDecoratorForCommand(cmd)
-				_, err = funcs.LoginWithPromptFallback(decoratePrompt, conjurClient, cmdFlagVals.username, cmdFlagVals.password)
+				_, err = funcs.LoginWithPromptFallback(decoratePrompt, conjurClient, cmdFlagVals.identity, cmdFlagVals.password)
 			} else if config.AuthnType == "oidc" {
-				_, err = funcs.OidcLogin(conjurClient, cmdFlagVals.username, cmdFlagVals.password)
+				_, err = funcs.OidcLogin(conjurClient, cmdFlagVals.identity, cmdFlagVals.password)
 			} else {
 				return fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
 			}
@@ -118,14 +109,8 @@ Examples:
 		},
 	}
 
-	cmd.Flags().StringP("username", "u", "", "")
-	cmd.Flags().StringP("password", "p", "", "")
-
-	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	cmd.Flags().StringP("id", "i", "", "")
-	cmd.Flags().MarkDeprecated("id", "Use -u / --username instead")
-	cmd.Flags().Lookup("id").Hidden = false
-	// END COMPATIBILITY WITH PYTHON CLI
+	cmd.Flags().StringP("password", "p", "", "")
 
 	return cmd
 }
