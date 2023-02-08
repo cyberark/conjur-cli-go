@@ -20,6 +20,7 @@ type initCmdFlagValues struct {
 	serviceID          string
 	conjurrcFilePath   string
 	certFilePath       string
+	caCert             string
 	forceFileOverwrite bool
 	insecure           bool
 	selfSigned         bool
@@ -51,6 +52,10 @@ func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
 	if err != nil {
 		return initCmdFlagValues{}, err
 	}
+	caCert, err := cmd.Flags().GetString("ca-cert")
+	if err != nil {
+		return initCmdFlagValues{}, err
+	}
 	selfSigned, err := cmd.Flags().GetBool("self-signed")
 	if err != nil {
 		return initCmdFlagValues{}, err
@@ -75,6 +80,7 @@ func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
 		serviceID:          serviceID,
 		conjurrcFilePath:   conjurrcFilePath,
 		certFilePath:       certFilePath,
+		caCert:             caCert,
 		selfSigned:         selfSigned,
 		insecure:           insecure,
 		forceFileOverwrite: forceFileOverwrite,
@@ -85,6 +91,9 @@ func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
 func validateCmdFlags(cmdFlagVals initCmdFlagValues, cmd *cobra.Command) error {
 	if cmdFlagVals.insecure && cmdFlagVals.selfSigned {
 		return fmt.Errorf("Cannot specify both --insecure and --self-signed")
+	}
+	if (cmdFlagVals.insecure || cmdFlagVals.selfSigned) && cmdFlagVals.caCert != "" {
+		return fmt.Errorf("Cannot specify --ca-cert when using --insecure or --self-signed")
 	}
 
 	if cmdFlagVals.selfSigned {
@@ -133,6 +142,15 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 		config.CredentialStorage = conjurapi.CredentialStorageFile
 	}
 
+	// If user has specified a cert file, read it and set it on the config
+	if cmdFlagVals.caCert != "" {
+		path, err := filepath.Abs(cmdFlagVals.caCert)
+		if err != nil {
+			return err
+		}
+		config.SSLCertPath = path
+	}
+
 	err = config.Validate()
 	if err != nil {
 		return err
@@ -160,6 +178,11 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 }
 
 func fetchCertIfNeeded(config *conjurapi.Config, cmdFlagVals initCmdFlagValues, setCommandStreamsOnPrompt prompts.DecoratePromptFunc) error {
+	// If user has specified a cert file, don't fetch it from the server
+	if config.SSLCertPath != "" {
+		return nil
+	}
+
 	// Get TLS certificate from Conjur server
 	url, err := url.Parse(config.ApplianceURL)
 	if err != nil {
@@ -236,7 +259,7 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 
 	cmd.Flags().StringP("account", "a", "", "Conjur organization account name")
 	cmd.Flags().StringP("url", "u", "", "URL of the Conjur service")
-	cmd.Flags().StringP("certificate", "c", "", "Conjur SSL certificate (will be obtained from host unless provided by this option)")
+	cmd.Flags().StringP("ca-cert", "c", "", "Conjur SSL certificate (will be obtained from host unless provided by this option)")
 	cmd.Flags().StringP("file", "f", filepath.Join(userHomeDir, ".conjurrc"), "File to write the configuration to")
 	cmd.Flags().String("cert-file", filepath.Join(userHomeDir, "conjur-server.pem"), "File to write the server's certificate to")
 	cmd.Flags().StringP("authn-type", "t", "", "Authentication type to use")
