@@ -114,6 +114,18 @@ var listCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "list role",
+		args: []string{"list", "-r", "dev:host:test-host"},
+		listResources: func(t *testing.T, filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error) {
+			assert.Equal(t, "dev:host:test-host", filter.Role)
+
+			return clientResponse, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "test-host")
+		},
+	},
+	{
 		name: "list inspect",
 		args: []string{"list", "--inspect"},
 		listResources: func(t *testing.T, filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error) {
