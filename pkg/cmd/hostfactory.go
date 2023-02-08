@@ -238,10 +238,10 @@ func newHostFactoryCmd(createTokenClientFactory createTokenClientFactoryFunc,
 	tokensRevokeCmd := newTokensRevokeCmd(revokeTokenClientFactory)
 	tokensCmd.AddCommand(tokensRevokeCmd)
 
-	tokensCreateCmd.Flags().StringP("duration", "", "10m", "The validity of the token")
-	tokensCreateCmd.Flags().Int64P("duration-days", "", 0, "The validity in days of the token")
-	tokensCreateCmd.Flags().Int64P("duration-hours", "", 0, "The validity in hours of the token")
-	tokensCreateCmd.Flags().Int64P("duration-minutes", "", 0, "The validity in minutes of the token")
+	tokensCreateCmd.Flags().StringP("duration", "", "10m", "The length of time that the token is valid")
+	tokensCreateCmd.Flags().Int64P("duration-days", "", 0, "The component in days of the length of time that the token is valid")
+	tokensCreateCmd.Flags().Int64P("duration-hours", "", 0, "The component in hours of the length of time that the token is valid")
+	tokensCreateCmd.Flags().Int64P("duration-minutes", "", 0, "The component in minutes of the length of time that the token is valid")
 
 	tokensCreateCmd.Flags().StringP("hostfactory-id", "i", "", "Fully qualified Host Factory id")
 
