@@ -16,12 +16,9 @@ require (
 	github.com/stretchr/testify v1.8.1
 )
 
-require github.com/manifoldco/promptui v0.9.0
-
 require (
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
-	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect

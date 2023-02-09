@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -127,7 +126,7 @@ credential_storage: file
 		args: []string{"init", "-u=http://host", "-a=other-test-account", "-i"},
 		promptResponses: []promptResponse{
 			{
-				prompt:   "",
+				prompt:   ".conjurrc exists. Overwrite?",
 				response: "y",
 			},
 		},
@@ -327,8 +326,12 @@ func TestInitCmd(t *testing.T) {
 			}
 			args = append(args, tc.args...)
 
+			rootCmd := newRootCommand()
+			rootCmd.AddCommand(cmd)
+			rootCmd.SetArgs(args)
+
 			stdout, stderr, err := executeCommandForTestWithPromptResponses(
-				t, cmd, tc.promptResponses, args...,
+				t, rootCmd, tc.promptResponses,
 			)
 			tc.assert(t, conjurrcInTmpDir, stdout, stderr, err)
 		})
@@ -340,10 +343,9 @@ func TestInitCmd(t *testing.T) {
 
 		rootCmd := newRootCommand()
 		rootCmd.AddCommand(cmd)
-		rootCmd.SetOut(io.Discard)
-		rootCmd.SetErr(io.Discard)
 		rootCmd.SetArgs([]string{"init"})
-		rootCmd.Execute()
+
+		_, _, _ = executeCommandForTest(t, rootCmd)
 
 		f, err := cmd.Flags().GetString("file")
 		assert.NoError(t, err)

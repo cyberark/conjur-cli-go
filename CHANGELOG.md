@@ -22,4 +22,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur/compare/v8.0.0...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.0...HEAD

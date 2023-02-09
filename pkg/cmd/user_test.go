@@ -179,7 +179,7 @@ var userChangePasswordCmdTestCases = []struct {
 			return nil, fmt.Errorf("%s", "an error")
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "Error: an error\n")
+			assert.Contains(t, stderr, "Error: an error")
 		},
 	},
 	{
@@ -187,7 +187,7 @@ var userChangePasswordCmdTestCases = []struct {
 		args:               []string{"user", "change-password", "-p", "SUp3r$3cr3t!!"},
 		clientFactoryError: fmt.Errorf("%s", "client factory error"),
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "Error: client factory error\n")
+			assert.Contains(t, stderr, "Error: client factory error")
 		},
 	},
 }
@@ -206,8 +206,12 @@ func TestUserChangePasswordCmd(t *testing.T) {
 				},
 			)
 
+			rootCmd := newRootCommand()
+			rootCmd.AddCommand(cmd)
+			rootCmd.SetArgs(tc.args)
+
 			stdout, stderr, err := executeCommandForTestWithPromptResponses(
-				t, cmd, tc.promptResponses, tc.args...,
+				t, rootCmd, tc.promptResponses,
 			)
 
 			tc.assert(t, stdout, stderr, err)

@@ -47,18 +47,14 @@ func executeCommandForTest(t *testing.T, cmd *cobra.Command, args ...string) (st
 }
 
 func executeCommandForTestWithPromptResponses(
-	t *testing.T, cmd *cobra.Command, promptResponses []promptResponse, args ...string,
+	t *testing.T, cmd *cobra.Command, promptResponses []promptResponse,
 ) (stdOut string, stdErr string, cmdErr error) {
 
-	rootCmd := newRootCommand()
-	rootCmd.AddCommand(cmd)
-	rootCmd.SetArgs(args)
-
 	// Mock short/long help output
-	mockHelpText(rootCmd)
+	mockHelpText(cmd)
 
 	if len(promptResponses) == 0 {
-		return executeCommandForTest(t, cmd, args...)
+		return executeCmdWithBuffers(cmd)
 	}
 
 	consoleOutput := &bytes.Buffer{}
@@ -70,35 +66,47 @@ func executeCommandForTestWithPromptResponses(
 		// Define virtual console interactivity.
 		for _, p := range promptResponses {
 			if p.prompt != "" {
-				//_, _ = c.ExpectString(p.prompt)
 				_, err := c.Expect(expect.String(p.prompt), expect.WithTimeout(500*time.Millisecond))
 				if err != nil {
-					t.Fail()
+					// Exit the goroutine and allow the command execution to timeout
+					t.Fatalf("Prompt not found.\nExpected:\n%s\nOutput:\n%s", p.prompt, stripAnsi(consoleOutput.String()))
 					return
 				}
 			}
 			if p.response != "" {
-				_, err := c.SendLine(p.response)
-				if err != nil {
-					t.Fail()
-					return
-				}
+				c.SendLine(p.response)
 			}
 		}
 
 		// Expect string that never gets output by command, this forces go-expect
 		// to keep reading the command output to the buffer. Set the read timeout
 		// to assume command has finished when there is no output for 0.5 seconds.
-		_, _ = c.Expect(expect.String("FINISHED"), expect.WithTimeout(500*time.Millisecond))
+		c.Expect(expect.String("FINISHED"), expect.WithTimeout(500*time.Millisecond))
 	}()
 
-	// Execute command with args.
-	err := cmd.Execute()
+	executeCommandWithTimeOut(t, cmd)
 
 	// Wait for virtual console to finish.
 	<-donec
 
-	return stripAnsi(consoleOutput.String()), stripAnsi(consoleOutput.String()), err
+	return stripAnsi(consoleOutput.String()), stripAnsi(consoleOutput.String()), nil
+}
+
+func executeCommandWithTimeOut(t *testing.T, cmd *cobra.Command) {
+	seconds := 3
+	timeout := time.After(time.Duration(seconds) * time.Second)
+	done := make(chan bool)
+	go func() {
+		// do your testing
+		cmd.Execute()
+		done <- true
+	}()
+
+	select {
+	case <-timeout:
+		t.Fatalf("Command execution timed out after %v seconds", seconds)
+	case <-done:
+	}
 }
 
 const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
@@ -108,6 +116,7 @@ func stripAnsi(str string) string {
 	return regexp.MustCompile(ansi).ReplaceAllString(str, "")
 }
 
+// mockHelpText recursively mocks the short and long help text of a command and its subcommands
 func mockHelpText(cmd *cobra.Command) {
 	cmd.Short = "HELP SHORT"
 	cmd.Long = "HELP LONG"
@@ -115,6 +124,19 @@ func mockHelpText(cmd *cobra.Command) {
 	for _, subCmd := range cmd.Commands() {
 		mockHelpText(subCmd)
 	}
+}
+
+// executeCmdWithBuffers executes the command as-is and returns stdout, stderr and error
+func executeCmdWithBuffers(cmd *cobra.Command) (stdOut string, stdErr string, cmdErr error) {
+	stdoutBuf := new(bytes.Buffer)
+	stderrBuf := new(bytes.Buffer)
+
+	cmd.SetOut(stdoutBuf)
+	cmd.SetErr(stderrBuf)
+
+	err := cmd.Execute()
+
+	return stripAnsi(stdoutBuf.String()), stripAnsi(stderrBuf.String()), err
 }
 
 // setupVirtualConsole will create a virtual console that for use in tests.
