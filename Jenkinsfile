@@ -75,12 +75,6 @@ pipeline {
       }
     }
 
-    stage('Get latest upstream dependencies') {
-      steps {
-        updateGoDependencies("${WORKSPACE}/go.mod")
-      }
-    }
-
     stage('Build while unit testing') {
       parallel {
         stage('Run unit tests') {
@@ -175,6 +169,10 @@ pipeline {
 
           // Copy assets to be published in Github release.
           sh "./bin/copy_release_artifacts ${assetDirectory}"
+
+          // Monkey-patch the go-bom install command, which runs inside a container, to set the working directory
+          //  as a safe directory in git config 
+          sh """sed -i 's/go install/git config --global --add safe.directory \$PWD; go install/' ${toolsDirectory}/bom/go/install_and_run"""
 
           // Create Go application SBOM using the go.mod version for the golang container image
           sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
