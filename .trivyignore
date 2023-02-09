@@ -1,2 +1,1 @@
-# Waiting for alpine to fix vuln in libcrypto3 and libssl3
-CVE-2023-0286
+# Use this file to mark vulnerabilities to ignore. Please ensure there is a comment justifying each entry
