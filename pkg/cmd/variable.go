@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strconv"
+
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/spf13/cobra"
 )
@@ -26,6 +28,10 @@ func newVariableCmd(
 	// and all subcommands, e.g.:
 	variableGetCmd.Flags().StringP("id", "i", "", "Provide variable identifier")
 	variableGetCmd.MarkFlagRequired("id")
+
+	// Variable versions start from 1 and then increase so we don't know
+	// the version of the latest value and can not provide a good default if
+	// this flag is an integer. Use a string to provide a default of "".
 	variableGetCmd.Flags().StringP("version", "v", "", "Specify the desired version of a single variable value")
 
 	variableSetCmd.Flags().StringP("id", "i", "", "Provide variable identifier")
@@ -38,6 +44,7 @@ func newVariableCmd(
 
 type variableGetClient interface {
 	RetrieveSecret(string) ([]byte, error)
+	RetrieveSecretWithVersion(string, int) ([]byte, error)
 }
 type variableSetClient interface {
 	AddSecret(string, string) error
@@ -70,13 +77,30 @@ func newVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Comman
 				return err
 			}
 
-			// TODO: update RetrieveSecret to accept version
-			data, err := client.RetrieveSecret(id)
+			versionStr, err := cmd.Flags().GetString("version")
+			if err != nil {
+				return err
+			}
+
+			var data []byte
+
+			if versionStr == "" {
+				data, err = client.RetrieveSecret(id)
+			} else {
+				version, err := strconv.Atoi(versionStr)
+				if err != nil {
+					return err
+				}
+
+				data, err = client.RetrieveSecretWithVersion(id, version)
+			}
+
 			if err != nil {
 				return err
 			}
 
 			cmd.Println(string(data))
+
 			return nil
 		},
 	}

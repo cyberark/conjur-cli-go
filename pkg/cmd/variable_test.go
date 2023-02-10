@@ -9,13 +9,17 @@ import (
 )
 
 type mockVariableClient struct {
-	t   *testing.T
-	get func(*testing.T, string) ([]byte, error)
-	set func(*testing.T, string, string) error
+	t              *testing.T
+	get            func(*testing.T, string) ([]byte, error)
+	getWithVersion func(*testing.T, string, int) ([]byte, error)
+	set            func(*testing.T, string, string) error
 }
 
 func (m mockVariableClient) RetrieveSecret(path string) ([]byte, error) {
 	return m.get(m.t, path)
+}
+func (m mockVariableClient) RetrieveSecretWithVersion(path string, version int) ([]byte, error) {
+	return m.getWithVersion(m.t, path, version)
 }
 func (m mockVariableClient) AddSecret(path string, value string) error {
 	return m.set(m.t, path, value)
@@ -25,6 +29,7 @@ var variableCmdTestCases = []struct {
 	name               string
 	args               []string
 	get                func(t *testing.T, path string) ([]byte, error)
+	getWithVersion     func(t *testing.T, path string, version int) ([]byte, error)
 	set                func(t *testing.T, path string, value string) error
 	clientFactoryError error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
@@ -81,6 +86,19 @@ var variableCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "get with version",
+		args: []string{"variable", "get", "-i", "moo", "-v", "1"},
+		getWithVersion: func(t *testing.T, path string, version int) ([]byte, error) {
+			// Assert on arguments
+			assert.Equal(t, 1, version)
+
+			return []byte("moo"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "moo")
+		},
+	},
+	{
 		name:               "get client factory error",
 		args:               []string{"variable", "get", "-i", "moo"},
 		clientFactoryError: fmt.Errorf("%s", "client factory error"),
@@ -134,7 +152,9 @@ func TestVariableCmd(t *testing.T) {
 
 	for _, tc := range variableCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockClient := mockVariableClient{t: t, set: tc.set, get: tc.get}
+			mockClient := mockVariableClient{
+				t: t, set: tc.set, get: tc.get, getWithVersion: tc.getWithVersion,
+			}
 
 			cmd := newVariableCmd(
 				func(cmd *cobra.Command) (variableGetClient, error) {
