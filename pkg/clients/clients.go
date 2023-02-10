@@ -24,6 +24,7 @@ type ConjurClient interface {
 	LoadPolicy(mode conjurapi.PolicyMode, policyID string, policy io.Reader) (*conjurapi.PolicyResponse, error)
 	AddSecret(variableID string, secretValue string) error
 	RetrieveSecret(variableID string) ([]byte, error)
+	RetrieveSecretWithVersion(variableID string, version int) ([]byte, error)
 	CheckPermission(resourceID string, privilege string) (bool, error)
 	CheckPermissionForRole(resourceID string, roleID string, privilege string) (bool, error)
 	ResourceExists(resourceID string) (bool, error)
