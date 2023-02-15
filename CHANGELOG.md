@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.1] - 2023-02-15
+
+### Added
+- Update Hostfactory help as the fully qualified hostfactory name is no longer required.
+  [cyberark/conjur-cli-go#104](https://github.com/cyberark/conjur-cli-go/pull/104)
+
 ## [8.0.0] - 2023-02-09
 
 ### Added

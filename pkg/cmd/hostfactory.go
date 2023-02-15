@@ -113,7 +113,8 @@ hosts, using hostfactory create hosts.
 Valid time units for the --duration flag are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 
 Examples:
-- conjur hostfactory tokens create --duration 5m -i cucumber_host_factory_factory
+- conjur hostfactory tokens create --duration 5m -i factory
+- conjur hostfactory tokens create -i cucumber:host_factory:factory
 `,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -213,7 +214,7 @@ Examples:
 	tokensCreateCmd.Flags().Lookup("duration-hours").Hidden = false
 	tokensCreateCmd.Flags().Lookup("duration-minutes").Hidden = false
 
-	tokensCreateCmd.Flags().StringP("hostfactory-id", "i", "", "Fully qualified host factory id")
+	tokensCreateCmd.Flags().StringP("hostfactory-id", "i", "", "Host factory id.")
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	// Adds support for 'hostfactoryid' flag to 'hostfactory tokens create' command

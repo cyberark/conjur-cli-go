@@ -38,7 +38,7 @@ func newHostRotateAPIKeyCmd(clientFactory hostClientFactoryFunc) *cobra.Command 
 		Long: `Rotate the API key of the host specified by the [host-id] parameter.
 
 Examples:
-- conjur host rotate-api-key --host-id ci-staging`,
+- conjur host rotate-api-key --id ci-staging`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			hostID, err := cmd.Flags().GetString("id")
