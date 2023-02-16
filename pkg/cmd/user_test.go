@@ -12,6 +12,7 @@ type mockUserClient struct {
 	t                         *testing.T
 	whoAmI                    func() ([]byte, error)
 	rotateUserAPIKey          func(*testing.T, string) ([]byte, error)
+	rotateCurrentUserAPIKey   func() ([]byte, error)
 	changeCurrentUserPassword func(*testing.T, string) ([]byte, error)
 }
 
@@ -23,17 +24,22 @@ func (m mockUserClient) RotateUserAPIKey(userID string) ([]byte, error) {
 	return m.rotateUserAPIKey(m.t, userID)
 }
 
+func (m mockUserClient) RotateCurrentUserAPIKey() ([]byte, error) {
+	return m.rotateCurrentUserAPIKey()
+}
+
 func (m mockUserClient) ChangeCurrentUserPassword(newPassword string) ([]byte, error) {
 	return m.changeCurrentUserPassword(m.t, newPassword)
 }
 
 var userRotateAPIKeyCmdTestCases = []struct {
-	name               string
-	args               []string
-	whoAmI             func() ([]byte, error)
-	rotateUserAPIKey   func(t *testing.T, userID string) ([]byte, error)
-	clientFactoryError error
-	assert             func(t *testing.T, stdout, stderr string, err error)
+	name                    string
+	args                    []string
+	whoAmI                  func() ([]byte, error)
+	rotateUserAPIKey        func(t *testing.T, userID string) ([]byte, error)
+	rotateCurrentUserAPIKey func() ([]byte, error)
+	clientFactoryError      error
+	assert                  func(t *testing.T, stdout, stderr string, err error)
 }{
 	{
 		name: "display help",
@@ -45,16 +51,8 @@ var userRotateAPIKeyCmdTestCases = []struct {
 	{
 		name: "rotate API key for logged in user",
 		args: []string{"user", "rotate-api-key"},
-		rotateUserAPIKey: func(t *testing.T, userID string) ([]byte, error) {
-			// Assert on arguments
-			assert.Equal(t, "logged-in-user", userID)
-
+		rotateCurrentUserAPIKey: func() ([]byte, error) {
 			return []byte("test-api-key"), nil
-		},
-		whoAmI: func() ([]byte, error) {
-			responseStr := "{\"client_ip\":\"12.16.23.10\",\"user_agent\":\"curl/7.64.1\",\"account\":\"demo\",\"username\":\"logged-in-user\",\"token_issued_at\":\"2020-09-14T19:50:42.000+00:00\"}"
-			responseBytes := []byte(responseStr)
-			return responseBytes, nil
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "test-api-key")
@@ -86,7 +84,7 @@ var userRotateAPIKeyCmdTestCases = []struct {
 	{
 		name: "client error when retrieving username of logged in user",
 		args: []string{"user", "rotate-api-key"},
-		whoAmI: func() ([]byte, error) {
+		rotateCurrentUserAPIKey: func() ([]byte, error) {
 			return nil, fmt.Errorf("%s", "an error")
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
@@ -107,9 +105,10 @@ func TestUserRotateAPIKeyCmd(t *testing.T) {
 	for _, tc := range userRotateAPIKeyCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockClient := mockUserClient{
-				t:                t,
-				whoAmI:           tc.whoAmI,
-				rotateUserAPIKey: tc.rotateUserAPIKey,
+				t:                       t,
+				whoAmI:                  tc.whoAmI,
+				rotateUserAPIKey:        tc.rotateUserAPIKey,
+				rotateCurrentUserAPIKey: tc.rotateCurrentUserAPIKey,
 			}
 
 			cmd := newUserCmd(

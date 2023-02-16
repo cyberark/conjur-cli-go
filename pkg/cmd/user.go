@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
-
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 
@@ -11,6 +9,7 @@ import (
 
 type userClient interface {
 	RotateUserAPIKey(userID string) ([]byte, error)
+	RotateCurrentUserAPIKey() ([]byte, error)
 	WhoAmI() ([]byte, error)
 	ChangeCurrentUserPassword(newPassword string) ([]byte, error)
 }
@@ -58,23 +57,13 @@ Examples:
 				return err
 			}
 
-			// Retrieve username for logged in user
+			var newAPIKey []byte
 			if userID == "" {
-				userData, err := client.WhoAmI()
-				if err != nil {
-					return err
-				}
-
-				var whoamiResponse whoamiResponse
-				err = json.Unmarshal(userData, &whoamiResponse)
-				if err != nil {
-					return err
-				}
-
-				userID = whoamiResponse.Username
+				newAPIKey, err = client.RotateCurrentUserAPIKey()
+			} else {
+				newAPIKey, err = client.RotateUserAPIKey(userID)
 			}
 
-			newAPIKey, err := client.RotateUserAPIKey(userID)
 			if err != nil {
 				return err
 			}
