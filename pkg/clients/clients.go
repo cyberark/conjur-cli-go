@@ -18,6 +18,7 @@ type ConjurClient interface {
 	GetAuthenticator() conjurapi.Authenticator
 	WhoAmI() ([]byte, error)
 	RotateUserAPIKey(userID string) ([]byte, error)
+	RotateCurrentUserAPIKey() ([]byte, error)
 	ChangeCurrentUserPassword(newPassword string) ([]byte, error)
 	RotateHostAPIKey(hostID string) ([]byte, error)
 	InternalAuthenticate() ([]byte, error)
