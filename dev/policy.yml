@@ -20,3 +20,8 @@
   members: 
   - !host test-host
   - !user alice
+
+- !host-factory
+  id: test-host-factory
+  layers: [ !layer test-layer ]
+  
