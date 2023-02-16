@@ -227,8 +227,7 @@ Examples:
 	tokensCreateCmd.Flags().Lookup("hostfactoryid").Hidden = false
 	// END COMPATIBILITY WITH PYTHON CLI
 
-	ip, _, _ := net.ParseCIDR("0.0.0.0/0")
-	ips := []net.IP{ip}
+	ips := []net.IP{}
 	tokensCreateCmd.Flags().IPSliceP("cidr", "c", ips, "A comma-delimited list of CIDR addresses to restrict token to")
 	tokensCreateCmd.Flags().IntP("count", "n", 1, "Number of tokens to create")
 	return tokensCreateCmd

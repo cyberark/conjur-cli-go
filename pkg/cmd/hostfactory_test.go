@@ -90,10 +90,14 @@ var hostfactoryCmdTestCases = []struct {
 		name: "token create command success",
 		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactory-id", "cucumber_host_factory_factory"},
 		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+			assert.Equal(t, "5m", duration)
+			assert.Equal(t, "cucumber_host_factory_factory", hostFactory)
+			assert.Equal(t, []string{}, cidr)
+
 			return []conjurapi.HostFactoryTokenResponse{
 				{
 					Expiration: "2022-12-23T20:32:46Z",
-					Cidr:       []string{"0.0.0.0/32"},
+					Cidr:       []string{},
 					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da",
 				},
 			}, nil
@@ -107,10 +111,14 @@ var hostfactoryCmdTestCases = []struct {
 		name: "create token command success",
 		args: []string{"hostfactory", "create", "token", "--duration", "5m", "--hostfactoryid", "cucumber_host_factory_factory"},
 		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+			assert.Equal(t, "5m", duration)
+			assert.Equal(t, "cucumber_host_factory_factory", hostFactory)
+			assert.Equal(t, []string{}, cidr)
+
 			return []conjurapi.HostFactoryTokenResponse{
 				{
 					Expiration: "2022-12-23T20:32:46Z",
-					Cidr:       []string{"0.0.0.0/32"},
+					Cidr:       []string{},
 					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da",
 				},
 			}, nil
@@ -128,7 +136,7 @@ var hostfactoryCmdTestCases = []struct {
 			return []conjurapi.HostFactoryTokenResponse{
 				{
 					Expiration: "2022-12-23T20:32:46Z",
-					Cidr:       []string{"0.0.0.0/32"},
+					Cidr:       []string{},
 					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da",
 				},
 			}, nil
@@ -145,6 +153,10 @@ var hostfactoryCmdTestCases = []struct {
 		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactory-id", "cucumber_host_factory_factory",
 			"-c", "0.0.0.0,1.2.3.4"},
 		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+			assert.Equal(t, "5m", duration)
+			assert.Equal(t, "cucumber_host_factory_factory", hostFactory)
+			assert.Equal(t, []string{"0.0.0.0", "1.2.3.4"}, cidr)
+
 			return []conjurapi.HostFactoryTokenResponse{
 				{
 					Expiration: "2022-12-23T20:32:46Z",
