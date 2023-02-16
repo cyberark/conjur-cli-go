@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.2] - 2023-02-16
+
+### Fixed
+- Fix default value of `hostfactory tokens create --cidr` parameter.
+  [cyberark/conjur-cli-go#105](https://github.com/cyberark/conjur-cli-go/pull/105)
+
 ## [8.0.1] - 2023-02-15
 
 ### Added
