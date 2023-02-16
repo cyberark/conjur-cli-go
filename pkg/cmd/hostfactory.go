@@ -248,10 +248,14 @@ func newTokensRevokeCmd(clientFactory revokeTokenClientFactoryFunc) *cobra.Comma
 			if err != nil {
 				return err
 			}
+
 			err = client.DeleteToken(token)
 			if err != nil {
 				return err
 			}
+
+			cmd.Println("Token has been revoked.")
+
 			return err
 		},
 	}
