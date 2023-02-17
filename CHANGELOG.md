@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fix rotating api key of the logged-in user
   [cyberark/conjur-cli-go#107](https://github.com/cyberark/conjur-cli-go/pull/107)
 
+### Added
+- Added Transition guide from the Docker based CLI
+  [cyberark/conjur-cli-go#86](https://github.com/cyberark/conjur-cli-go/pull/86)
+
 ## [8.0.2] - 2023-02-16
 
 ### Fixed
