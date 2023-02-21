@@ -10,11 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.3] - 2023-02-17
+## [8.0.3] - 2023-02-21
 
 ### Fixed
 - Fix rotating api key of the logged-in user
   [cyberark/conjur-cli-go#107](https://github.com/cyberark/conjur-cli-go/pull/107)
+- Support fully- and partially-qualified IDs for API key rotation
+  [cyberark/conjur-cli-go#111](https://github.com/cyberark/conjur-cli-go/pull/111)
 
 ### Added
 - Added Transition guide from the Docker based CLI
@@ -42,4 +44,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.0...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.3...HEAD
+[8.0.3]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.2...v8.0.3
+[8.0.2]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.1...v8.0.2
+[8.0.1]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.0...v8.0.1
+[8.0.0]: https://github.com/cyberark/conjur-cli-go/releases/tag/v8.0.0
