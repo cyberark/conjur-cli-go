@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -153,5 +154,12 @@ func assertExistsCmd(t *testing.T, err error, stdOut string, stdErr string) {
 func assertLogoutCmd(t *testing.T, err error, stdOut string, stdErr string) {
 	assert.NoError(t, err)
 	assert.Contains(t, stdOut, "Logged out\n")
+	assert.Equal(t, "", stdErr)
+}
+
+func assertAPIKeyRotationCmd(t *testing.T, err error, stdOut string, stdErr string, priorAPIKey string) {
+	assert.NoError(t, err)
+	assert.Regexp(t, regexp.MustCompile("[a-zA-Z0-9]{45,60}\n"), stdOut)
+	assert.NotEqual(t, priorAPIKey, stdOut)
 	assert.Equal(t, "", stdErr)
 }
