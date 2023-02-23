@@ -171,6 +171,28 @@ var hostfactoryCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "token create with ip with subnet success",
+		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactory-id", "cucumber_host_factory_factory",
+			"-c", "0.0.0.0/0,1.2.3.0/24"},
+		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+			assert.Equal(t, "5m", duration)
+			assert.Equal(t, "cucumber_host_factory_factory", hostFactory)
+			assert.Equal(t, []string{"0.0.0.0/0", "1.2.3.0/24"}, cidr)
+
+			return []conjurapi.HostFactoryTokenResponse{
+				{
+					Expiration: "2022-12-23T20:32:46Z",
+					Cidr:       []string{"0.0.0.0/0", "1.2.3.0/24"},
+					Token:      "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da",
+				},
+			}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da")
+			assert.Contains(t, stdout, "[\n      \"0.0.0.0/0\",\n      \"1.2.3.0/24\"\n    ]")
+		},
+	},
+	{
 		name: "token create negative duration flags",
 		args: []string{"hostfactory", "tokens", "create", "-i", "cucumber_host_factory_factory", "--duration-hours", "-10"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
@@ -194,14 +216,6 @@ var hostfactoryCmdTestCases = []struct {
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.NoError(t, err)
-		},
-	},
-	{
-		name: "token create command error",
-		args: []string{"hostfactory", "tokens", "create", "--duration", "5m", "--hostfactory-id", "cucumber_host_factory_factory",
-			"-c", "0.0.0"},
-		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "invalid string being converted")
 		},
 	},
 	{
