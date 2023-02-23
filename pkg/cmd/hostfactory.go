@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 
 	"github.com/spf13/cobra"
 
@@ -34,14 +33,6 @@ type revokeTokenClient interface {
 }
 type createHostClient interface {
 	CreateHost(id string, token string) (conjurapi.HostFactoryHostResponse, error)
-}
-
-func iPArrayToStingArray(ipArray []net.IP) []string {
-	s := make([]string, 0)
-	for _, ip := range ipArray {
-		s = append(s, ip.String())
-	}
-	return s
 }
 
 func newHostsCmd() *cobra.Command {
@@ -110,7 +101,7 @@ func newTokensCreateCmd(clientFactory createTokenClientFactoryFunc) *cobra.Comma
 		Short: "Create one or more tokens",
 		Long: `Create one or more host factory tokens. Each token can be used to create
 hosts, using hostfactory create hosts.
-Valid time units for the --duration flag are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+Valid time units for the --duration flag are "s", "m", "h".
 
 Examples:
 - conjur hostfactory tokens create --duration 5m -i factory
@@ -118,10 +109,6 @@ Examples:
 `,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			length := len(args)
-			if length > 0 {
-				// positional args used
-			}
 
 			duration, err := cmd.Flags().GetString("duration")
 			if err != nil {
@@ -180,7 +167,7 @@ Examples:
 			}
 			// END COMPATIBILITY WITH PYTHON CLI
 
-			cidr, err := cmd.Flags().GetIPSlice("cidr")
+			cidr, err := cmd.Flags().GetStringSlice("cidr")
 			if err != nil {
 				return err
 			}
@@ -192,7 +179,7 @@ Examples:
 			if err != nil {
 				return err
 			}
-			tokenCreateResponse, err := client.CreateToken(duration, hostfactoryName, iPArrayToStingArray(cidr), count)
+			tokenCreateResponse, err := client.CreateToken(duration, hostfactoryName, cidr, count)
 			if err != nil {
 				return err
 			}
@@ -227,8 +214,8 @@ Examples:
 	tokensCreateCmd.Flags().Lookup("hostfactoryid").Hidden = false
 	// END COMPATIBILITY WITH PYTHON CLI
 
-	ips := []net.IP{}
-	tokensCreateCmd.Flags().IPSliceP("cidr", "c", ips, "A comma-delimited list of CIDR addresses to restrict token to")
+	ips := make([]string, 0)
+	tokensCreateCmd.Flags().StringSliceP("cidr", "c", ips, "A comma-delimited list of CIDR addresses to restrict token to")
 	tokensCreateCmd.Flags().IntP("count", "n", 1, "Number of tokens to create")
 	return tokensCreateCmd
 }
