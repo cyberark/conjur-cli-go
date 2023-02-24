@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/spf13/cobra"
@@ -26,7 +28,8 @@ func newVariableCmd(
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	variableGetCmd.Flags().StringP("id", "i", "", "Provide variable identifier")
+	ids := make([]string, 0)
+	variableGetCmd.Flags().StringSliceP("id", "i", ids, "Provide variable identifiers")
 	variableGetCmd.MarkFlagRequired("id")
 
 	// Variable versions start from 1 and then increase so we don't know
@@ -44,6 +47,7 @@ func newVariableCmd(
 
 type variableGetClient interface {
 	RetrieveSecret(string) ([]byte, error)
+	RetrieveBatchSecretsSafe(variableIDs []string) (map[string][]byte, error)
 	RetrieveSecretWithVersion(string, int) ([]byte, error)
 }
 type variableSetClient interface {
@@ -61,17 +65,43 @@ func variableSetClientFactory(cmd *cobra.Command) (variableSetClient, error) {
 	return clients.AuthenticatedConjurClientForCommand(cmd)
 }
 
+func printMultilineResults(cmd *cobra.Command, secrets map[string][]byte) error {
+	if len(secrets) > 1 {
+		cmd.Println("{")
+		for fullID, value := range secrets {
+			id := strings.Split(string(fullID), ":")
+			cmd.Printf("    \"%s\": \"%s\"\n", id[len(id)-1], value)
+		}
+		cmd.Println("}")
+	} else {
+		for _, v := range secrets {
+			cmd.Println(string(v))
+		}
+	}
+	return nil
+}
+
 func newVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:          "get",
-		Short:        "Use the get subcommand to get the value of one or more Conjur variables",
+		Use:   "get",
+		Short: "Use the get subcommand to get the value of one or more Conjur variables",
+		Long: `Use the get subcommand to get the value of one or more Conjur variables
+
+Examples:
+- conjur variable get -i secret
+- conjur variable get -i secret,secret2
+- conjur variable get -i secret -v 1
+		`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := cmd.Flags().GetString("id")
+			id, err := cmd.Flags().GetStringSlice("id")
 			if err != nil {
 				return err
 			}
-
+			singleID := ""
+			if len(id) == 1 {
+				singleID = id[0]
+			}
 			client, err := clientFactory(cmd)
 			if err != nil {
 				return err
@@ -82,26 +112,25 @@ func newVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Comman
 				return err
 			}
 
-			var data []byte
+			data := map[string][]byte{}
 
 			if versionStr == "" {
-				data, err = client.RetrieveSecret(id)
+				data, err = client.RetrieveBatchSecretsSafe(id)
 			} else {
-				version, err := strconv.Atoi(versionStr)
+				if len(id) > 1 {
+					return fmt.Errorf("version can not be used with multiple variables")
+				}
+				var version int
+				version, err = strconv.Atoi(versionStr)
 				if err != nil {
 					return err
 				}
-
-				data, err = client.RetrieveSecretWithVersion(id, version)
+				data[singleID], err = client.RetrieveSecretWithVersion(singleID, version)
 			}
-
 			if err != nil {
 				return err
 			}
-
-			cmd.Println(string(data))
-
-			return nil
+			return printMultilineResults(cmd, data)
 		},
 	}
 }

@@ -70,7 +70,7 @@ func TestIntegration(t *testing.T) {
 
 	t.Run("policy load", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.RunWithStdin(
-			bytes.NewReader([]byte("- !variable meow\n- !user alice\n- !host bob")),
+			bytes.NewReader([]byte("- !variable meow\n- !variable woof\n- !user alice\n- !host bob")),
 			"policy", "load", "-b", "root", "-f", "-",
 		)
 		assertPolicyLoadCmd(t, err, stdOut, stdErr)
@@ -81,9 +81,19 @@ func TestIntegration(t *testing.T) {
 		assertSetVariableCmd(t, err, stdOut, stdErr)
 	})
 
+	t.Run("set another variable after policy load", func(t *testing.T) {
+		stdOut, stdErr, err = conjurCLI.Run("variable", "set", "-i", "woof", "-v", "quack")
+		assertSetVariableCmd(t, err, stdOut, stdErr)
+	})
+
 	t.Run("get variable after policy load", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("variable", "get", "-i", "meow")
 		assertGetVariableCmd(t, err, stdOut, stdErr)
+	})
+
+	t.Run("get two variables after policy load", func(t *testing.T) {
+		stdOut, stdErr, err = conjurCLI.Run("variable", "get", "-i", "meow,woof")
+		assertGetTwoVariablesCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("exists returns false", func(t *testing.T) {

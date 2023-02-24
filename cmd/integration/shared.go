@@ -146,6 +146,13 @@ func assertGetVariableCmd(t *testing.T, err error, stdOut string, stdErr string)
 	assert.Equal(t, "", stdErr)
 }
 
+func assertGetTwoVariablesCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "moo")
+	assert.Contains(t, stdOut, "quack")
+	assert.Equal(t, "", stdErr)
+}
+
 func assertExistsCmd(t *testing.T, err error, stdOut string, stdErr string) {
 	assert.NoError(t, err)
 	assert.Equal(t, "false\n", stdOut)
