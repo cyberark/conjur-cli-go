@@ -10,11 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.4] - 2023-02-23
+## [8.0.4] - 2023-02-28
 
 ### Fixed
 - Allow hostfactory cidrs to specify a subnet
   [cyberark/conjur-cli-go#113](https://github.com/cyberark/conjur-cli-go/pull/113)
+- Update variable get to retrieve multiple variables
+  [cyberark/conjur-cli-go#114](https://github.com/cyberark/conjur-cli-go/pull/114)
 
 ## [8.0.3] - 2023-02-21
 

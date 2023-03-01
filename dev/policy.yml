@@ -8,6 +8,7 @@
 - !layer test-layer
 
 - !variable secret
+- !variable top-secret
 
 - !permit
   # Give permissions to the human user to update the secret and fetch the secret.
