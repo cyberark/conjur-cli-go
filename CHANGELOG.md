@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.4] - 2023-02-28
+## [8.0.5] - 2023-03-03
+
+## [8.0.4] - 2023-03-03
 
 ### Fixed
 - Allow hostfactory cidrs to specify a subnet
