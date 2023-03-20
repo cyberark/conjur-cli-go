@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [8.0.5] - 2023-03-03
 
+### Changed
+- OIDC login now supports a custom redirect URL port
+  [cyberark/conjur-cli-go#117](https://github.com/cyberark/conjur-cli-go/pull/117)
+
 ## [8.0.4] - 2023-03-03
 
 ### Fixed
