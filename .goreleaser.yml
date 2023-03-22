@@ -58,7 +58,8 @@ checksum:
   name_template: 'SHA256SUMS.txt'
 
 brews:
-  - description: CyberArk Conjur command line interface (Golang)
+  - name: conjur-cli
+    description: CyberArk Conjur command line interface
     homepage: https://conjur.org
     url_template: https://github.com/cyberark/conjur-cli-go/releases/download/v{{.Env.VERSION}}/conjur-cli-go_{{.Env.VERSION}}_{{.Os}}_{{.Arch}}.tar.gz
     install: |

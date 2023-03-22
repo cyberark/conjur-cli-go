@@ -40,3 +40,6 @@ step and promote the desired build from the master branch.
 1. Jenkins build parameters can be utilized to promote a successful release
    or manually trigger aditional releases as needed.
 1. Reference the [internal automated release doc](https://github.com/conjurinc/docs/blob/master/reference/infrastructure/automated_releases.md#release-and-promotion-process) for releasing and promoting.
+1. Copy the `conjur-cli.rb` homebrew formula output by goreleaser
+   to the [homebrew formula for Conjur CLI](https://github.com/cyberark/homebrew-tools/blob/main/conjur-cli.rb)
+   and submit a PR to update the version of Conjur-Cli available in brew.
