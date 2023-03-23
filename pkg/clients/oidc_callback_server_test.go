@@ -1,7 +1,7 @@
 package clients
 
 import (
-	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"math/rand"
@@ -63,7 +63,6 @@ func TestHandleOidcFlow(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			http.DefaultServeMux = http.NewServeMux()
 			var code string
 			var serverError error
 			mockOpenBrowser := func(url string) error { return nil }
@@ -101,7 +100,6 @@ func TestHandleOidcFlow(t *testing.T) {
 		}
 
 		// Start the local server
-		http.DefaultServeMux = http.NewServeMux()
 		var code string
 		var serverError error
 		port := fmt.Sprint(randomPort())
@@ -145,26 +143,22 @@ func TestHandleOidcFlow(t *testing.T) {
 		}
 
 		// First start a dummy server to occupy the port
-		stopDummyServer := runDummyServer()
-		defer stopDummyServer()
+		port := fmt.Sprint(randomPort())
+		listener, err := net.Listen("tcp", "127.0.0.1:"+port)
+		assert.NoError(t, err)
+		defer listener.Close()
 
 		// Now try to start the local server
-		go func() {
-			assert.Panics(t, func() {
-				handleOpenIDFlow("https://example.com?redirect_uri=http%3A%2F%2F127.0.0.1%3A8888%2Fcallback", mockGenerateState, mockOpenBrowser)
-			})
-		}()
+		_, err = handleOpenIDFlow("https://example.com?redirect_uri=http%3A%2F%2F127.0.0.1%3A"+port+"%2Fcallback", mockGenerateState, mockOpenBrowser)
 
-		// Wait for the server to (attempt to) start up asynchronously
-		time.Sleep(1 * time.Second)
-
+		assert.ErrorContains(t, err, "address already in use")
 		assert.False(t, openBrowserCalled)
 	})
 
 	t.Run("Stops server after timeout", func(t *testing.T) {
 		t.Cleanup(func() {
 			// Restore the timeout
-			callbackServerTimeout = 5 * time.Minute
+			callbackServerTimeout = 5 * time.Second
 		})
 
 		openBrowserCalled := false
@@ -177,7 +171,6 @@ func TestHandleOidcFlow(t *testing.T) {
 		// Decrease the timeout
 		callbackServerTimeout = 1 * time.Second
 		// Start the local server
-		http.DefaultServeMux = http.NewServeMux()
 		port := fmt.Sprint(randomPort())
 		redirectURI := "https://example.com?redirect_uri=http%3A%2F%2F127.0.0.1%3A" + port + "%2Fcallback"
 		go func() {
@@ -194,6 +187,14 @@ func TestHandleOidcFlow(t *testing.T) {
 	})
 }
 
+func TestGenerateState(t *testing.T) {
+	state := generateState()
+	// Check that the state is a valid base64 string
+	decodedState, err := base64.StdEncoding.DecodeString(state)
+	assert.NoError(t, err)
+	assert.Len(t, decodedState, 16)
+}
+
 func isServerRunning(port string) bool {
 	// Checks whether the server is running by attempting to connect to the port
 	conn, err := net.DialTimeout("tcp", "127.0.0.1:"+port, 1*time.Second)
@@ -202,22 +203,6 @@ func isServerRunning(port string) bool {
 	}
 	conn.Close()
 	return true
-}
-
-func runDummyServer() func() {
-	http.DefaultServeMux = http.NewServeMux()
-	server := &http.Server{Addr: "127.0.0.1:8888"}
-	server.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
-		fmt.Fprintln(w, "This should never be called")
-	})
-	http.Handle("/callback", server.Handler)
-	go func() {
-		server.ListenAndServe()
-	}()
-	return func() {
-		server.Shutdown(context.Background())
-	}
 }
 
 func mockGenerateState() string {

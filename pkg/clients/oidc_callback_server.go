@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -19,7 +20,7 @@ var callbackServerTimeout = 5 * time.Minute
 
 type callbackEndpoint struct {
 	server         *http.Server
-	shutdownSignal chan string
+	shutdownSignal chan struct{}
 	code           string
 	state          string
 }
@@ -54,13 +55,13 @@ func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.code = code
 	fmt.Fprintln(w, "Logged in successfully. You may close the browser and return to the command line.")
-	h.shutdownSignal <- "shutdown"
+	h.shutdownSignal <- struct{}{}
 }
 
 func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, openBrowserFn func(string) error) (string, error) {
 	callbackEndpoint := &callbackEndpoint{}
 	callbackEndpoint.state = generateStateFn()
-	callbackEndpoint.shutdownSignal = make(chan string)
+	callbackEndpoint.shutdownSignal = make(chan struct{})
 
 	authURL, authURLParseError := url.Parse(authEndpointURL)
 	if authURLParseError != nil {
@@ -80,22 +81,31 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 		WriteTimeout: 10 * time.Second,
 	}
 	callbackEndpoint.server = server
-	http.Handle("/callback", callbackEndpoint)
+	defer server.Shutdown(context.Background())
+	mux := http.NewServeMux()
+	mux.Handle("/callback", callbackEndpoint)
+	server.Handler = mux
 
 	server.Addr = "127.0.0.1:" + strconv.Itoa(port)
 
 	queryVals.Set("state", callbackEndpoint.state)
 	authURL.RawQuery = queryVals.Encode()
 
-	// Start the local server. This will panic if the server fails to start.
-	go func() {
-		server.ListenAndServe()
-	}()
+	// Start the local server. This will fail if the server fails to start.
+	errorSignal := make(chan error)
+	listener, err := net.Listen("tcp", server.Addr)
 
-	// Wait a short amount of time before opening the browser. This gives time for the server
-	// to either successfully start or panic. This ensures that the browser won't
-	// be opened if the server fails to start (e.g. if the port is already in use).
-	time.Sleep(100 * time.Millisecond)
+	// This will stop execution if the port is already in use
+	if err != nil {
+		return "", err
+	}
+
+	go func() {
+		err = server.Serve(listener)
+		if err != nil && err != http.ErrServerClosed {
+			errorSignal <- err
+		}
+	}()
 
 	// Open the browser to the OIDC provider
 	err = openBrowserFn(authURL.String())
@@ -109,13 +119,12 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 
 	select {
 	case <-timeout.C:
-		callbackEndpoint.server.Shutdown(context.Background())
 		return "", fmt.Errorf("timeout waiting for OIDC callback")
 	case <-callbackEndpoint.shutdownSignal:
-		callbackEndpoint.server.Shutdown(context.Background())
+		return callbackEndpoint.code, nil
+	case err := <-errorSignal:
+		return "", err
 	}
-
-	return callbackEndpoint.code, nil
 }
 
 func generateState() string {
