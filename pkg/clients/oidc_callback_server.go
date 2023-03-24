@@ -5,8 +5,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,7 +20,7 @@ var callbackServerTimeout = 5 * time.Minute
 
 type callbackEndpoint struct {
 	server         *http.Server
-	shutdownSignal chan string
+	shutdownSignal chan struct{}
 	code           string
 	state          string
 }
@@ -52,23 +55,13 @@ func (h *callbackEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.code = code
 	fmt.Fprintln(w, "Logged in successfully. You may close the browser and return to the command line.")
-	h.shutdownSignal <- "shutdown"
+	h.shutdownSignal <- struct{}{}
 }
 
 func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, openBrowserFn func(string) error) (string, error) {
-
 	callbackEndpoint := &callbackEndpoint{}
 	callbackEndpoint.state = generateStateFn()
-	callbackEndpoint.shutdownSignal = make(chan string)
-	server := &http.Server{
-		Addr:         "127.0.0.1:8888",
-		Handler:      nil,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
-	// No need to use HTTPS as per https://www.rfc-editor.org/rfc/rfc8252#section-8.3
-	callbackEndpoint.server = server
-	http.Handle("/callback", callbackEndpoint)
+	callbackEndpoint.shutdownSignal = make(chan struct{})
 
 	authURL, authURLParseError := url.Parse(authEndpointURL)
 	if authURLParseError != nil {
@@ -76,26 +69,46 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 	}
 
 	queryVals := authURL.Query()
-
-	// TODO: What if this port isn't available? Should this be configurable?
-	if queryVals.Get("redirect_uri") != "http://127.0.0.1:8888/callback" {
-		return "", fmt.Errorf("redirect_uri must be http://127.0.0.1:8888/callback")
+	port, err := parseAndValidateRedirectPort(queryVals.Get("redirect_uri"))
+	if err != nil {
+		return "", err
 	}
+
+	// No need to use HTTPS as per https://www.rfc-editor.org/rfc/rfc8252#section-8.3
+	server := &http.Server{
+		Handler:      nil,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+	callbackEndpoint.server = server
+	defer server.Shutdown(context.Background())
+	mux := http.NewServeMux()
+	mux.Handle("/callback", callbackEndpoint)
+	server.Handler = mux
+
+	server.Addr = "127.0.0.1:" + strconv.Itoa(port)
 
 	queryVals.Set("state", callbackEndpoint.state)
 	authURL.RawQuery = queryVals.Encode()
 
-	// Start the local server
+	// Start the local server. This will fail if the server fails to start.
+	errorSignal := make(chan error)
+	listener, err := net.Listen("tcp", server.Addr)
+
+	// This will stop execution if the port is already in use
+	if err != nil {
+		return "", err
+	}
+
 	go func() {
-		server.ListenAndServe()
+		err = server.Serve(listener)
+		if err != nil && err != http.ErrServerClosed {
+			errorSignal <- err
+		}
 	}()
 
-	// Wait for the server to start before opening the browser. This ensures that the browser won't
-	// be opened if the server fails to start.
-	time.Sleep(100 * time.Millisecond)
-
 	// Open the browser to the OIDC provider
-	err := openBrowserFn(authURL.String())
+	err = openBrowserFn(authURL.String())
 	if err != nil {
 		return "", err
 	}
@@ -106,17 +119,38 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 
 	select {
 	case <-timeout.C:
-		callbackEndpoint.server.Shutdown(context.Background())
 		return "", fmt.Errorf("timeout waiting for OIDC callback")
 	case <-callbackEndpoint.shutdownSignal:
-		callbackEndpoint.server.Shutdown(context.Background())
+		return callbackEndpoint.code, nil
+	case err := <-errorSignal:
+		return "", err
 	}
-
-	return callbackEndpoint.code, nil
 }
 
 func generateState() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return base64.StdEncoding.EncodeToString(b)
+}
+
+func parseAndValidateRedirectPort(redirectURI string) (int, error) {
+	// Use regex to validate redirect_uri is in the format http://127.0.0.1[:port]/callback
+	if !regexp.MustCompile(`^http://127\.0\.0\.1(:[0-9]+)?/callback$`).MatchString(redirectURI) {
+		return 0, fmt.Errorf("redirect_uri must be http://127.0.0.1[:port]/callback")
+	}
+
+	// Get port from uri
+	uri, err := url.Parse(redirectURI)
+	if err != nil {
+		return 0, fmt.Errorf("Unable to parse redirect_uri: %s", err)
+	}
+	if uri.Port() != "" {
+		port, _ := strconv.Atoi(uri.Port()) // This is certain to be an integer since it passed the regex check
+		if port < 1 || port > 65535 {
+			return 0, fmt.Errorf("Port in redirect_uri must be between 1 and 65535")
+		}
+		return port, nil
+	}
+	// Default to port 80
+	return 80, nil
 }
