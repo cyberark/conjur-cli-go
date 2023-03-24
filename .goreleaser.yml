@@ -65,7 +65,7 @@ brews:
     install: |
       bin.install "conjur"
     test: |
-      system "#{bin}/conjur", "-version"
+      system "#{bin}/conjur", "--version"
     tap:
       owner: cyberark
       name: homebrew-tools

@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.5] - 2023-03-03
+## [8.0.6] - 2023-03-24
+
+## [8.0.5] - 2023-03-24
 
 ### Changed
 - OIDC login now supports a custom redirect URL port
@@ -62,7 +64,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.4...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.5...HEAD
+[8.0.5]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.4...v8.0.5
 [8.0.4]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.3...v8.0.4
 [8.0.3]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.2...v8.0.3
 [8.0.2]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.1...v8.0.2
