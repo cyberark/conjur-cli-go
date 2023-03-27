@@ -41,6 +41,19 @@ func TestIntegration(t *testing.T) {
 		assert.Contains(t, stdErr, "Must specify an Account")
 	})
 
+	t.Run("init with self-signed cert", func(t *testing.T) {
+		stdOut, stdErr, err = conjurCLI.Run("init", "-a", account, "-u", "https://proxy", "--force-netrc", "--force")
+		assert.Error(t, err)
+		assert.Equal(t, "", stdOut)
+		assert.Contains(t, stdErr, "Unable to retrieve and validate certificate")
+		assert.Contains(t, stdErr, "re-run the init command with the `--self-signed` flag")
+
+		stdOut, stdErr, err = conjurCLI.Run("init", "-a", account, "-u", "https://proxy", "--force-netrc", "--force", "--self-signed")
+		assert.NotContains(t, stdErr, "Unable to retrieve and validate certificate")
+		assert.Contains(t, stdOut, "The server's certificate fingerprint is")
+		assert.Contains(t, stdErr, selfSignedWarning)
+	})
+
 	t.Run("init", func(t *testing.T) {
 		stdOut, stdErr, err = conjurCLI.Run("init", "-a", account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
 		assert.NoError(t, err)

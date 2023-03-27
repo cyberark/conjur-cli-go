@@ -21,6 +21,7 @@ const pathToBinary = "conjur"
 
 const insecureModeWarning = "Warning: Running the command with '--insecure' makes your system vulnerable to security attacks\n" +
 	"If you prefer to communicate with the server securely you must reinitialize the client in secure mode.\n"
+const selfSignedWarning = "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data\n"
 
 func newConjurCLI(homeDir string) *conjurCLI {
 	return &conjurCLI{

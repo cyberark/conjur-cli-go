@@ -23,8 +23,8 @@ services:
   proxy:
     image: nginx:1.13.6-alpine
     volumes:
-      - ../conf/:/etc/nginx/conf.d/:ro
-      - ../conf/tls/:/etc/nginx/tls/:ro
+      - ./conf/:/etc/nginx/conf.d/:ro
+      - ./conf/tls/:/etc/nginx/tls/:ro
     depends_on:
     - conjur
     restart: on-failure

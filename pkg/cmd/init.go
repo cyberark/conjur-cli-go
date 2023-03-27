@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -199,7 +200,11 @@ func fetchCertIfNeeded(config *conjurapi.Config, cmdFlagVals initCmdFlagValues, 
 
 	cert, err := utils.GetServerCert(url.Host, cmdFlagVals.selfSigned)
 	if err != nil {
-		return fmt.Errorf("Unable to retrieve certificate from %s: %s", url.Host, err)
+		errStr := fmt.Sprintf("Unable to retrieve and validate certificate from %s: %s", url.Host, err)
+		if !cmdFlagVals.selfSigned {
+			errStr += "\nIf you're attempting to use a self-signed certificate, re-run the init command with the `--self-signed` flag\n"
+		}
+		return errors.New(errStr)
 	}
 
 	// Prompt user to accept certificate
