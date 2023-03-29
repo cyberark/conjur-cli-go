@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Improved error message when using self-signed certificates
   [cyberark/conjur-cli-go#119](https://github.com/cyberark/conjur-cli-go/pull/119)
+- Fix double prompt in Windows
+  [cyberark/conjur-cli-go#120](https://github.com/cyberark/conjur-cli-go/pull/120)
 
 ## [8.0.5] - 2023-03-24
 
