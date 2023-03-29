@@ -23,6 +23,7 @@ func TestAuthenticatedConjurClientForCommand(t *testing.T) {
 
 		client, err := AuthenticatedConjurClientForCommand(cmd)
 
+		// Note: This fails when run inside the dev container because it has a valid config
 		assert.Nil(t, client)
 		assert.Error(t, err)
 	})

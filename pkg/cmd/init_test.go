@@ -289,8 +289,6 @@ cert_file: ` + pwd + `/custom-cert.pem
 }
 
 func TestInitCmd(t *testing.T) {
-	t.Parallel()
-
 	for _, tc := range initCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// conjurrcInTmpDir is the .conjurrc test file location, it is

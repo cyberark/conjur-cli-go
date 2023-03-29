@@ -12,15 +12,18 @@ import (
 	"github.com/creack/pty"
 	"github.com/hinshun/vt10x"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 )
 
 // promptResponse is a prompt-response pair representing an expected prompt from stdout and
 // the response to write on stdin when such a prompt is encountered
 type promptResponse struct {
-	prompt   string // optional, because
-	response string // A new line character is added to the end of the response,
-	// unless if the last character of the response is already a new line.
+	// Optional. If empty, the response is sent to stdin without waiting for a prompt
+	prompt string
+
+	// A new line character is added to the end of the response.
 	// This makes it so that an empty response is equivalent to sending a newline to stdin.
+	response string
 }
 
 // executeCommandForTest executes a cobra command in-memory and returns stdout, stderr and error
@@ -55,6 +58,7 @@ func executeCommandForTestWithPromptResponses(
 
 	consoleOutput := &bytes.Buffer{}
 	c := setupVirtualConsole(t, consoleOutput)
+	defer c.Close()
 
 	donec := make(chan struct{})
 	go func() {
@@ -69,15 +73,19 @@ func executeCommandForTestWithPromptResponses(
 			}
 		}
 
-		// Expect string that never gets output by command, this forces go-expect
-		// to keep reading the command output to the buffer. Set the read timeout
-		// to assume command has finished when there is no output for 0.5 seconds.
-		_, _ = c.Expect(expect.String("FINISHED"), expect.WithTimeout(500*time.Millisecond))
+		// Wait until EOF gets printed to the virtual console, which happens in the code below
+		// when the command finishes executing. This forces the virtual console to
+		// continue reading input until the command finishes. Set a timeout
+		// to ensure that the virtual console doesn't wait forever.
+		_, err := c.Expect(expect.String("TEST_COMMAND_EXITED"), expect.WithTimeout(10*time.Second))
+		// If the timeout is reached, we should fail the test.
+		assert.NoError(t, err)
 	}()
 
 	// Execute command with args.
 	err := cmd.Execute()
-
+	// Print EOF to virtual console to signal that the command has finished executing.
+	cmd.Print("TEST_COMMAND_EXITED")
 	// Wait for virtual console to finish.
 	<-donec
 
