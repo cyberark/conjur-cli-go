@@ -206,7 +206,7 @@ appliance_url: http://host
 		name: "fails if can't retrieve server certificate",
 		args: []string{"init", "-u=https://nohost.example.com", "-a=test-account"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
-			assert.Contains(t, stderr, "Unable to retrieve certificate")
+			assert.Contains(t, stderr, "Unable to retrieve and validate certificate")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
@@ -214,7 +214,8 @@ appliance_url: http://host
 		name: "fails for self-signed certificate",
 		args: []string{"init", "-u=https://self-signed.badssl.com", "-a=test-account"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string, stderr string, err error) {
-			assert.Contains(t, stderr, "Unable to retrieve certificate")
+			assert.Contains(t, stderr, "Unable to retrieve and validate certificate")
+			assert.Contains(t, stderr, "If you're attempting to use a self-signed certificate, re-run the init command with the `--self-signed` flag")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
