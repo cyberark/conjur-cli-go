@@ -1,219 +1,95 @@
 package cmd
 
 import (
-	"bufio"
 	"bytes"
-	"fmt"
 	"io"
+	"os"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
+	expect "github.com/Netflix/go-expect"
+	"github.com/creack/pty"
+	"github.com/hinshun/vt10x"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 )
 
 // promptResponse is a prompt-response pair representing an expected prompt from stdout and
 // the response to write on stdin when such a prompt is encountered
 type promptResponse struct {
-	prompt   string // optional, because
-	response string // A new line character is added to the end of the response,
-	// unless if the last character of the response is already a new line.
+	// Optional. If empty, the response is sent to stdin without waiting for a prompt
+	prompt string
+
+	// A new line character is added to the end of the response.
 	// This makes it so that an empty response is equivalent to sending a newline to stdin.
-}
-
-type promptResponseSlice []promptResponse
-
-func (promptResponses promptResponseSlice) respondToPrompts(
-	stdinWriter io.Writer,
-	stdoutReader io.Reader,
-	doneSignal chan<- error,
-	endSignal <-chan struct{},
-) {
-	stdOutBufferedReader := bufio.NewReader(stdoutReader)
-
-	var goRoutineErr error
-	promptResponsesIndex := 0
-
-	timer := time.NewTimer(maxWaitTimeForPrompt)
-	defer timer.Stop()
-
-	ticker := time.NewTicker(promptCheckInterval)
-	defer ticker.Stop()
-
-L:
-	for promptResponsesIndex < len(promptResponses) {
-		pr := promptResponses[promptResponsesIndex]
-		// Empty prompt means immediately write to stdin without waiting for a stdout prompt
-		// This is useful when a command is reading from stdin such as policy loading.
-		if pr.prompt == "" {
-			promptResponsesIndex++
-
-			stdinWriter.Write([]byte(maybeAddNewLineSuffix(pr.response)))
-			continue
-		}
-
-		select {
-		// This case makes sure that you don't wait forever for a prompt that never shows up.
-		// Here we timebox the wait on a prompt.
-		// Additionally ensures we don't leak this goroutine because it ensures that after
-		// a second of waiting we break the circuit.
-		case <-timer.C:
-			goRoutineErr = fmt.Errorf(
-				"maxWaitTimeForPrompt was exceeded without the command issuing the expected prompt: %q",
-				pr.prompt,
-			)
-			break L
-		// This case avoids wait for the timebox above. When we know the command is finished we can simply
-		// break the loop knowing that there will be no further reading.
-		case <-endSignal:
-			break L
-		case <-ticker.C:
-			line, err := stdOutBufferedReader.ReadString('\n')
-			if err != nil {
-				if err == io.EOF {
-					// Sleep is important to avoid a busy goroutine
-					// that never yields the CPU to anything else
-					continue
-				}
-
-				goRoutineErr = err
-				break L
-			}
-
-			// Strip ANSI because it's just noise
-			line = stripAnsi(line)
-
-			// Try to match promptResponses in order
-			if strings.Contains(line, pr.prompt) {
-				promptResponsesIndex++
-
-				stdinWriter.Write([]byte(maybeAddNewLineSuffix(pr.response)))
-			}
-		}
-	}
-
-	if goRoutineErr == nil && promptResponsesIndex < len(promptResponses) {
-		goRoutineErr = fmt.Errorf(
-			"promptResponses not exhausted, remaining: %+v",
-			promptResponses[promptResponsesIndex:],
-		)
-	}
-	doneSignal <- goRoutineErr
+	response string
 }
 
 // executeCommandForTest executes a cobra command in-memory and returns stdout, stderr and error
 func executeCommandForTest(t *testing.T, c *cobra.Command, args ...string) (string, string, error) {
-	return executeCommandForTestWithPromptResponses(t, c, nil, args...)
-}
-
-// executeCommandForTestWithPromptResponses executes a cobra command in-memory and returns stdout, stderr and error.
-// It takes a as input a slice representing a sequence of prompt-responses, each containing an expected
-// prompt from stdout and the response to write on stdin when such a prompt is encountered.
-func executeCommandForTestWithPromptResponses(
-	t *testing.T, c *cobra.Command, promptResponses []promptResponse, args ...string,
-) (string, string, error) {
 	t.Helper()
 
 	cmd := newRootCommand()
 	cmd.AddCommand(c)
 	cmd.SetArgs(args)
 
-	c.Short = "HELP SHORT"
-	c.Long = "HELP LONG"
-
 	stdoutBuf := new(bytes.Buffer)
 	stderrBuf := new(bytes.Buffer)
 
-	// Will have to make this recursive if we have deeper subcommands.
-	for _, subCmd := range c.Commands() {
-		subCmd.Short = "HELP SHORT"
-		subCmd.Long = "HELP LONG"
-		for _, nestedSubCmd := range subCmd.Commands() {
-			nestedSubCmd.Short = "HELP SHORT"
-			nestedSubCmd.Long = "HELP LONG"
-		}
-	}
+	mockHelpText(cmd)
 
 	cmd.SetOut(stdoutBuf)
 	cmd.SetErr(stderrBuf)
 
-	cmdErr, stdinErr := executeCommandWithPromptResponses(
-		cmd,
-		promptResponses,
-	)
-
-	if stdinErr != nil {
-		t.Error(stdinErr)
-	}
+	cmd.SetIn(bytes.NewReader(nil))
+	err := cmd.Execute()
 
 	// strip ansi from stdout and stderr because we're using promptui
-	return stripAnsi(stdoutBuf.String()), stripAnsi(stderrBuf.String()), cmdErr
+	return stripAnsi(stdoutBuf.String()), stripAnsi(stderrBuf.String()), err
 }
 
-func maybeAddNewLineSuffix(s string) string {
-	if strings.HasSuffix(s, "\n") {
-		return s
-	}
+func executeCommandForTestWithPromptResponses(
+	t *testing.T, cmd *cobra.Command, promptResponses []promptResponse,
+) (stdOut string, cmdErr error) {
 
-	return s + "\n"
-}
+	// Mock short/long help output
+	mockHelpText(cmd)
 
-const maxWaitTimeForPrompt = 2 * time.Second
-const promptCheckInterval = 10 * time.Millisecond
+	consoleOutput := &bytes.Buffer{}
+	c := setupVirtualConsole(t, consoleOutput)
+	defer c.Close()
 
-func executeCommandWithPromptResponses(
-	cmd *cobra.Command, promptResponses []promptResponse,
-) (cmdErr error, stdinErr error) {
-	// For no prompt-responses we simply execute with an empty stdin :)
-	if len(promptResponses) == 0 {
-		cmd.SetIn(bytes.NewReader(nil))
-		return cmd.Execute(), nil
-	}
-
-	// For prompt-responses we create a pipe for stdin and use goroutine to carry out the
-	// required writes to stdin in response to prompts
-	stdinReader, stdinWriter := io.Pipe()
-	defer func() {
-		stdinReader.Close()
-		stdinWriter.Close()
-	}()
-	cmd.SetIn(stdinReader)
-
-	endSignal := make(chan struct{}, 1)
-	doneSignal := make(chan error, 1)
-
-	// Create a multiwriter to so that we have a seperate buffer for checking for prompts on
-	// stdout without interferring with the original stdout buffer of the command.
-	stdoutBuf := new(bytes.Buffer)
-	cmd.SetOut(io.MultiWriter(cmd.OutOrStdout(), stdoutBuf))
-
-	// This goroutine schedules writes to the write-end of the stdin pipe based on the prompt-responses
+	donec := make(chan struct{})
 	go func() {
-		// Signal that there will be no further writing
-		defer stdinWriter.Close()
+		defer close(donec)
+		// Define virtual console interactivity.
+		for _, p := range promptResponses {
+			if p.prompt != "" {
+				_, _ = c.ExpectString(p.prompt)
+			}
+			if p.response != "" {
+				_, _ = c.SendLine(p.response)
+			}
+		}
 
-		promptResponseSlice(promptResponses).respondToPrompts(
-			stdinWriter,
-			stdoutBuf,
-			doneSignal,
-			endSignal,
-		)
+		// Wait until EOF gets printed to the virtual console, which happens in the code below
+		// when the command finishes executing. This forces the virtual console to
+		// continue reading input until the command finishes. Set a timeout
+		// to ensure that the virtual console doesn't wait forever.
+		_, err := c.Expect(expect.String("TEST_COMMAND_EXITED"), expect.WithTimeout(10*time.Second))
+		// If the timeout is reached, we should fail the test.
+		assert.NoError(t, err)
 	}()
 
+	// Execute command with args.
 	err := cmd.Execute()
-	// Signal that there will be no further reading
-	stdinReader.Close()
+	// Print EOF to virtual console to signal that the command has finished executing.
+	cmd.Print("TEST_COMMAND_EXITED")
+	// Wait for virtual console to finish.
+	<-donec
 
-	// Inform the goroutine that the command is done
-	endSignal <- struct{}{}
-
-	// Wait for goroutine to finish
-	if goroutineErr := <-doneSignal; goroutineErr != nil {
-		return err, goroutineErr
-	}
-
-	return err, nil
+	return stripAnsi(consoleOutput.String()), err
 }
 
 const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
@@ -221,4 +97,55 @@ const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)
 // stripAnsi is inspired by https://github.com/acarl005/stripansi
 func stripAnsi(str string) string {
 	return regexp.MustCompile(ansi).ReplaceAllString(str, "")
+}
+
+func mockHelpText(cmd *cobra.Command) {
+	cmd.Short = "HELP SHORT"
+	cmd.Long = "HELP LONG"
+
+	for _, subCmd := range cmd.Commands() {
+		mockHelpText(subCmd)
+	}
+}
+
+// setupVirtualConsole will create a virtual console that for use in tests.
+// The virtual console will override the stdout, stderr, and stdin, and reset
+// them at the end of the test. As stdout, and stderr are overriden it can be
+// difficult to debug a test as standard print statements will not be visible.
+// To fix this issue use the verbose option, -v, with go test.
+func setupVirtualConsole(t *testing.T, w io.Writer) *expect.Console {
+	t.Helper()
+	c, err := newConsole(expect.WithStdout(w))
+	if err != nil {
+		t.Fatalf("unable to create virtual console: %v", err)
+	}
+	origIn := os.Stdin
+	origOut := os.Stdout
+	origErr := os.Stderr
+	t.Cleanup(func() {
+		os.Stdin = origIn
+		os.Stdout = origOut
+		os.Stderr = origErr
+		c.Close()
+	})
+	os.Stdin = c.Tty()
+	os.Stdout = c.Tty()
+	os.Stderr = c.Tty()
+	return c
+}
+
+// newConsole returns a new expect.Console that multiplexes the
+// Stdin/Stdout to a VT10X terminal, allowing Console to interact with an
+// application sending ANSI escape sequences.
+func newConsole(opts ...expect.ConsoleOpt) (*expect.Console, error) {
+	ptm, pts, err := pty.Open()
+	if err != nil {
+		return nil, err
+	}
+	term := vt10x.New(vt10x.WithWriter(pts))
+	c, err := expect.NewConsole(append(opts, expect.WithStdin(ptm), expect.WithStdout(term), expect.WithCloser(pts, ptm))...)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }

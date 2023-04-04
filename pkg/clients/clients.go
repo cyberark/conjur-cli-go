@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 
 	"github.com/spf13/cobra"
 )
@@ -99,8 +98,7 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		decorateConjurClient(client)
 
 		if config.AuthnType == "" || config.AuthnType == "authn" || config.AuthnType == "ldap" {
-			decoratePrompt := prompts.PromptDecoratorForCommand(cmd)
-			client, err = Login(client, decoratePrompt)
+			client, err = Login(client)
 		} else if config.AuthnType == "oidc" {
 			client, err = OidcLogin(client, "", "")
 		} else {

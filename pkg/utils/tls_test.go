@@ -42,7 +42,8 @@ KU6CM0dKcqUWLkaFE23c2iWAhYAHqrFRRzAKBggqhkjOPQQDAwNnADBkAjAE3A3U
 vMkXEPvNvv4t30K6xtpG26qmZ+6OiISBIIXMljWnsiYR1gyZnTzIg3AQSw4Vmw==
 -----END CERTIFICATE-----`
 
-	selfSignedFingerprint := "31:CF:9F:34:65:7B:F1:A7:A2:AA:B0:4F:46:48:19:42:83:6D:84:E2"
+	// Note: this will change whenever certs are renewed for self-signed.badssl.com
+	selfSignedFingerprint := "42:B0:D7:0D:41:C3:7C:E7:09:9F:55:97:56:BC:51:E5:D0:34:24:51"
 
 	t.Run("Returns the right certificate from github.com", func(t *testing.T) {
 		cert, err := GetServerCert("github.com", false)
