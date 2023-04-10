@@ -16,6 +16,7 @@ source "../ci/keycloak/keycloak_functions.sh"
 ENABLE_OIDC_KEYCLOAK=false
 ENABLE_OIDC_OKTA=false
 ENABLE_OIDC_IDENTITY=false
+IDENTITY_USER=""
 
 # Minimal set of services.  We add to this list based on cmd line flags.
 services=(pg conjur proxy cli-dev)
@@ -135,6 +136,9 @@ conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-i
 conjur login -i alice -p alice'
   elif [ "$ENABLE_OIDC_IDENTITY" = true ]; then
     echo "Setting up Conjur for OIDC (Identity)"
+    docker-compose exec cli-dev bash -c 'conjur logout
+conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id identity
+conjur login -i $IDENTITY_USERNAME -p $IDENTITY_PASSWORD'
   fi
 
   echo
@@ -147,6 +151,7 @@ parse_options() {
       --oidc-keycloak ) ENABLE_OIDC_KEYCLOAK=true ; shift ;;
       --oidc-okta ) ENABLE_OIDC_OKTA=true ; shift ;;
       --oidc-identity ) ENABLE_OIDC_IDENTITY=true ; shift ;;
+      --identity-user ) IDENTITY_USER="$2" ; shift ; shift ;;
       # -h | --help ) print_help ; shift ;;
        * )
          if [ -z "$1" ]; then
@@ -157,6 +162,11 @@ parse_options() {
          fi ;;
     esac
   done
+
+  if [[ $ENABLE_OIDC_IDENTITY = true && -z "$IDENTITY_USER" ]]; then
+    echo "Flag --oidc-identity must be paired with flag --identity-user. See --help."
+    exit
+  fi
 }
 
 start_conjur_server() {
@@ -197,6 +207,11 @@ configure_oidc_providers() {
     setup_okta
   fi
 
+  if [[ $ENABLE_OIDC_IDENTITY = true ]]; then
+  echo "Configuring Identity provider"
+    setup_identity
+  fi
+
   enable_oidc_authenticators
 }
 
@@ -229,6 +244,24 @@ setup_okta() {
   fi
 }
 
+setup_identity() {
+  vars=("IDENTITY_PROVIDER_URI" "IDENTITY_CLIENT_ID" "IDENTITY_CLIENT_SECRET")
+  local identity_valid=true
+  for i in "${vars[@]}"
+  do
+    if [[ -z "${!i}" ]]; then
+      echo "${i} is not set"
+      $identity_valid = false
+    fi
+  done
+
+  if [[ $identity_valid = true ]]; then
+    generate_identity_policy
+    identity_setup=("${IDENTITY_PROVIDER_URI}" "${IDENTITY_CLIENT_ID}" "${IDENTITY_CLIENT_SECRET}" "email")
+    setup_oidc_client 'identity' ${identity_setup[@]}
+  fi
+}
+
 setup_oidc_client() {
   s=$1 arr=("$@")
 
@@ -247,6 +280,13 @@ setup_oidc_client() {
   client_load_policy "../ci/$t/users.yml"
 }
 
+function generate_identity_policy() {
+  echo "Generating policy for AuthnOIDC V2 service 'identity' and user '$IDENTITY_USER'"
+  policy_dir="../ci/identity"
+  rm -f "$policy_dir/users.yml"
+  sed -e "s#{{ IDENTITY_USER }}#$IDENTITY_USER#g" "$policy_dir/users.template.yml" > "$policy_dir/users.yml"
+}
+
 enable_oidc_authenticators() {
   if [[ $ENABLE_OIDC_KEYCLOAK = true ]]; then
     echo "Configuring Keycloak as OpenID provider for automatic testing"
@@ -256,8 +296,13 @@ enable_oidc_authenticators() {
   fi
 
   if [[ $ENABLE_OIDC_OKTA = true ]]; then
-    echo "Configuring OKTA as OpenID provider for manual testing"
+    echo "Configuring Okta as OpenID provider for manual testing"
     enabled_authenticators="$enabled_authenticators,authn-oidc/okta-2"
+  fi
+
+  if [[ $ENABLE_OIDC_IDENTITY = true ]]; then
+    echo "Configuring Identity as OpenID provider for manual testing"
+    enabled_authenticators="$enabled_authenticators,authn-oidc/identity"
   fi
 }
 

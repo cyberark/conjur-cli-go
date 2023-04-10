@@ -1,0 +1,7 @@
+# Users with permission to authenticate
+- !user {{ IDENTITY_USERNAME }}
+
+- !grant
+  members:
+    - !user {{ IDENTITY_USERNAME }}
+  role: !group conjur/authn-oidc/identity/authenticatable

@@ -13,6 +13,8 @@ dev/tmp
 build_ca_certificate
 .vscode/
 
+ci/identity/users.yml
+
 # CLI binaries
 conjur
 # Exclude binary entrypoint
