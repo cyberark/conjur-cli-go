@@ -222,7 +222,7 @@ setup_keycloak() {
   wait_for_keycloak_server
   fetch_keycloak_certificate
   keycloak_setup=("https://keycloak:8443/auth/realms/master" "conjurClient" "1234" "email")
-  setup_oidc_client 'keycloak' ${keycloak_setup[@]}
+  setup_oidc_client 'keycloak' "${keycloak_setup[@]}"
   create_keycloak_users
   echo "keycloak admin console url: http://0.0.0.0:7777/auth/admin"
 }
@@ -234,13 +234,13 @@ setup_okta() {
   do
     if [[ -z "${!i}" ]]; then
       echo "${i} is not set"
-      $okta_valid = false
+      okta_valid=false
     fi
   done
 
   if [[ $okta_valid = true ]]; then
     okta_setup=("${OKTA_PROVIDER_URI}oauth2/default" "${OKTA_CLIENT_ID}" "${OKTA_CLIENT_SECRET}" "preferred_username")
-    setup_oidc_client 'okta-2' ${okta_setup[@]}
+    setup_oidc_client 'okta-2' "${okta_setup[@]}"
   fi
 }
 
@@ -251,14 +251,14 @@ setup_identity() {
   do
     if [[ -z "${!i}" ]]; then
       echo "${i} is not set"
-      $identity_valid = false
+      identity_valid=false
     fi
   done
 
   if [[ $identity_valid = true ]]; then
     generate_identity_policy
     identity_setup=("${IDENTITY_PROVIDER_URI}" "${IDENTITY_CLIENT_ID}" "${IDENTITY_CLIENT_SECRET}" "email")
-    setup_oidc_client 'identity' ${identity_setup[@]}
+    setup_oidc_client 'identity' "${identity_setup[@]}"
   fi
 }
 
@@ -266,15 +266,15 @@ setup_oidc_client() {
   s=$1 arr=("$@")
 
   t="${s%-*}"
-  service="$(tr '[:lower:]' '[:upper:]' <<< ${t:0:1})${t:1}"
+  service=$(tr '[:lower:]' '[:upper:]' <<< "${t:0:1}")"${t:1}"
   echo "Setting ${service} policy and variable values in Conjur"
 
   client_load_policy "../ci/$t/policy.yml"
 
-  client_add_secret "conjur/authn-oidc/$s/provider-uri" ${arr[1]}
-  client_add_secret "conjur/authn-oidc/$s/client-id" ${arr[2]}
-  client_add_secret "conjur/authn-oidc/$s/client-secret" ${arr[3]}
-  client_add_secret "conjur/authn-oidc/$s/claim-mapping" ${arr[4]}
+  client_add_secret "conjur/authn-oidc/$s/provider-uri" "${arr[1]}"
+  client_add_secret "conjur/authn-oidc/$s/client-id" "${arr[2]}"
+  client_add_secret "conjur/authn-oidc/$s/client-secret" "${arr[3]}"
+  client_add_secret "conjur/authn-oidc/$s/claim-mapping" "${arr[4]}"
   client_add_secret "conjur/authn-oidc/$s/redirect_uri" "http://127.0.0.1:8888/callback"
 
   client_load_policy "../ci/$t/users.yml"
