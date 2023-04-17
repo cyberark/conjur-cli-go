@@ -16,7 +16,7 @@ source "../ci/keycloak/keycloak_functions.sh"
 ENABLE_OIDC_KEYCLOAK=false
 ENABLE_OIDC_OKTA=false
 ENABLE_OIDC_IDENTITY=false
-IDENTITY_USER=""
+export IDENTITY_USERNAME=""
 
 # Minimal set of services.  We add to this list based on cmd line flags.
 services=(pg conjur proxy cli-dev)
@@ -138,7 +138,7 @@ conjur login -i alice -p alice'
     echo "Setting up Conjur for OIDC (Identity)"
     docker-compose exec cli-dev bash -c 'conjur logout
 conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id identity
-conjur login -i $IDENTITY_USERNAME -p $IDENTITY_PASSWORD'
+conjur login -i $IDENTITY_USERNAME'
   fi
 
   echo
@@ -151,7 +151,7 @@ parse_options() {
       --oidc-keycloak ) ENABLE_OIDC_KEYCLOAK=true ; shift ;;
       --oidc-okta ) ENABLE_OIDC_OKTA=true ; shift ;;
       --oidc-identity ) ENABLE_OIDC_IDENTITY=true ; shift ;;
-      --identity-user ) IDENTITY_USER="$2" ; shift ; shift ;;
+      --identity-user ) IDENTITY_USERNAME="$2" ; shift ; shift ;;
       # -h | --help ) print_help ; shift ;;
        * )
          if [ -z "$1" ]; then
@@ -163,7 +163,7 @@ parse_options() {
     esac
   done
 
-  if [[ $ENABLE_OIDC_IDENTITY = true && -z "$IDENTITY_USER" ]]; then
+  if [[ $ENABLE_OIDC_IDENTITY = true && -z "$IDENTITY_USERNAME" ]]; then
     echo "Flag --oidc-identity must be paired with flag --identity-user. See --help."
     exit
   fi
@@ -261,10 +261,10 @@ setup_oidc_client() {
 }
 
 function generate_identity_policy() {
-  echo "Generating policy for AuthnOIDC V2 service 'identity' and user '$IDENTITY_USER'"
+  echo "Generating policy for AuthnOIDC V2 service 'identity' and user '$IDENTITY_USERNAME'"
   policy_dir="../ci/identity"
   rm -f "$policy_dir/users.yml"
-  sed -e "s#{{ IDENTITY_USER }}#$IDENTITY_USER#g" "$policy_dir/users.template.yml" > "$policy_dir/users.yml"
+  sed -e "s#{{ IDENTITY_USERNAME }}#$IDENTITY_USERNAME#g" "$policy_dir/users.template.yml" > "$policy_dir/users.yml"
 }
 
 check_environment_variables() {

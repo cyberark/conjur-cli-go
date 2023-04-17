@@ -32,6 +32,7 @@ services:
     environment:
       - OKTA_USERNAME=${OKTA_USERNAME:-user}
       - OKTA_PASSWORD=${OKTA_PASSWORD:-password}
+      - IDENTITY_USERNAME=${IDENTITY_USERNAME:-user}
     command: bash -c "cd ${PWD}/..; make install; sleep infinity"
     working_dir: ${PWD}/..
     restart: on-failure
