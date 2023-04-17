@@ -70,7 +70,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.5...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.6...HEAD
+[8.0.6]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.5...v8.0.6
 [8.0.5]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.4...v8.0.5
 [8.0.4]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.3...v8.0.4
 [8.0.3]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.2...v8.0.3
