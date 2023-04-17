@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.6] - 2023-03-24
+## [8.0.7] - 2023-04-17
+
+## [8.0.6] - 2023-04-17
 
 ### Fixed
 - Improved error message when using self-signed certificates
