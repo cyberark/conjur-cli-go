@@ -16,8 +16,12 @@ var initCmdTestCases = []struct {
 	args            []string
 	out             string
 	promptResponses []promptResponse
-	beforeTest      func(t *testing.T, conjurrcInTmpDir string)
-	assert          func(t *testing.T, conjurrcInTmpDir string, stdout string)
+	// Being unable to pipe responses to prompts is a known shortcoming of Survey.
+	// https://github.com/go-survey/survey/issues/394
+	// This flag is used to enable Pipe-based, and not PTY-based, tests.
+	pipe       bool
+	beforeTest func(t *testing.T, conjurrcInTmpDir string)
+	assert     func(t *testing.T, conjurrcInTmpDir string, stdout string)
 }{
 	{
 		name: "help",
@@ -89,6 +93,7 @@ appliance_url: http://conjur
 				response: "N",
 			},
 		},
+		pipe: true,
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
 			os.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
 		},
@@ -107,6 +112,7 @@ appliance_url: http://conjur
 				response: "y",
 			},
 		},
+		pipe: true,
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
 			os.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
 		},
@@ -168,6 +174,7 @@ appliance_url: http://host
 				response: "y",
 			},
 		},
+		pipe: true,
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			assertCertWritten(t, conjurrcInTmpDir, stdout)
 		},
@@ -181,6 +188,7 @@ appliance_url: http://host
 				response: "N",
 			},
 		},
+		pipe: true,
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			fmt.Println(stdout)
 			assert.Contains(t, stdout, "You decided not to trust the certificate")
@@ -205,6 +213,7 @@ appliance_url: http://host
 		},
 	},
 	{
+		name: "succeeds for self-signed certificate with --self-signed flag",
 		args: []string{"init", "-u=https://self-signed.badssl.com", "-a=test-account", "--self-signed"},
 		promptResponses: []promptResponse{
 			{
@@ -212,6 +221,7 @@ appliance_url: http://host
 				response: "y",
 			},
 		},
+		pipe: true,
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			assert.Contains(t, stdout, "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data")
 			assertCertWritten(t, conjurrcInTmpDir, stdout)
@@ -313,7 +323,16 @@ func TestInitCmd(t *testing.T) {
 			rootCmd.AddCommand(cmd)
 			rootCmd.SetArgs(args)
 
-			out, _ := executeCommandForTestWithPromptResponses(t, rootCmd, tc.promptResponses)
+			var out string
+			if tc.pipe {
+				var content string
+				for _, pr := range tc.promptResponses {
+					content = fmt.Sprintf("%s%s\n", content, pr.response)
+				}
+				out, _ = executeCommandForTestWithPipeResponses(t, rootCmd, content)
+			} else {
+				out, _ = executeCommandForTestWithPromptResponses(t, rootCmd, tc.promptResponses)
+			}
 
 			if tc.assert != nil {
 				tc.assert(t, conjurrcInTmpDir, out)

@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -32,46 +34,65 @@ func newAccountPrompt() *survey.Question {
 	}
 }
 
-func newFileExistsPrompt(filePath string) *survey.Question {
-	return &survey.Question{
-		Prompt:   &survey.Confirm{Message: fmt.Sprintf("File %s exists. Overwrite?", filePath)},
-		Validate: survey.Required,
+func stringToBool(s string) bool {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "y":
+		return true
+	case "yes":
+		return true
+	default:
+		return false
 	}
+}
+
+func basicConfirm(message string) bool {
+	fmt.Fprintf(os.Stdout, "%s ", message)
+	var answer string
+	fmt.Scanln(&answer)
+	fmt.Fprintln(os.Stdout, "")
+	return stringToBool(answer)
+}
+
+func confirm(message string) (bool, error) {
+	var err error
+	var userInput bool
+
+	// When handling Pipe-based Stdin, we can't use Survey to gather responses.
+	// https://github.com/go-survey/survey/issues/394
+	// Instead, use standard fmt funcs to prompt to Stdout and gather from Stdin.
+	if isatty.IsTerminal(os.Stdin.Fd()) {
+		q := &survey.Question{
+			Prompt:   &survey.Confirm{Message: message},
+			Validate: survey.Required,
+		}
+		err = survey.AskOne(q.Prompt, &userInput, survey.WithValidator(q.Validate), survey.WithShowCursor(true))
+	} else {
+		userInput = basicConfirm(message)
+	}
+
+	return userInput, err
 }
 
 // AskToOverwriteFile presents a prompt to get confirmation from a user to overwrite a file
 func AskToOverwriteFile(filePath string) error {
-	var userInput bool
+	userInput, err := confirm(fmt.Sprintf("File %s exists. Overwrite?", filePath))
 
-	q := newFileExistsPrompt(filePath)
-	err := survey.AskOne(q.Prompt, &userInput, survey.WithValidator(q.Validate), survey.WithShowCursor(true))
-
-	if userInput == false {
+	if !userInput {
 		return fmt.Errorf("Not overwriting %s", filePath)
 	}
 	return err
 }
 
-func newTrustCertPrompt() *survey.Question {
-	return &survey.Question{
-		Prompt:   &survey.Confirm{Message: "Trust this certificate?"},
-		Validate: survey.Required,
-	}
-}
-
 // AskToTrustCert presents a prompt to get confirmation from a user to trust a certificate
 func AskToTrustCert(fingerprint string) error {
-	var userInput bool
-
 	warning := fmt.Sprintf("\nThe server's certificate fingerprint is %s.\n", fingerprint) +
 		"Please verify this certificate on the appliance using command:\n" +
 		"openssl x509 -fingerprint -noout -in ~conjur/etc/ssl/conjur.pem\n\n"
 	os.Stdout.Write([]byte(warning))
 
-	q := newTrustCertPrompt()
-	err := survey.AskOne(q.Prompt, &userInput, survey.WithValidator(q.Validate), survey.WithShowCursor(true))
+	userInput, err := confirm("Trust this certificate?")
 
-	if userInput == false {
+	if !userInput {
 		return errors.New("You decided not to trust the certificate.")
 	}
 	return err

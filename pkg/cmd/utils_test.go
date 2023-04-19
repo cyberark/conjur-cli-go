@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"testing"
@@ -45,8 +46,49 @@ func executeCommandForTest(t *testing.T, c *cobra.Command, args ...string) (stri
 	cmd.SetIn(bytes.NewReader(nil))
 	err := cmd.Execute()
 
-	// strip ansi from stdout and stderr because we're using promptui
 	return stripAnsi(stdoutBuf.String()), stripAnsi(stderrBuf.String()), err
+}
+
+func executeCommandForTestWithPipeResponses(
+	t *testing.T, cmd *cobra.Command, content string,
+) (stdOut string, cmdErr error) {
+	t.Helper()
+
+	mockHelpText(cmd)
+
+	// Send CLI stdOut and stdErr to Pipes and consolidate
+	outR, outW, _ := os.Pipe()
+	errR, errW, _ := os.Pipe()
+	combinedOutReader := io.MultiReader(outR, errR)
+
+	defer func(origOut *os.File) { os.Stdout = origOut }(os.Stdout)
+	defer func(origErr *os.File) { os.Stderr = origErr }(os.Stderr)
+	os.Stdout = outW
+	os.Stderr = errW
+
+	// Receive CLI stdIn from Pipe
+	inR, inW, _ := os.Pipe()
+	_, err := inW.Write([]byte(content))
+	if err != nil {
+		t.Fatal(err)
+	}
+	inW.Close()
+
+	defer func(origIn *os.File) { os.Stdin = origIn }(os.Stdin)
+	os.Stdin = inR
+
+	// Run CLI cmd
+	err = cmd.Execute()
+
+	// Collect stdOut
+	outW.Close()
+	errW.Close()
+	out, outErr := ioutil.ReadAll(combinedOutReader)
+	if outErr != nil {
+		t.Fatal(outErr)
+	}
+
+	return stripAnsi(string(out)), err
 }
 
 func executeCommandForTestWithPromptResponses(

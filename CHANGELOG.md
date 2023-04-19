@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.8] - 2023-04-19
+
+### Fixed
+- Fixed piping input to `conjur init` confirmation prompts
+  [cyberark/conjur-cli-go#127](https://github.com/cyberark/conjur-cli-go/pull/127)
+
 ## [8.0.7] - 2023-04-18
 
 ### Fixed
@@ -76,7 +82,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.7...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.8...HEAD
+[8.0.8]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.7...v8.0.8
 [8.0.7]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.6...v8.0.7
 [8.0.6]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.5...v8.0.6
 [8.0.5]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.4...v8.0.5
