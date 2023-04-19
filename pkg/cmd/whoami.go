@@ -7,14 +7,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type whoamiResponse struct {
-	ClientIP      string `json:"client_ip"`
-	UserAgent     string `json:"user_agent"`
-	Account       string `json:"account"`
-	Username      string `json:"username"`
-	TokenIssuedAt string `json:"token_issued_at"`
-}
-
 type whoamiClient interface {
 	WhoAmI() ([]byte, error)
 }
@@ -28,7 +20,7 @@ type whoamiClientFactoryFunc func(*cobra.Command) (whoamiClient, error)
 func newWhoamiCommand(clientFactory whoamiClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
 		Use:          "whoami",
-		Short:        "Displays info about the logged in user",
+		Short:        "Display info about the logged in user",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := clientFactory(cmd)

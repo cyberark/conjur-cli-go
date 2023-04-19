@@ -31,8 +31,8 @@ var roleCmd = &cobra.Command{
 func newRoleExistsCmd(clientFactory roleClientFactoryFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exists",
-		Short: "Checks if a role exists",
-		Long: `Checks if a role exists
+		Short: "Check if a role exists",
+		Long: `Check if a role exists
 		
 This command requires a [role-id] and includes an optional [--json] 
 flag to return a JSON-formatted result.

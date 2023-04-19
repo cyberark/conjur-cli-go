@@ -15,7 +15,7 @@ func newVariableCmd(
 ) *cobra.Command {
 	variableCmd := &cobra.Command{
 		Use:   "variable",
-		Short: "Use the variable command to manage Conjur variables",
+		Short: "Manage Conjur variables",
 	}
 
 	variableGetCmd := newVariableGetCmd(getClientFactory)
@@ -84,8 +84,8 @@ func printMultilineResults(cmd *cobra.Command, secrets map[string][]byte) error 
 func newVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
 		Use:   "get",
-		Short: "Use the get subcommand to get the value of one or more Conjur variables",
-		Long: `Use the get subcommand to get the value of one or more Conjur variables
+		Short: "Get the value of one or more Conjur variables",
+		Long: `Get the value of one or more Conjur variables.
 
 Examples:
 - conjur variable get -i secret
@@ -137,8 +137,13 @@ Examples:
 
 func newVariableSetCmd(clientFactory variableSetClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:          "set",
-		Short:        "Use the set subcommand to set the value of a Conjur variable",
+		Use:   "set",
+		Short: "Set the value of a Conjur variable",
+		Long: `Set the value of a Conjur variable.
+
+Examples:
+- conjur variable set -i secret -v value
+		`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := cmd.Flags().GetString("id")

@@ -23,7 +23,7 @@ type authenticateClientFactoryFunc func(*cobra.Command) (authenticateClient, err
 func newAuthenticateCommand(clientFactory authenticateClientFactoryFunc) *cobra.Command {
 	authenticateCmd := &cobra.Command{
 		Use:          "authenticate",
-		Short:        "Obtains an access token for the currently logged-in user.",
+		Short:        "Obtain an access token for the currently logged-in user",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			conjurClient, err := clientFactory(cmd)

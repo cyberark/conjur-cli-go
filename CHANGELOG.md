@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Fixed piping input to `conjur init` confirmation prompts
   [cyberark/conjur-cli-go#127](https://github.com/cyberark/conjur-cli-go/pull/127)
+- Made command help text more consistent
+  [cyberark/conjur-cli-go#123](https://github.com/cyberark/conjur-cli-go/pull/123)
 
 ## [8.0.7] - 2023-04-18
 

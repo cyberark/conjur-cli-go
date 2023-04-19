@@ -69,7 +69,7 @@ func loadPolicyCommandRunner(
 func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	policyCmd := &cobra.Command{
 		Use:   "policy",
-		Short: "Use the policy command to manage Conjur policies",
+		Short: "Manage Conjur policies",
 	}
 
 	policyCmd.PersistentFlags().StringP("branch", "b", "", "The parent policy branch")

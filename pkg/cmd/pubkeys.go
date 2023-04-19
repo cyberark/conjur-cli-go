@@ -19,8 +19,8 @@ type pubKeysClientFactoryFunc func(*cobra.Command) (pubKeysClient, error)
 func newPubKeysCommand(clientFactory pubKeysClientFactoryFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pubkeys <username>",
-		Short: "Displays the public keys associated with a user",
-		Long: `Displays the public keys for a given [username].
+		Short: "Display the public keys associated with a user",
+		Long: `Display the public keys for a given [username].
 
 Examples:
 - conjur pubkeys alice`,

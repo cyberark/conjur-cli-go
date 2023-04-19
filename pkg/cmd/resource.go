@@ -30,8 +30,8 @@ var resourceCmd = &cobra.Command{
 func newResourceExistsCmd(clientFactory resourceClientFactoryFunc) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exists",
-		Short: "Checks if a resource exists",
-		Long: `Checks if a resource exists, given a [resource-id].
+		Short: "Check if a resource exists",
+		Long: `Check if a resource exists, given a [resource-id].
 		
 Examples:
 
