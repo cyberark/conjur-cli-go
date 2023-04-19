@@ -201,7 +201,7 @@ Examples:
 	tokensCreateCmd.Flags().Lookup("duration-hours").Hidden = false
 	tokensCreateCmd.Flags().Lookup("duration-minutes").Hidden = false
 
-	tokensCreateCmd.Flags().StringP("hostfactory-id", "i", "", "Host factory id.")
+	tokensCreateCmd.Flags().StringP("hostfactory-id", "i", "", "Host factory id")
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	// Adds support for 'hostfactoryid' flag to 'hostfactory tokens create' command

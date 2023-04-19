@@ -11,8 +11,8 @@ type configLoaderFn func() (conjurapi.Config, error)
 func newLogoutCmd(loadConfig configLoaderFn) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "logout",
-		Short:        "Logs out a user and deletes cached credentials.",
-		Long:         `Logs out a user and deletes the credentials cached in the operating system user's .netrc file.`,
+		Short:        "Log out the user and delete cached credentials.",
+		Long:         `Log out the user and delete the credentials cached in the operating system user's credential storage or .netrc file.`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := loadConfig()

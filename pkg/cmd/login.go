@@ -56,12 +56,12 @@ func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 func newLoginCmd(funcs loginCmdFuncs) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
-		Short: "Authenticate with Conjur using the provided identity and password.",
+		Short: "Authenticate with Conjur using the provided identity and password",
 		Long: `Authenticate with Conjur using the provided identity and password.
 
-The command will prompt for identity and password if they are not provided via flag.
+The command will prompt for identity and password if they are not provided via flags.
 
-On successful login, the password is exchanged for the user's API key, which is cached in the operating system user's .netrc file. Subsequent commands will authenticate using the cached credentials. To switch users, login again using new credentials. To erase credentials, use the 'logout' command.
+On successful login, the password is exchanged for the user's API key, which is cached in the operating system user's credential storage or .netrc file. Subsequent commands will authenticate using the cached credentials. To switch users, login again using new credentials. To erase credentials, use the 'logout' command.
 
 Examples:
 
