@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.9] - 2023-04-21
+
+### Security
+- Redact credentials dumped to logs with `--debug` flag
+  [cyberark/conjur-cli-go#130](https://github.com/cyberark/conjur-cli-go/pull/130)
+
 ## [8.0.8] - 2023-04-19
 
 ### Fixed
