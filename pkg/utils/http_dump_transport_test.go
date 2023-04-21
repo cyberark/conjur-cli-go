@@ -37,6 +37,7 @@ func TestDumpTransport(t *testing.T) {
 			path:        "/authn-xyz/account/login",
 			body:        "some-body",
 			assert: func(t *testing.T, req *http.Request, dump string) {
+				assert.Contains(t, dump, redactedString)
 				assert.NotContains(t, dump, "some-body")
 
 				reqBody, err := ioutil.ReadAll(req.Body)
@@ -79,6 +80,7 @@ func TestDumpTransport(t *testing.T) {
 			description: "Body is redacted if it contains a Conjur token",
 			body:        "{\"protected\":\"abcde\",\"payload\":\"fghijk\",\"signature\":\"lmnop\"}",
 			assert: func(t *testing.T, res *http.Response, dump string) {
+				assert.Contains(t, dump, redactedString)
 				assert.NotContains(t, dump, "{\"protected\":\"abcde\",\"payload\":\"fghijk\",\"signature\":\"lmnop\"}")
 
 				reqBody, err := ioutil.ReadAll(res.Body)

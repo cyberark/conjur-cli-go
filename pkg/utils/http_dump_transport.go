@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const redactedString = "[REDACTED]"
+
 type dumpTransport struct {
 	roundTripper http.RoundTripper
 	logRequest   func([]byte)
@@ -22,7 +24,7 @@ func redactAuthz(req *http.Request) (restore func()) {
 
 	origAuthz := req.Header.Get("Authorization")
 	if origAuthz != "" {
-		req.Header.Set("Authorization", "[REDACTED]")
+		req.Header.Set("Authorization", redactedString)
 		restore = func() {
 			req.Header.Set("Authorization", origAuthz)
 		}
@@ -50,31 +52,77 @@ func redactBody(rc io.ReadCloser, rx *regexp.Regexp) (bool, io.ReadCloser, error
 	return rx.Match(content.Bytes()), io.NopCloser(&content), nil
 }
 
+func redactRequestBody(req *http.Request) (restore func()) {
+	restore = func() {}
+
+	redactedReader := io.NopCloser(strings.NewReader(redactedString))
+
+	redact, origBody, _ := redactBody(req.Body, regexp.MustCompile(".*"))
+
+	if redact {
+		origLength := req.ContentLength
+
+		req.Body = redactedReader
+		req.ContentLength = int64(len(redactedString))
+
+		restore = func() {
+			req.Body = origBody
+			req.ContentLength = origLength
+		}
+	} else {
+		req.Body = origBody
+	}
+
+	return
+}
+
+func redactResponseBody(res *http.Response) (restore func()) {
+	restore = func() {}
+
+	redactedReader := io.NopCloser(strings.NewReader(redactedString))
+
+	redact, origBody, _ := redactBody(res.Body, regexp.MustCompile("{\"protected\":\".*\",\"payload\":\".*\",\"signature\":\".*\"}"))
+
+	if redact {
+		origLength := res.ContentLength
+
+		res.Body = redactedReader
+		res.ContentLength = int64(len(redactedString))
+
+		restore = func() {
+			res.Body = origBody
+			res.ContentLength = origLength
+		}
+	} else {
+		res.Body = origBody
+	}
+
+	return
+}
+
 // dumpRequest logs the contents of a given HTTP request, but first:
 // 1. sanitizes the Authorization header
 // 2. sanitizes the request body if the request is for authentication
 func (d *dumpTransport) dumpRequest(req *http.Request) []byte {
-	restore := redactAuthz(req)
-	defer restore()
+	restoreAuthz := redactAuthz(req)
+	defer restoreAuthz()
 
-	redact := false
-	var body io.ReadCloser
 	if strings.Contains(req.URL.Path, "/authn") {
-		redact, body, _ = redactBody(req.Body, regexp.MustCompile(".*"))
-		req.Body = body
+		restoreBody := redactRequestBody(req)
+		defer restoreBody()
 	}
 
-	dump, _ := httputil.DumpRequestOut(req, !redact)
+	dump, _ := httputil.DumpRequestOut(req, true)
 	return dump
 }
 
 // dumpResponse logs the contents of a given HTTP response, but first
 // sanitizes the response body if it includes a Conjur token.
 func (d *dumpTransport) dumpResponse(res *http.Response) []byte {
-	redact, body, _ := redactBody(res.Body, regexp.MustCompile("{\"protected\":\".*\",\"payload\":\".*\",\"signature\":\".*\"}"))
-	res.Body = body
+	restoreBody := redactResponseBody(res)
+	defer restoreBody()
 
-	dump, _ := httputil.DumpResponse(res, !redact)
+	dump, _ := httputil.DumpResponse(res, true)
 	return dump
 }
 
