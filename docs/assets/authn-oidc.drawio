@@ -1,0 +1,191 @@
+<mxfile host="app.diagrams.net" modified="2023-04-24T14:47:00.738Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36" etag="e_XO8E3M0iDaqIzmojIf" version="21.2.1" type="browser">
+  <diagram name="Page-1" id="HDq8crZnGoceBEKWcJa3">
+    <mxGraphModel dx="1401" dy="645" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="reUsgjwNzwV7kIMc-ddp-1" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
+          <mxGeometry x="20" y="10" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="reUsgjwNzwV7kIMc-ddp-2" value="CLI" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="170" y="10" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="reUsgjwNzwV7kIMc-ddp-3" value="Conjur" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="10" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="reUsgjwNzwV7kIMc-ddp-4" value="OIDC Provider" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="640" y="10" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="reUsgjwNzwV7kIMc-ddp-6" value="" style="endArrow=none;dashed=1;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="40" y="840" as="sourcePoint" />
+            <mxPoint x="40" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="reUsgjwNzwV7kIMc-ddp-7" value="" style="endArrow=none;dashed=1;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" target="reUsgjwNzwV7kIMc-ddp-2" edge="1" source="wymGIsb5RBrTBvSfO6ES-31">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="230" y="830" as="sourcePoint" />
+            <mxPoint x="229.5" y="110" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="reUsgjwNzwV7kIMc-ddp-8" value="" style="endArrow=none;dashed=1;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" target="reUsgjwNzwV7kIMc-ddp-3" edge="1" source="wymGIsb5RBrTBvSfO6ES-32">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="460" y="830" as="sourcePoint" />
+            <mxPoint x="459.5" y="110" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="reUsgjwNzwV7kIMc-ddp-9" value="" style="endArrow=none;dashed=1;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" target="reUsgjwNzwV7kIMc-ddp-4" edge="1" source="wymGIsb5RBrTBvSfO6ES-33">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="700" y="830" as="sourcePoint" />
+            <mxPoint x="699.5" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="reUsgjwNzwV7kIMc-ddp-10" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="40" y="140" as="sourcePoint" />
+            <mxPoint x="230" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="reUsgjwNzwV7kIMc-ddp-11" value="&lt;font face=&quot;Courier New&quot; style=&quot;font-size: 18px;&quot;&gt;conjur login&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="reUsgjwNzwV7kIMc-ddp-10" vertex="1" connectable="0">
+          <mxGeometry x="-0.2105" y="1" relative="1" as="geometry">
+            <mxPoint x="15" y="-19" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-1" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="230" y="180" as="sourcePoint" />
+            <mxPoint x="460" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-2" value="&lt;font face=&quot;Courier New&quot; style=&quot;font-size: 14px;&quot;&gt;GET /authn-oidc/&amp;lt;account&amp;gt;/&lt;br&gt;providers&lt;br&gt;&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wymGIsb5RBrTBvSfO6ES-1">
+          <mxGeometry x="-0.2" y="3" relative="1" as="geometry">
+            <mxPoint x="18" y="-17" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-6" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="460" y="280" as="sourcePoint" />
+            <mxPoint x="230" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-7" value="&lt;font style=&quot;font-size: 14px;&quot; face=&quot;Courier New&quot;&gt;...&lt;br&gt;&quot;redirect_uri&quot;:&lt;br&gt;&quot;&amp;lt;provider-url&amp;gt;&quot;&lt;br&gt;...&lt;/font&gt;" style="edgeLabel;html=1;align=left;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wymGIsb5RBrTBvSfO6ES-6">
+          <mxGeometry x="0.5043" y="1" relative="1" as="geometry">
+            <mxPoint x="-17" y="-41" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-8" value="Ad-hoc HTTP server" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="170" y="360" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-10" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.925;entryY=-0.033;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" target="wymGIsb5RBrTBvSfO6ES-8">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="230" y="330" as="sourcePoint" />
+            <mxPoint x="280" y="350" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="320" y="330" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-11" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Start server on localhost&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wymGIsb5RBrTBvSfO6ES-10">
+          <mxGeometry x="-0.4105" y="4" relative="1" as="geometry">
+            <mxPoint x="49" y="-6" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-12" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="230" y="470" as="sourcePoint" />
+            <mxPoint x="40" y="470" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-13" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Open browser to&lt;br&gt;&lt;font face=&quot;Courier New&quot;&gt;&amp;lt;provider-url&amp;gt;&lt;/font&gt;&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wymGIsb5RBrTBvSfO6ES-12">
+          <mxGeometry x="-0.3263" y="-4" relative="1" as="geometry">
+            <mxPoint x="-36" y="-16" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-14" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="40" y="530" as="sourcePoint" />
+            <mxPoint x="700" y="530" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-15" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;User logs in to OIDC Provider, performs MFA if required&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wymGIsb5RBrTBvSfO6ES-14">
+          <mxGeometry x="-0.8152" y="-1" relative="1" as="geometry">
+            <mxPoint x="399" y="-11" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-16" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.867;entryY=1.033;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" target="wymGIsb5RBrTBvSfO6ES-8">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="700" y="580" as="sourcePoint" />
+            <mxPoint x="40" y="580" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="274" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-17" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Redirects browser to localhost with OIDC code&lt;br&gt;&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wymGIsb5RBrTBvSfO6ES-16">
+          <mxGeometry x="0.1667" y="1" relative="1" as="geometry">
+            <mxPoint x="75" y="-11" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-19" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.683;exitY=1.033;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="wymGIsb5RBrTBvSfO6ES-8">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="261.96000000000004" y="420" as="sourcePoint" />
+            <mxPoint x="230" y="635" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="252" y="635" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-20" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Server returns OIDC code&lt;br&gt;to CLI and shuts down&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wymGIsb5RBrTBvSfO6ES-19">
+          <mxGeometry x="0.6649" relative="1" as="geometry">
+            <mxPoint x="88" y="-6" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-22" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="230" y="700" as="sourcePoint" />
+            <mxPoint x="460" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-23" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;CLI authenticates to Conjur&lt;br&gt;with OIDC code&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wymGIsb5RBrTBvSfO6ES-22">
+          <mxGeometry x="-0.2609" y="2" relative="1" as="geometry">
+            <mxPoint x="15" y="-18" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-26" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="460" y="760" as="sourcePoint" />
+            <mxPoint x="700" y="760" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-27" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Conjur exchanges OIDC code for&lt;br&gt;JWT,&amp;nbsp;verifies user access to Conjur&lt;br&gt;&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wymGIsb5RBrTBvSfO6ES-26">
+          <mxGeometry x="0.4" y="-2" relative="1" as="geometry">
+            <mxPoint x="-48" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-28" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="460" y="790" as="sourcePoint" />
+            <mxPoint x="230" y="790" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-29" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Conjur issues access token&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="wymGIsb5RBrTBvSfO6ES-28">
+          <mxGeometry x="0.2261" relative="1" as="geometry">
+            <mxPoint x="21" y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-30" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="20" y="844" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-31" value="CLI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="170" y="844" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-32" value="Conjur" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="844" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wymGIsb5RBrTBvSfO6ES-33" value="OIDC Provider" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="844" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
