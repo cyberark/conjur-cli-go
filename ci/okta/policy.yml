@@ -5,7 +5,7 @@
       id: authn-oidc
       body:
         - !policy
-          id: okta-2
+          id: okta
           body:
           - !webservice
 
