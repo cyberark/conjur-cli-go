@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -20,7 +23,7 @@ var initCmdTestCases = []struct {
 	// https://github.com/go-survey/survey/issues/394
 	// This flag is used to enable Pipe-based, and not PTY-based, tests.
 	pipe       bool
-	beforeTest func(t *testing.T, conjurrcInTmpDir string)
+	beforeTest func(t *testing.T, conjurrcInTmpDir string) func()
 	assert     func(t *testing.T, conjurrcInTmpDir string, stdout string)
 }{
 	{
@@ -94,8 +97,9 @@ appliance_url: http://conjur
 			},
 		},
 		pipe: true,
-		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
+		beforeTest: func(t *testing.T, conjurrcInTmpDir string) func() {
 			os.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
+			return nil
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			// Assert that file is not overwritten
@@ -113,8 +117,9 @@ appliance_url: http://conjur
 			},
 		},
 		pipe: true,
-		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
+		beforeTest: func(t *testing.T, conjurrcInTmpDir string) func() {
 			os.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
+			return nil
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			// Assert that file is overwritten
@@ -142,8 +147,9 @@ credential_storage: file
 	{
 		name: "force overwrite",
 		args: []string{"init", "-u=http://host", "-a=yet-another-test-account", "--force", "-i"},
-		beforeTest: func(t *testing.T, conjurrcInTmpDir string) {
+		beforeTest: func(t *testing.T, conjurrcInTmpDir string) func() {
 			os.WriteFile(conjurrcInTmpDir, []byte("something"), 0644)
+			return nil
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			// Assert that file is overwritten
@@ -205,16 +211,20 @@ appliance_url: http://host
 	},
 	{
 		name: "fails for self-signed certificate",
-		args: []string{"init", "-u=https://self-signed.badssl.com", "-a=test-account"},
+		args: []string{"init", "-u=https://localhost:8080", "-a=test-account"},
+		beforeTest: func(t *testing.T, conjurrcInTmpDir string) func() {
+			return startSelfSignedServer(t, 8080)
+		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			assert.Contains(t, stdout, "Unable to retrieve and validate certificate")
+			assert.Contains(t, stdout, "x509")
 			assert.Contains(t, stdout, "If you're attempting to use a self-signed certificate, re-run the init command with the `--self-signed` flag")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
 	{
 		name: "succeeds for self-signed certificate with --self-signed flag",
-		args: []string{"init", "-u=https://self-signed.badssl.com", "-a=test-account", "--self-signed"},
+		args: []string{"init", "-u=https://localhost:8080", "-a=test-account", "--self-signed"},
 		promptResponses: []promptResponse{
 			{
 				prompt:   "Trust this certificate?",
@@ -222,6 +232,9 @@ appliance_url: http://host
 			},
 		},
 		pipe: true,
+		beforeTest: func(t *testing.T, conjurrcInTmpDir string) func() {
+			return startSelfSignedServer(t, 8080)
+		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			assert.Contains(t, stdout, "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data")
 			assertCertWritten(t, conjurrcInTmpDir, stdout)
@@ -307,7 +320,10 @@ func TestInitCmd(t *testing.T) {
 			conjurrcInTmpDir := tempDir + "/.conjurrc"
 
 			if tc.beforeTest != nil {
-				tc.beforeTest(t, conjurrcInTmpDir)
+				cleanup := tc.beforeTest(t, conjurrcInTmpDir)
+				if cleanup != nil {
+					defer cleanup()
+				}
 			}
 
 			// --file default to conjurrcInTmpDir. It can always be overwritten in each test case
@@ -388,4 +404,19 @@ func assertCertWritten(t *testing.T, conjurrcInTmpDir string, stdout string) {
 	assert.Contains(t, stdout, "Wrote certificate to "+expectedCertPath)
 	data, _ = os.ReadFile(expectedCertPath)
 	assert.Contains(t, string(data), "-----BEGIN CERTIFICATE-----")
+}
+
+func startSelfSignedServer(t *testing.T, port int) func() {
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Hello, client")
+	}))
+	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+	if err != nil {
+		assert.NoError(t, err, "unabled to start test server")
+	}
+
+	server.Listener = l
+	server.StartTLS()
+
+	return func() { server.Close() }
 }

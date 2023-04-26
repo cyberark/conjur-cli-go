@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bytes"
 	"crypto/sha1"
 	"crypto/tls"
 	"crypto/x509"
@@ -65,13 +64,6 @@ func GetServerCert(host string, allowSelfSigned bool) (ServerCert, error) {
 }
 
 func getSha1Fingerprint(cert []byte) string {
-	sum := sha1.Sum(cert)
-	var buf bytes.Buffer
-	for i, f := range sum {
-		if i > 0 {
-			buf.WriteString(":")
-		}
-		fmt.Fprintf(&buf, "%02X", f)
-	}
-	return buf.String()
+	sha1sum := sha1.Sum(cert)
+	return strings.ToUpper(fmt.Sprintf("%x", sha1sum))
 }
