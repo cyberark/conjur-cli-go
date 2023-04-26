@@ -33,10 +33,9 @@ func redactAuthz(req *http.Request) (restore func()) {
 	return
 }
 
-// redactBody determines whether a given request or response body should
-// be redacted, and returns a copy of the body to reattach to the
-// request or response in question.
-func redactBody(rc io.ReadCloser, rx *regexp.Regexp) (bool, io.ReadCloser, error) {
+// bodyMatch determines whether a given ReadCloser should be redacted
+// given a RegEx, and returns a copy of the ReadCloser.
+func bodyMatch(rc io.ReadCloser, rx *regexp.Regexp) (bool, io.ReadCloser, error) {
 	if rc == nil || rc == http.NoBody {
 		return true, http.NoBody, nil
 	}
@@ -52,49 +51,27 @@ func redactBody(rc io.ReadCloser, rx *regexp.Regexp) (bool, io.ReadCloser, error
 	return rx.Match(content.Bytes()), io.NopCloser(&content), nil
 }
 
-func redactRequestBody(req *http.Request) (restore func()) {
+// redactBody replaces a given ReadCloser with a redacted one if it
+// is found to match the given RegEx, and returns a function to
+// restore the ReadCloser.
+func redactBody(rc *io.ReadCloser, contentLen *int64, rx *regexp.Regexp) (restore func()) {
 	restore = func() {}
 
-	redactedReader := io.NopCloser(strings.NewReader(redactedString))
-
-	redact, origBody, _ := redactBody(req.Body, regexp.MustCompile(".*"))
+	redact, origBody, _ := bodyMatch(*rc, rx)
 
 	if redact {
-		origLength := req.ContentLength
+		origLength := *contentLen
 
-		req.Body = redactedReader
-		req.ContentLength = int64(len(redactedString))
-
-		restore = func() {
-			req.Body = origBody
-			req.ContentLength = origLength
-		}
-	} else {
-		req.Body = origBody
-	}
-
-	return
-}
-
-func redactResponseBody(res *http.Response) (restore func()) {
-	restore = func() {}
-
-	redactedReader := io.NopCloser(strings.NewReader(redactedString))
-
-	redact, origBody, _ := redactBody(res.Body, regexp.MustCompile("{\"protected\":\".*\",\"payload\":\".*\",\"signature\":\".*\"}"))
-
-	if redact {
-		origLength := res.ContentLength
-
-		res.Body = redactedReader
-		res.ContentLength = int64(len(redactedString))
+		redactedReader := io.NopCloser(strings.NewReader(redactedString))
+		*rc = redactedReader
+		*contentLen = int64(len(redactedString))
 
 		restore = func() {
-			res.Body = origBody
-			res.ContentLength = origLength
+			*rc = origBody
+			*contentLen = origLength
 		}
 	} else {
-		res.Body = origBody
+		*rc = origBody
 	}
 
 	return
@@ -108,7 +85,11 @@ func (d *dumpTransport) dumpRequest(req *http.Request) []byte {
 	defer restoreAuthz()
 
 	if strings.Contains(req.URL.Path, "/authn") {
-		restoreBody := redactRequestBody(req)
+		restoreBody := redactBody(
+			&req.Body,
+			&req.ContentLength,
+			regexp.MustCompile(".*"),
+		)
 		defer restoreBody()
 	}
 
@@ -119,7 +100,11 @@ func (d *dumpTransport) dumpRequest(req *http.Request) []byte {
 // dumpResponse logs the contents of a given HTTP response, but first
 // sanitizes the response body if it includes a Conjur token.
 func (d *dumpTransport) dumpResponse(res *http.Response) []byte {
-	restoreBody := redactResponseBody(res)
+	restoreBody := redactBody(
+		&res.Body,
+		&res.ContentLength,
+		regexp.MustCompile("{\"protected\":\".*\",\"payload\":\".*\",\"signature\":\".*\"}"),
+	)
 	defer restoreBody()
 
 	dump, _ := httputil.DumpResponse(res, true)
