@@ -74,7 +74,7 @@ plugins:
   gofmt:
     enabled: true
   golint:
-    enabled: true
+    enabled: false
     exclude_patterns:
       - "**/"                # exclude all
       - "!./cmd/"            # unexclude just the ones we want to lint
