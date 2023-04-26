@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"html"
 	"io"
 	"io/ioutil"
@@ -16,12 +17,20 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 )
 
 // OidcLogin attempts to login to Conjur using the OIDC flow. Username and password can be provided to
 // bypass the browser and use the username and password to fetch an OIDC code. This option is meant for testing
 // purposes only and will print a warning.
 func OidcLogin(conjurClient ConjurClient, username string, password string) (ConjurClient, error) {
+	username, password, err := prompts.MaybeAskForCredentials(username, password)
+	if err != nil {
+		return nil, err
+	}
+
 	// If a username and password is provided, attempt to use them to fetch an OIDC code instead of opening a browser
 	oidcPromptHandler := openBrowser
 	if username != "" && password != "" {
@@ -48,6 +57,9 @@ func fetchOidcCodeFromProvider(username, password string) func(providerURL strin
 		case strings.Contains(providerURL, "okta"):
 			fmt.Println("Using Okta as OIDC provider")
 			return fetchOidcCodeFromOkta(httpClient, username, password, providerURL)
+		case strings.Contains(providerURL, "idaptive"):
+			fmt.Println("Using Identity as OIDC provider")
+			return fetchOidcCodeFromIdentity(httpClient, username, password, providerURL)
 		default:
 			fmt.Println("Using Keycloak as OIDC provider")
 			return fetchOidcCodeFromKeycloak(httpClient, username, password, providerURL)
@@ -99,7 +111,7 @@ func fetchOidcCodeFromKeycloak(httpClient *http.Client, username, password, prov
 
 	// If the login was successful, the provider will redirect to the callback URL with a code
 	if resp.StatusCode == 302 {
-		callbackRedirect(resp)
+		callbackRedirect(resp.Header.Get("Location"))
 		return nil
 	}
 
@@ -122,7 +134,7 @@ func fetchOidcCodeFromOkta(httpClient *http.Client, username, password, provider
 
 	// If the login was successful, redirect to the callback URL with a code
 	if resp.StatusCode == 302 {
-		callbackRedirect(resp)
+		callbackRedirect(resp.Header.Get("Location"))
 		return nil
 	}
 	return errors.New("unable to fetch authorization code from Okta")
@@ -180,8 +192,7 @@ func fetchSessionTokenFromOkta(httpClient *http.Client, providerURL string, user
 	return respJSON.SessionToken, nil
 }
 
-func callbackRedirect(resp *http.Response) error {
-	location := string(resp.Header.Get("Location"))
+func callbackRedirect(location string) error {
 	go func() {
 		// Send a request to the callback URL to pass the code back to the CLI
 		resp, err := http.Get(location)
@@ -192,6 +203,249 @@ func callbackRedirect(resp *http.Response) error {
 		defer resp.Body.Close()
 	}()
 	return nil
+}
+
+func fetchOidcCodeFromIdentity(httpClient *http.Client, username, password, providerURL string) error {
+	authToken, err := fetchAuthTokenFromIdentity(httpClient, providerURL, username, password)
+	if err != nil {
+		return err
+	}
+
+	target := providerURL
+	code := 0
+	for !strings.Contains(target, "127.0.0.1:8888/callback") {
+		req, err := http.NewRequest("GET", target, nil)
+		if err != nil {
+			return err
+		}
+		req.Header.Add("Accept", "*/*")
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
+
+		resp, err := httpClient.Do(req)
+		if err != nil {
+			return err
+		}
+
+		target = resp.Header.Get("Location")
+		code = resp.StatusCode
+	}
+
+	if code == 302 {
+		callbackRedirect(target)
+		return nil
+	}
+	return errors.New("unable to fetch authorization code from Identity")
+}
+
+type startAuthData struct {
+	Version  string `json:"Version"`
+	Username string `json:"User"`
+}
+
+type advanceAuthData struct {
+	Action      string `json:"Action"`
+	Answer      string `json:"Answer,omitempty"`
+	MechanismId string `json:"MechanismId"`
+	SessionId   string `json:"SessionId"`
+}
+
+type mechanism struct {
+	PromptSelectMech string `json:"PromptSelectMech"`
+	MechanismId      string `json:"MechanismId"`
+}
+
+type startAuthResponse struct {
+	Success bool `json:"success"`
+	Result  struct {
+		SessionId  string `json:"SessionId,omitempty"`
+		Challenges []struct {
+			Mechanisms []mechanism `json:"Mechanisms"`
+		} `json:"Challenges,omitempty"`
+		Summary string `json:"Summary,omitempty"`
+		PodFqdn string `json:"PodFqdn",omitempty`
+	} `json:"Result"`
+	Message         string `json:"Message"`
+	MessageId       string `json:"MessageID"`
+	Exception       string `json:"Exception"`
+	ErrorId         string `json:"ErrorID"`
+	ErrorCode       string `json:"ErrorCode"`
+	IsSoftError     bool   `json:"IsSoftError"`
+	InnerExceptions string `json:"InnerExceptions"`
+}
+
+type advanceAuthResponse struct {
+	Success bool `json:"success"`
+	Result  struct {
+		Summary            string `json:"Summary"`
+		GeneratedAuthValue string `json:"GeneratedAuthValue"`
+	} `json:"Result"`
+	Message         string `json:"Message"`
+	MessageId       string `json:"MessageID"`
+	Exception       string `json:"Exception"`
+	ErrorId         string `json:"ErrorID"`
+	ErrorCode       string `json:"ErrorCode"`
+	IsSoftError     bool   `json:"IsSoftError"`
+	InnerExceptions string `json:"InnerExceptions"`
+}
+
+func authRequest[data startAuthData | advanceAuthData, responseContent startAuthResponse | advanceAuthResponse](
+	endpoint string,
+	payload data,
+	httpClient *http.Client,
+) (*http.Response, responseContent, error) {
+	var content responseContent
+
+	byteData, _ := json.Marshal(payload)
+	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(byteData))
+	if err != nil {
+		fmt.Println(err)
+		return nil, content, err
+	}
+	req.Header.Add("Accept", "*/*")
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return nil, content, err
+	}
+	defer resp.Body.Close()
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, content, err
+	}
+
+	err = json.Unmarshal(responseBody, &content)
+	if err != nil {
+		return nil, content, err
+	}
+
+	return resp, content, nil
+}
+
+func startAuthRequest(hostname string, data startAuthData, httpClient *http.Client) (*http.Response, startAuthResponse, error) {
+	endpoint := hostname + "/Security/StartAuthentication"
+	return authRequest[startAuthData, startAuthResponse](endpoint, data, httpClient)
+}
+
+func advanceAuthRequest(hostname string, data advanceAuthData, httpClient *http.Client) (*http.Response, advanceAuthResponse, error) {
+	endpoint := hostname + "/Security/AdvanceAuthentication"
+	return authRequest[advanceAuthData, advanceAuthResponse](endpoint, data, httpClient)
+}
+
+func fetchAuthTokenFromIdentity(httpClient *http.Client, providerURL string, username string, password string) (string, error) {
+	fmt.Println("Attempting to get auth token from Identity using the provided username/password")
+
+	// A request to /Security/StartAuthentication begins the login process,
+	// and returns a list of authentication mechanisms to engage with.
+
+	host := extractHostname(providerURL)
+	startData := startAuthData{
+		Version:  "1.0",
+		Username: username,
+	}
+	_, startResp, err := startAuthRequest(host, startData, httpClient)
+	if err != nil {
+		return "", err
+	}
+	if startResp.Result.PodFqdn != "" {
+		host = fmt.Sprintf("https://%s", startResp.Result.PodFqdn)
+		_, startResp, err = startAuthRequest(host, startData, httpClient)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	primaryMechanisms := startResp.Result.Challenges[0].Mechanisms
+	secondaryMechanisms := startResp.Result.Challenges[1].Mechanisms
+
+	// Usually, we would iterate through MFA challenges sequentially.
+	// For our purposes, though, we want to make sure to use the Password
+	// and Mobile Authenticator mechanisms.
+
+	passwordMechanism := primaryMechanisms[slices.IndexFunc(
+		primaryMechanisms,
+		func(m mechanism) bool {
+			return m.PromptSelectMech == "Password"
+		},
+	)]
+	mobileAuthMechanism := secondaryMechanisms[slices.IndexFunc(
+		secondaryMechanisms,
+		func(m mechanism) bool {
+			return m.PromptSelectMech == "Mobile Authenticator"
+		},
+	)]
+
+	// Advance Password-based authentication handshake.
+
+	resp, advanceResp, err := advanceAuthRequest(host, advanceAuthData{
+		Action:      "Answer",
+		Answer:      password,
+		MechanismId: passwordMechanism.MechanismId,
+		SessionId:   startResp.Result.SessionId,
+	}, httpClient)
+	if err != nil {
+		return "", nil
+	}
+	if !(advanceResp.Success) {
+		return "", errors.New(advanceResp.Message)
+	}
+
+	// Advance Mobile Authenticator-based authentication handshake.
+
+	resp, advanceResp, err = advanceAuthRequest(host, advanceAuthData{
+		Action:      "StartOOB",
+		MechanismId: mobileAuthMechanism.MechanismId,
+		SessionId:   startResp.Result.SessionId,
+	}, httpClient)
+	if err != nil {
+		return "", err
+	}
+	if !(advanceResp.Success) {
+		return "", errors.New(advanceResp.Message)
+	}
+	fmt.Println(fmt.Sprintf("\nDev env users: select %s in your Identity notification", advanceResp.Result.GeneratedAuthValue))
+
+	// For 30 seconds, Poll for out-of-band authentication success.
+
+	poll := func() error {
+		ticker := time.NewTicker(3 * time.Second)
+		defer ticker.Stop()
+		timeout := time.After(30 * time.Second)
+		for {
+			select {
+			case <-timeout:
+				return errors.New("Timed out waiting for out-of-band authentication")
+			case <-ticker.C:
+				resp, advanceResp, err = advanceAuthRequest(host, advanceAuthData{
+					Action:      "Poll",
+					MechanismId: mobileAuthMechanism.MechanismId,
+					SessionId:   startResp.Result.SessionId,
+				}, httpClient)
+				if err != nil {
+					return err
+				}
+
+				if advanceResp.Result.Summary == "LoginSuccess" {
+					return nil
+				}
+			}
+		}
+	}
+
+	err = poll()
+	if err != nil {
+		return "", err
+	}
+
+	// When the OOB Poll response indicates LoginSuccess, the bearer token is
+	// included as an .ASPXAUTH cookie.
+
+	return resp.Cookies()[slices.IndexFunc(
+		resp.Cookies(), func(c *http.Cookie) bool {
+			return c.Name == ".ASPXAUTH"
+		},
+	)].Value, nil
 }
 
 func extractHostname(providerURL string) string {

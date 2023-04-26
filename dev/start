@@ -13,8 +13,10 @@ source "../ci/keycloak/keycloak_functions.sh"
 # TODO: add a prompt and an -f flag to give the user control over destroying an already existing development environment.
 # It can be such a pain to mistakenly destroy your environment.
 
-ENABLE_AUTHN_OIDC=false
+ENABLE_OIDC_KEYCLOAK=false
 ENABLE_OIDC_OKTA=false
+ENABLE_OIDC_IDENTITY=false
+export IDENTITY_USERNAME=""
 
 # Minimal set of services.  We add to this list based on cmd line flags.
 services=(pg conjur proxy cli-dev)
@@ -111,7 +113,7 @@ EOL
   echo
   echo "Setting up authenticators"
 
-  init_oidc
+  configure_oidc_providers
 
   # Updates CONJUR_AUTHENTICATORS and restarts required services.
   start_auth_services
@@ -127,11 +129,16 @@ EOL
     docker-compose exec cli-dev bash -c 'conjur logout
 conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id okta-2
 conjur login -i $OKTA_USERNAME -p $OKTA_PASSWORD'
-  elif [ "$ENABLE_AUTHN_OIDC" = true ]; then
+  elif [ "$ENABLE_OIDC_KEYCLOAK" = true ]; then
     echo "Setting up Conjur for OIDC (Keycloak)"
     docker-compose exec cli-dev bash -c 'conjur logout
 conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id keycloak
 conjur login -i alice -p alice'
+  elif [ "$ENABLE_OIDC_IDENTITY" = true ]; then
+    echo "Setting up Conjur for OIDC (Identity)"
+    docker-compose exec cli-dev bash -c 'conjur logout
+conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id identity
+conjur login -i $IDENTITY_USERNAME'
   fi
 
   echo
@@ -141,8 +148,10 @@ conjur login -i alice -p alice'
 parse_options() {
   while true ; do
     case "$1" in
-      --authn-oidc ) ENABLE_AUTHN_OIDC=true ; shift ;;
+      --oidc-keycloak ) ENABLE_OIDC_KEYCLOAK=true ; shift ;;
       --oidc-okta ) ENABLE_OIDC_OKTA=true ; shift ;;
+      --oidc-identity ) ENABLE_OIDC_IDENTITY=true ; shift ;;
+      --identity-user ) IDENTITY_USERNAME="$2" ; shift ; shift ;;
       # -h | --help ) print_help ; shift ;;
        * )
          if [ -z "$1" ]; then
@@ -153,6 +162,11 @@ parse_options() {
          fi ;;
     esac
   done
+
+  if [[ $ENABLE_OIDC_IDENTITY = true && -z "$IDENTITY_USERNAME" ]]; then
+    echo "Flag --oidc-identity must be paired with flag --identity-user. See --help."
+    exit
+  fi
 }
 
 start_conjur_server() {
@@ -183,93 +197,109 @@ client_add_secret() {
 configure_oidc_providers() {
   # Start conjur again, since it is recreating by docker-compose because of
   # dependency with keycloak
+  if [[ $ENABLE_OIDC_KEYCLOAK = true ]]; then
+    echo "Configuring Keycloak provider"
+    setup_keycloak
+  fi
+
+  if [[ $ENABLE_OIDC_OKTA = true ]]; then
+    echo "Configuring Okta provider"
+    setup_okta
+  fi
+
+  if [[ $ENABLE_OIDC_IDENTITY = true ]]; then
+    echo "Configuring Identity provider"
+    setup_identity
+  fi
+
+  enable_oidc_authenticators
+}
+
+setup_keycloak() {
+  services+=(keycloak)
+  docker-compose up -d --no-deps "${services[@]}"
   start_conjur_server
   wait_for_keycloak_server
   fetch_keycloak_certificate
-  configure_oidc_authenticators
-  enable_oidc_authenticators
+  setup_oidc_client "keycloak" "https://keycloak:8443/auth/realms/master" "conjurClient" "1234" "email"
   create_keycloak_users
   echo "keycloak admin console url: http://0.0.0.0:7777/auth/admin"
 }
 
-configure_oidc_authenticators() {
-    echo "Setting Keycloak policy and variables values in Conjur"
-    client_load_policy "../ci/keycloak/policy.yml"
+setup_okta() {
+  check_environment_variables "OKTA_PROVIDER_URI" "OKTA_CLIENT_ID" "OKTA_CLIENT_SECRET"
+  setup_oidc_client "okta-2" "${OKTA_PROVIDER_URI}oauth2/default" \
+                    "${OKTA_CLIENT_ID}" "${OKTA_CLIENT_SECRET}" "preferred_username"
+}
 
-    client_add_secret 'conjur/authn-oidc/keycloak/provider-uri' 'https://keycloak:8443/auth/realms/master'
-    client_add_secret 'conjur/authn-oidc/keycloak/client-id' 'conjurClient'
-    client_add_secret 'conjur/authn-oidc/keycloak/client-secret' '1234'
-    client_add_secret 'conjur/authn-oidc/keycloak/claim-mapping' 'email'
-    client_add_secret 'conjur/authn-oidc/keycloak/redirect_uri' 'http://127.0.0.1:8888/callback'
+setup_identity() {
+  check_environment_variables "IDENTITY_PROVIDER_URI" "IDENTITY_CLIENT_ID" "IDENTITY_CLIENT_SECRET"
+  generate_identity_policy
+  setup_oidc_client "identity" "${IDENTITY_PROVIDER_URI}" \
+                    "${IDENTITY_CLIENT_ID}" "${IDENTITY_CLIENT_SECRET}" "email"
+}
 
-    client_load_policy "../ci/keycloak/users.yml"
+setup_oidc_client() {
+  service_id="$1"
+  provider_uri="$2"
+  client_id="$3"
+  client_secret="$4"
+  claim_mapping="$5"
 
-  if [[ $ENABLE_OIDC_OKTA = true ]]; then
-    echo "Confuring Okta policy and variables values in Conjur"
-    client_load_policy "../ci/okta/policy.yml"
+  trim_service_id="${service_id%-*}"
+  echo "Setting $service_id policy and variable values in Conjur"
 
-    local okta_valid=true
-    if [[ -z "$OKTA_PROVIDER_URI" ]]; then
-      echo "OKTA_PROVIDER_URI is not set"
-      okta_valid=false
+  client_load_policy "../ci/$trim_service_id/policy.yml"
+
+  client_add_secret "conjur/authn-oidc/$service_id/provider-uri" "$provider_uri"
+  client_add_secret "conjur/authn-oidc/$service_id/client-id" "$client_id"
+  client_add_secret "conjur/authn-oidc/$service_id/client-secret" "$client_secret"
+  client_add_secret "conjur/authn-oidc/$service_id/claim-mapping" "$claim_mapping"
+  client_add_secret "conjur/authn-oidc/$service_id/redirect_uri" "http://127.0.0.1:8888/callback"
+
+  client_load_policy "../ci/$trim_service_id/users.yml"
+}
+
+function generate_identity_policy() {
+  echo "Generating policy for AuthnOIDC V2 service 'identity' and user '$IDENTITY_USERNAME'"
+  policy_dir="../ci/identity"
+  rm -f "$policy_dir/users.yml"
+  sed -e "s#{{ IDENTITY_USERNAME }}#$IDENTITY_USERNAME#g" "$policy_dir/users.template.yml" > "$policy_dir/users.yml"
+}
+
+check_environment_variables() {
+  vars=("$@")
+  local valid=true
+  for i in "${vars[@]}"
+  do
+    if [[ -z "${!i}" ]]; then
+      echo "${i} is not set"
+      valid=false
     fi
+  done
 
-    if [[ -z "$OKTA_CLIENT_ID" ]]; then
-      echo "OKTA_CLIENT_ID is not set"
-      okta_valid=false
-    fi
-
-    if [[ -z "$OKTA_CLIENT_SECRET" ]]; then
-      echo "OKTA_CLIENT_SECRET is not set"
-      okta_valid=false
-    fi
-
-    if [[ $okta_valid = true ]]; then
-      # Replace these okta values with your own if not using Summon
-      client_add_secret 'conjur/authn-oidc/okta-2/provider-uri' "${OKTA_PROVIDER_URI}oauth2/default"
-      client_add_secret 'conjur/authn-oidc/okta-2/client-id' "$OKTA_CLIENT_ID"
-      client_add_secret 'conjur/authn-oidc/okta-2/client-secret' "$OKTA_CLIENT_SECRET"
-    else
-      echo "Skipped Okta configuration due to missing environment variables"
-    fi
-
-
-    client_add_secret 'conjur/authn-oidc/okta-2/claim-mapping' 'preferred_username'
-    client_add_secret 'conjur/authn-oidc/okta-2/redirect_uri' 'http://127.0.0.1:8888/callback'
-
-    client_load_policy "../ci/okta/users.yml"
+  if [[ $valid = false ]]; then
+    exit 1
   fi
 }
 
 enable_oidc_authenticators() {
-  echo "Configuring Keycloak as OpenID provider for automatic testing"
-  # We enable an OIDC authenticator without a service-id to test that it's
-  # invalid.
-  enabled_authenticators="$enabled_authenticators,authn-oidc/keycloak"
+  if [[ $ENABLE_OIDC_KEYCLOAK = true ]]; then
+    echo "Configuring Keycloak as OpenID provider for automatic testing"
+    # We enable an OIDC authenticator without a service-id to test that it's
+    # invalid.
+    enabled_authenticators="$enabled_authenticators,authn-oidc/keycloak"
+  fi
 
   if [[ $ENABLE_OIDC_OKTA = true ]]; then
-    echo "Configuring OKTA as OpenID provider for manual testing"
+    echo "Configuring Okta as OpenID provider for manual testing"
     enabled_authenticators="$enabled_authenticators,authn-oidc/okta-2"
   fi
-}
 
-init_oidc() {
-  # # ADFS and OKTA make no sense without OIDC.
-  # if [[ $ENABLE_AUTHN_OIDC = false &&
-  #   ($ENABLE_OIDC_ADFS = true || $ENABLE_OIDC_OKTA = true) ]]
-  # then
-  #   echo "Error: --oidc-adfs and --oidc-okta both require --authn-oidc"
-  #   exit 1
-  # fi
-
-  if [[ $ENABLE_AUTHN_OIDC != true ]]; then
-    return
+  if [[ $ENABLE_OIDC_IDENTITY = true ]]; then
+    echo "Configuring Identity as OpenID provider for manual testing"
+    enabled_authenticators="$enabled_authenticators,authn-oidc/identity"
   fi
-
-  services+=(keycloak)
-  docker-compose up -d --no-deps "${services[@]}"
-
-  configure_oidc_providers
 }
 
 start_auth_services() {
