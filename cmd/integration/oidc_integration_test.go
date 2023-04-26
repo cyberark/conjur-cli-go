@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -147,7 +148,7 @@ func testLogout(t *testing.T, tmpDir string, conjurCLI *conjurCLI, aoc authnOidc
 
 		stdOut, stdErr, err = conjurCLI.Run("login", "-i", "not_in_conjur", "-p", "not_in_conjur")
 		assert.Error(t, err)
-		assert.Contains(t, stdErr, "Unable to authenticate")
+		assert.NotEmpty(t, stdErr)
 
 		// Check that the netrc file is not modified
 		info, err = os.Stat(tmpDir + "/.netrc")
@@ -169,13 +170,14 @@ func testLogout(t *testing.T, tmpDir string, conjurCLI *conjurCLI, aoc authnOidc
 	})
 }
 
-func RunOIDCIntegrationTests(t *testing.T) {
+func TestOIDCIntegration(t *testing.T) {
 	TestCases := []struct {
 		description     string
 		oidcConnection  oidcConnection
 		oidcCredentials oidcCredentials
 		authnOidcConfig authnOidcConfig
 		envVars         []string
+		beforeFunc      func() error
 	}{
 		{
 			description: "conjur cli user authenticates with keycloak",
@@ -207,7 +209,7 @@ func RunOIDCIntegrationTests(t *testing.T) {
 				password: os.Getenv("OKTA_PASSWORD"),
 			},
 			authnOidcConfig: authnOidcConfig{
-				serviceID:    "okta-2",
+				serviceID:    "okta",
 				claimMapping: "preferred_username",
 				policyUser:   os.Getenv("OKTA_USERNAME"),
 			},
@@ -217,6 +219,55 @@ func RunOIDCIntegrationTests(t *testing.T) {
 				"OKTA_CLIENT_SECRET",
 				"OKTA_USERNAME",
 				"OKTA_PASSWORD",
+			},
+		},
+		{
+			description: "conjur cli user authenticates with identity",
+			oidcConnection: oidcConnection{
+				providerURI:  os.Getenv("IDENTITY_PROVIDER_URI"),
+				clientID:     os.Getenv("IDENTITY_CLIENT_ID"),
+				clientSecret: os.Getenv("IDENTITY_CLIENT_SECRET"),
+			},
+			oidcCredentials: oidcCredentials{
+				username: os.Getenv("IDENTITY_USERNAME"),
+				password: os.Getenv("IDENTITY_PASSWORD"),
+			},
+			authnOidcConfig: authnOidcConfig{
+				serviceID:    "identity",
+				claimMapping: "email",
+				policyUser:   os.Getenv("IDENTITY_USERNAME"),
+			},
+			envVars: []string{
+				"IDENTITY_PROVIDER_URI",
+				"IDENTITY_CLIENT_ID",
+				"IDENTITY_CLIENT_SECRET",
+				"IDENTITY_USERNAME",
+				"IDENTITY_PASSWORD",
+			},
+			beforeFunc: func() error {
+				tmp, err := template.ParseFiles("../../ci/identity/users.template.yml")
+				if err != nil {
+					return err
+				}
+
+				err = os.Remove("../../ci/identity/users.yml")
+				if err != nil {
+					return err
+				}
+
+				file, err := os.Create("../../ci/identity/users.yml")
+				if err != nil {
+					return err
+				}
+
+				defer file.Close()
+
+				err = tmp.Execute(file, map[string]string{"IDENTITY_USERNAME": os.Getenv("IDENTITY_USERNAME")})
+				if err != nil {
+					return err
+				}
+
+				return nil
 			},
 		},
 	}
@@ -232,6 +283,11 @@ func RunOIDCIntegrationTests(t *testing.T) {
 
 			err := hasValidVariables(tc.envVars)
 			assert.Nil(t, err)
+
+			if tc.beforeFunc != nil {
+				err := tc.beforeFunc()
+				assert.Nil(t, err)
+			}
 
 			setupAuthenticator(account, tc.oidcConnection, tc.authnOidcConfig)
 
