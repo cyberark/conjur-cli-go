@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.10] - 2023-04-27
+
+### Fixed
+- Fixed missing example commands in help output
+  [cyberark/conjur-cli-go#134](https://github.com/cyberark/conjur-cli-go/pull/134)
+
 ## [8.0.9] - 2023-04-21
 
 ### Security
@@ -90,7 +96,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.8...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.10...HEAD
+[8.0.10]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.9...v8.0.10
+[8.0.9]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.8...v8.0.9
 [8.0.8]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.7...v8.0.8
 [8.0.7]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.6...v8.0.7
 [8.0.6]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.5...v8.0.6
