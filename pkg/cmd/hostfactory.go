@@ -50,6 +50,11 @@ func newHostsCreateCmd(clientFactory createHostClientFactoryFunc) *cobra.Command
 	hostsCreateCmd := &cobra.Command{
 		Use:   "create",
 		Short: "Use a token to create a host",
+		Long: `Use a host factory token to create a host.
+
+Example:
+- conjur hostfactory hosts create --id TestHost --token 1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da
+`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			token, err := cmd.Flags().GetString("token")
 			if err != nil {
@@ -224,6 +229,11 @@ func newTokensRevokeCmd(clientFactory revokeTokenClientFactoryFunc) *cobra.Comma
 	tokensRevokeCmd := &cobra.Command{
 		Use:   "revoke",
 		Short: "Revoke (delete) a token",
+		Long: `Revoke a host factory token.
+
+Example:
+- conjur hostfactory tokens revoke --token 1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da
+`,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			token, err := cmd.Flags().GetString("token")
