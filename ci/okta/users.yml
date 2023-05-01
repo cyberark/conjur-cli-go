@@ -8,7 +8,7 @@
     - !user test.user3@mycompany.com
     - !user conjur_ci_user@cyberark.com
     - !user conj_ops_dev@cyberark.com
-  role: !group conjur/authn-oidc/okta-2/authenticatable
+  role: !group conjur/authn-oidc/okta/authenticatable
 
 - !permit
   role: !user conjur_ci_user@cyberark.com
