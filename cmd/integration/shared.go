@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,17 +24,37 @@ const insecureModeWarning = "Warning: Running the command with '--insecure' make
 	"If you prefer to communicate with the server securely you must reinitialize the client in secure mode.\n"
 const selfSignedWarning = "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data\n"
 
-func newConjurCLI(homeDir string) *conjurCLI {
-	return &conjurCLI{
+func newConjurTestCLI(t *testing.T) (cli *testConjurCLI) {
+	homeDir := t.TempDir()
+	// Lean on the uniqueness of temp directories
+	account := strings.Replace(homeDir, "/", "", -1)
+
+	cli = &testConjurCLI{
 		homeDir: homeDir,
+		account: account,
 	}
+
+	// Create a Conjur account
+	cleanUpConjurAccount := prepareConjurAccount(account)
+	// Clean up the Conjur account after the tests complete
+	t.Cleanup(cleanUpConjurAccount)
+
+	return
 }
 
-type conjurCLI struct {
+type testConjurCLI struct {
 	homeDir string
+	account string
 }
 
-func (cli *conjurCLI) RunWithStdin(stdIn io.Reader, args ...string) (stdOut string, stdErr string, err error) {
+func (cli *testConjurCLI) InitAndLoginAsAdmin(t *testing.T) {
+	stdOut, stdErr, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
+	assertInitCmd(t, err, stdOut, cli.homeDir)
+	stdOut, stdErr, err = cli.Run("login", "-i", "admin", "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": cli.account + ":user:admin"}))
+	assertLoginCmd(t, err, stdOut, stdErr)
+}
+
+func (cli *testConjurCLI) RunWithStdin(stdIn io.Reader, args ...string) (stdOut string, stdErr string, err error) {
 	cmd := exec.Command(pathToBinary, args...)
 	stdOutBuffer := new(bytes.Buffer)
 	stdErrBuffer := new(bytes.Buffer)
@@ -47,7 +68,7 @@ func (cli *conjurCLI) RunWithStdin(stdIn io.Reader, args ...string) (stdOut stri
 	return stdOutBuffer.String(), stdErrBuffer.String(), err
 }
 
-func (cli *conjurCLI) Run(args ...string) (stdOut string, stdErr string, err error) {
+func (cli *testConjurCLI) Run(args ...string) (stdOut string, stdErr string, err error) {
 	return cli.RunWithStdin(nil, args...)
 }
 
@@ -96,6 +117,11 @@ func loadPolicyFile(account, policyFile string) {
 
 func createSecret(account string, variable string, value string) {
 	makeDevRequest("create_secret", map[string]string{"resource_id": account + ":variable:" + variable, "value": value})
+}
+
+func assertInitCmd(t *testing.T, err error, stdOut string, homeDir string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "Wrote configuration to "+homeDir+"/.conjurrc\n")
 }
 
 func assertLoginCmd(t *testing.T, err error, stdOut string, stdErr string) {
