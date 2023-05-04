@@ -28,7 +28,13 @@ const testPolicy = `
 - !variable meow
 - !variable woof
 - !user alice
-- !host bob`
+- !host bob
+
+- !permit
+  resource: !variable meow
+  role: !user alice
+  privileges: [ read ]
+`
 
 func newConjurTestCLI(t *testing.T) (cli *testConjurCLI) {
 	homeDir := t.TempDir()
