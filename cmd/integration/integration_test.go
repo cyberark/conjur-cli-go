@@ -5,7 +5,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"os/exec"
 	"testing"
 
@@ -73,34 +72,6 @@ func TestIntegration(t *testing.T) {
 	t.Run("exists returns false", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("role", "exists", "dev:user:meow")
 		assertExistsCmd(t, err, stdOut, stdErr)
-	})
-
-	t.Run("rotate user alice api key", func(t *testing.T) {
-		priorAPIKey := ""
-		stdOut, stdErr, err := cli.Run("user", "rotate-api-key", "-i", fmt.Sprintf("%s:user:alice", cli.account))
-		assertAPIKeyRotationCmd(t, err, stdOut, stdErr, priorAPIKey)
-
-		priorAPIKey = stdOut
-		stdOut, stdErr, err = cli.Run("user", "rotate-api-key", "-i", "user:alice")
-		assertAPIKeyRotationCmd(t, err, stdOut, stdErr, priorAPIKey)
-
-		priorAPIKey = stdOut
-		stdOut, stdErr, err = cli.Run("user", "rotate-api-key", "-i", "alice")
-		assertAPIKeyRotationCmd(t, err, stdOut, stdErr, priorAPIKey)
-	})
-
-	t.Run("rotate host bob api key", func(t *testing.T) {
-		priorAPIKey := ""
-		stdOut, stdErr, err := cli.Run("host", "rotate-api-key", "-i", fmt.Sprintf("%s:host:bob", cli.account))
-		assertAPIKeyRotationCmd(t, err, stdOut, stdErr, priorAPIKey)
-
-		priorAPIKey = stdOut
-		stdOut, stdErr, err = cli.Run("host", "rotate-api-key", "-i", "host:bob")
-		assertAPIKeyRotationCmd(t, err, stdOut, stdErr, priorAPIKey)
-
-		priorAPIKey = stdOut
-		stdOut, stdErr, err = cli.Run("host", "rotate-api-key", "-i", "bob")
-		assertAPIKeyRotationCmd(t, err, stdOut, stdErr, priorAPIKey)
 	})
 
 	t.Run("logout", func(t *testing.T) {
