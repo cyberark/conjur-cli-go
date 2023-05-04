@@ -24,6 +24,12 @@ const insecureModeWarning = "Warning: Running the command with '--insecure' make
 	"If you prefer to communicate with the server securely you must reinitialize the client in secure mode.\n"
 const selfSignedWarning = "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data\n"
 
+const testPolicy = `
+- !variable meow
+- !variable woof
+- !user alice
+- !host bob`
+
 func newConjurTestCLI(t *testing.T) (cli *testConjurCLI) {
 	homeDir := t.TempDir()
 	// Lean on the uniqueness of temp directories
@@ -48,10 +54,20 @@ type testConjurCLI struct {
 }
 
 func (cli *testConjurCLI) InitAndLoginAsAdmin(t *testing.T) {
+	// Initialize the CLI
 	stdOut, stdErr, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
 	assertInitCmd(t, err, stdOut, cli.homeDir)
+
+	// Login as admin
 	stdOut, stdErr, err = cli.Run("login", "-i", "admin", "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": cli.account + ":user:admin"}))
 	assertLoginCmd(t, err, stdOut, stdErr)
+
+	// Load a policy
+	stdOut, stdErr, err = cli.RunWithStdin(
+		bytes.NewReader([]byte(testPolicy)),
+		"policy", "load", "-b", "root", "-f", "-",
+	)
+	assertPolicyLoadCmd(t, err, stdOut, stdErr)
 }
 
 func (cli *testConjurCLI) RunWithStdin(stdIn io.Reader, args ...string) (stdOut string, stdErr string, err error) {
@@ -167,9 +183,9 @@ func assertSetVariableCmd(t *testing.T, err error, stdOut string, stdErr string)
 	assert.Equal(t, "", stdErr)
 }
 
-func assertGetVariableCmd(t *testing.T, err error, stdOut string, stdErr string) {
+func assertGetVariableCmd(t *testing.T, err error, stdOut string, stdErr string, excpectedValue string) {
 	assert.NoError(t, err)
-	assert.Equal(t, "moo\n", stdOut)
+	assert.Equal(t, excpectedValue+"\n", stdOut)
 	assert.Equal(t, "", stdErr)
 }
 

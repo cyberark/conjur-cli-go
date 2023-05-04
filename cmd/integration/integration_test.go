@@ -62,37 +62,12 @@ func TestIntegration(t *testing.T) {
 		assertAuthenticateCmd(t, err, stdOut, stdErr)
 	})
 
-	t.Run("get variable before policy load", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("variable", "get", "-i", "meow")
-		assertNotFound(t, err, stdOut, stdErr)
-	})
-
 	t.Run("policy load", func(t *testing.T) {
 		stdOut, stdErr, err := cli.RunWithStdin(
-			bytes.NewReader([]byte("- !variable meow\n- !variable woof\n- !user alice\n- !host bob")),
+			bytes.NewReader([]byte(testPolicy)),
 			"policy", "load", "-b", "root", "-f", "-",
 		)
 		assertPolicyLoadCmd(t, err, stdOut, stdErr)
-	})
-
-	t.Run("set variable after policy load", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("variable", "set", "-i", "meow", "-v", "moo")
-		assertSetVariableCmd(t, err, stdOut, stdErr)
-	})
-
-	t.Run("set another variable after policy load", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("variable", "set", "-i", "woof", "-v", "quack")
-		assertSetVariableCmd(t, err, stdOut, stdErr)
-	})
-
-	t.Run("get variable after policy load", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("variable", "get", "-i", "meow")
-		assertGetVariableCmd(t, err, stdOut, stdErr)
-	})
-
-	t.Run("get two variables after policy load", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("variable", "get", "-i", "meow,woof")
-		assertGetTwoVariablesCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("exists returns false", func(t *testing.T) {

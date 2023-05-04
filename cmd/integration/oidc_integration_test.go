@@ -90,7 +90,7 @@ func testAuthenticatedCli(t *testing.T, cli *testConjurCLI, aoc authnOidcConfig)
 
 	t.Run("get variable after policy load", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("variable", "get", "-i", "meow")
-		assertGetVariableCmd(t, err, stdOut, stdErr)
+		assertGetVariableCmd(t, err, stdOut, stdErr, "moo")
 	})
 }
 
