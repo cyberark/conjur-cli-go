@@ -4,7 +4,6 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -76,11 +75,7 @@ func testAuthenticatedCli(t *testing.T, cli *testConjurCLI, aoc authnOidcConfig)
   role: !user %s
   privilege: [ read, execute, update ]
   resource: !variable meow`, aoc.policyUser)
-		stdOut, stdErr, err := cli.RunWithStdin(
-			bytes.NewReader([]byte(variablePolicy)),
-			"policy", "load", "-b", "root", "-f", "-",
-		)
-		assertPolicyLoadCmd(t, err, stdOut, stdErr)
+		cli.LoadPolicy(t, variablePolicy)
 	})
 
 	t.Run("set variable after policy load", func(t *testing.T) {
