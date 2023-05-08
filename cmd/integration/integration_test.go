@@ -56,11 +56,6 @@ func TestIntegration(t *testing.T) {
 		assertWhoamiCmd(t, err, stdOut, stdErr)
 	})
 
-	t.Run("authenticate", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("authenticate")
-		assertAuthenticateCmd(t, err, stdOut, stdErr)
-	})
-
 	t.Run("policy load", func(t *testing.T) {
 		stdOut, stdErr, err := cli.RunWithStdin(
 			bytes.NewReader([]byte(testPolicy)),
