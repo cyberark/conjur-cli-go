@@ -4,14 +4,13 @@
 package main
 
 import (
-	"bytes"
 	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIntegration(t *testing.T) {
+func TestInitIntegration(t *testing.T) {
 	cli := newConjurTestCLI(t)
 
 	t.Run("ensure binary exists", func(t *testing.T) {
@@ -40,36 +39,9 @@ func TestIntegration(t *testing.T) {
 		assert.Contains(t, stdErr, selfSignedWarning)
 	})
 
-	t.Run("init", func(t *testing.T) {
+	t.Run("init with insecure flag", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
 		assertInitCmd(t, err, stdOut, cli.homeDir)
 		assert.Equal(t, insecureModeWarning, stdErr)
-	})
-
-	t.Run("login", func(t *testing.T) {
-		cli.LoginAsAdmin(t)
-	})
-
-	t.Run("whoami after login", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("whoami")
-		assertWhoamiCmd(t, err, stdOut, stdErr)
-	})
-
-	t.Run("policy load", func(t *testing.T) {
-		stdOut, stdErr, err := cli.RunWithStdin(
-			bytes.NewReader([]byte(testPolicy)),
-			"policy", "load", "-b", "root", "-f", "-",
-		)
-		assertPolicyLoadCmd(t, err, stdOut, stdErr)
-	})
-
-	t.Run("exists returns false", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("role", "exists", "dev:user:meow")
-		assertExistsCmd(t, err, stdOut, stdErr)
-	})
-
-	t.Run("logout", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("logout")
-		assertLogoutCmd(t, err, stdOut, stdErr)
 	})
 }

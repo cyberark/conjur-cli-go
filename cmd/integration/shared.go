@@ -61,14 +61,18 @@ type testConjurCLI struct {
 
 func (cli *testConjurCLI) InitAndLoginAsAdmin(t *testing.T) {
 	// Initialize the CLI
-	stdOut, _, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
-	assertInitCmd(t, err, stdOut, cli.homeDir)
+	cli.Init(t)
 
 	// Login as admin
 	cli.LoginAsAdmin(t)
 
 	// Load test policy
 	cli.LoadPolicy(t, testPolicy)
+}
+
+func (cli *testConjurCLI) Init(t *testing.T) {
+	stdOut, _, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
+	assertInitCmd(t, err, stdOut, cli.homeDir)
 }
 
 func (cli *testConjurCLI) LoginAsAdmin(t *testing.T) {
