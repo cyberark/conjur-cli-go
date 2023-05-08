@@ -47,8 +47,7 @@ func TestIntegration(t *testing.T) {
 	})
 
 	t.Run("login", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("login", "-i", "admin", "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": cli.account + ":user:admin"}))
-		assertLoginCmd(t, err, stdOut, stdErr)
+		cli.LoginAsAdmin(t)
 	})
 
 	t.Run("whoami after login", func(t *testing.T) {

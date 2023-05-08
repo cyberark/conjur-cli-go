@@ -61,16 +61,24 @@ type testConjurCLI struct {
 
 func (cli *testConjurCLI) InitAndLoginAsAdmin(t *testing.T) {
 	// Initialize the CLI
-	stdOut, stdErr, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
+	stdOut, _, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
 	assertInitCmd(t, err, stdOut, cli.homeDir)
 
 	// Login as admin
-	stdOut, stdErr, err = cli.Run("login", "-i", "admin", "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": cli.account + ":user:admin"}))
-	assertLoginCmd(t, err, stdOut, stdErr)
+	cli.LoginAsAdmin(t)
 
-	// Load a policy
-	stdOut, stdErr, err = cli.RunWithStdin(
-		bytes.NewReader([]byte(testPolicy)),
+	// Load test policy
+	cli.LoadPolicy(t, testPolicy)
+}
+
+func (cli *testConjurCLI) LoginAsAdmin(t *testing.T) {
+	stdOut, stdErr, err := cli.Run("login", "-i", "admin", "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": cli.account + ":user:admin"}))
+	assertLoginCmd(t, err, stdOut, stdErr)
+}
+
+func (cli *testConjurCLI) LoadPolicy(t *testing.T, policyText string) {
+	stdOut, stdErr, err := cli.RunWithStdin(
+		bytes.NewReader([]byte(policyText)),
 		"policy", "load", "-b", "root", "-f", "-",
 	)
 	assertPolicyLoadCmd(t, err, stdOut, stdErr)

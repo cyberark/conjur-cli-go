@@ -22,11 +22,10 @@ func TestUserIntegration(t *testing.T) {
 
 	t.Run("rotate another user's api key", func(t *testing.T) {
 		// We must be logged in as admin here
-		stdOut, stdErr, err := cli.Run("login", "-i", "admin", "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": cli.account + ":user:admin"}))
-		assertLoginCmd(t, err, stdOut, stdErr)
+		cli.LoginAsAdmin(t)
 
 		priorAPIKey := ""
-		stdOut, stdErr, err = cli.Run("user", "rotate-api-key", "-i", fmt.Sprintf("%s:user:alice", cli.account))
+		stdOut, stdErr, err := cli.Run("user", "rotate-api-key", "-i", fmt.Sprintf("%s:user:alice", cli.account))
 		assertAPIKeyRotationCmd(t, err, stdOut, stdErr, priorAPIKey)
 
 		priorAPIKey = stdOut
