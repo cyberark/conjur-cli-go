@@ -30,7 +30,7 @@ func TestListIntegration(t *testing.T) {
 
 		assertListsAllResources(t, stdOut, cli)
 		// Should contain timestamps and other metadata
-		assertListsMetadata(t, stdOut, cli)
+		assertContainsMetadata(t, stdOut, cli)
 	})
 
 	t.Run("list with kind", func(t *testing.T) {
@@ -45,7 +45,7 @@ func TestListIntegration(t *testing.T) {
 		assert.NotContains(t, stdOut, cli.account+":host:bob")
 
 		// Should not contain any timestamps or other metadata
-		assertDoesNotListMetadata(t, stdOut, cli)
+		assertDoesNotContainMetadata(t, stdOut, cli)
 	})
 
 	t.Run("list with kind and inspect", func(t *testing.T) {
@@ -58,7 +58,7 @@ func TestListIntegration(t *testing.T) {
 		assert.NotContains(t, stdOut, cli.account+":host:bob")
 
 		// Should contain timestamps and other metadata
-		assertListsMetadata(t, stdOut, cli)
+		assertContainsMetadata(t, stdOut, cli)
 	})
 
 	t.Run("list with search", func(t *testing.T) {
@@ -73,7 +73,7 @@ func TestListIntegration(t *testing.T) {
 		assert.NotContains(t, stdOut, cli.account+":host:bob")
 
 		// Should not contain any timestamps or other metadata
-		assertDoesNotListMetadata(t, stdOut, cli)
+		assertDoesNotContainMetadata(t, stdOut, cli)
 	})
 
 	t.Run("list with role", func(t *testing.T) {
@@ -133,7 +133,7 @@ func assertListsAllResources(t *testing.T, stdOut string, cli *testConjurCLI) {
 	assert.Contains(t, stdOut, cli.account+":host:bob")
 }
 
-func assertListsMetadata(t *testing.T, stdOut string, cli *testConjurCLI) {
+func assertContainsMetadata(t *testing.T, stdOut string, cli *testConjurCLI) {
 	assert.Contains(t, stdOut, "\"created_at\":")
 	assert.Contains(t, stdOut, "\"annotations\":")
 	assert.Contains(t, stdOut, "\"owner\":")
@@ -141,7 +141,7 @@ func assertListsMetadata(t *testing.T, stdOut string, cli *testConjurCLI) {
 	assert.Contains(t, stdOut, "\"policy\":")
 }
 
-func assertDoesNotListMetadata(t *testing.T, stdOut string, cli *testConjurCLI) {
+func assertDoesNotContainMetadata(t *testing.T, stdOut string, cli *testConjurCLI) {
 	assert.NotContains(t, stdOut, "\"created_at\":")
 	assert.NotContains(t, stdOut, "\"annotations\":")
 	assert.NotContains(t, stdOut, "\"owner\":")
