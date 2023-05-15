@@ -4,7 +4,6 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -31,53 +30,40 @@ type authnOidcConfig struct {
 	policyUser   string
 }
 
-func testLogin(t *testing.T, account string, tmpDir string, conjurCLI *conjurCLI, oc oidcCredentials, aoc authnOidcConfig) {
-	var (
-		stdOut string
-		stdErr string
-		err    error
-	)
-
+func testLogin(t *testing.T, cli *testConjurCLI, oc oidcCredentials, aoc authnOidcConfig) {
 	t.Run("init", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run(
-			"init", "-a", account,
+		stdOut, stdErr, err := cli.Run(
+			"init", "-a", cli.account,
 			"-u", "http://conjur",
 			"-t", "oidc",
 			"--service-id", aoc.serviceID,
 			"--force-netrc",
 			"-i", "--force",
 		)
-		assert.NoError(t, err)
-		assert.Equal(t, "Wrote configuration to "+tmpDir+"/.conjurrc\n", stdOut)
+		assertInitCmd(t, err, stdOut, cli.homeDir)
 		assert.Equal(t, insecureModeWarning, stdErr)
 	})
 
 	t.Run("login", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("login", "-i", oc.username, "-p", oc.password)
+		stdOut, stdErr, err := cli.Run("login", "-i", oc.username, "-p", oc.password)
 		assertLoginCmd(t, err, stdOut, stdErr)
-		assertAuthTokenCached(t, tmpDir)
+		assertAuthTokenCached(t, cli.homeDir)
 	})
 
 	t.Run("whoami after login", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("whoami")
+		stdOut, stdErr, err := cli.Run("whoami")
 		assertWhoamiCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("authenticate", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("authenticate")
+		stdOut, stdErr, err := cli.Run("authenticate")
 		assertAuthenticateCmd(t, err, stdOut, stdErr)
 	})
 }
 
-func testAuthenticatedCli(t *testing.T, conjurCLI *conjurCLI, aoc authnOidcConfig) {
-	var (
-		stdOut string
-		stdErr string
-		err    error
-	)
-
+func testAuthenticatedCli(t *testing.T, cli *testConjurCLI, aoc authnOidcConfig) {
 	t.Run("get variable before policy load", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("variable", "get", "-i", "meow")
+		stdOut, stdErr, err := cli.Run("variable", "get", "-i", "meow")
 		assertNotFound(t, err, stdOut, stdErr)
 	})
 
@@ -89,31 +75,21 @@ func testAuthenticatedCli(t *testing.T, conjurCLI *conjurCLI, aoc authnOidcConfi
   role: !user %s
   privilege: [ read, execute, update ]
   resource: !variable meow`, aoc.policyUser)
-		stdOut, stdErr, err = conjurCLI.RunWithStdin(
-			bytes.NewReader([]byte(variablePolicy)),
-			"policy", "load", "-b", "root", "-f", "-",
-		)
-		assertPolicyLoadCmd(t, err, stdOut, stdErr)
+		cli.LoadPolicy(t, variablePolicy)
 	})
 
 	t.Run("set variable after policy load", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("variable", "set", "-i", "meow", "-v", "moo")
+		stdOut, stdErr, err := cli.Run("variable", "set", "-i", "meow", "-v", "moo")
 		assertSetVariableCmd(t, err, stdOut, stdErr)
 	})
 
 	t.Run("get variable after policy load", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("variable", "get", "-i", "meow")
-		assertGetVariableCmd(t, err, stdOut, stdErr)
+		stdOut, stdErr, err := cli.Run("variable", "get", "-i", "meow")
+		assertGetVariableCmd(t, err, stdOut, stdErr, "moo")
 	})
 }
 
-func testLogout(t *testing.T, tmpDir string, conjurCLI *conjurCLI, aoc authnOidcConfig) {
-	var (
-		stdOut string
-		stdErr string
-		err    error
-	)
-
+func testLogout(t *testing.T, tmpDir string, cli *testConjurCLI, aoc authnOidcConfig) {
 	if aoc.serviceID == "keycloak" {
 		t.Run("login as another user", func(t *testing.T) {
 			// Get the modifieddate of the netrc file
@@ -121,7 +97,7 @@ func testLogout(t *testing.T, tmpDir string, conjurCLI *conjurCLI, aoc authnOidc
 			assert.NoError(t, err)
 			modifiedDate := info.ModTime()
 
-			stdOut, stdErr, err = conjurCLI.Run("login", "-i", "bob.somebody", "-p", "bob")
+			stdOut, stdErr, err := cli.Run("login", "-i", "bob.somebody", "-p", "bob")
 			assertLoginCmd(t, err, stdOut, stdErr)
 
 			// Check that the token file is modified
@@ -131,7 +107,7 @@ func testLogout(t *testing.T, tmpDir string, conjurCLI *conjurCLI, aoc authnOidc
 		})
 
 		t.Run("whoami after login as another user", func(t *testing.T) {
-			stdOut, stdErr, err = conjurCLI.Run("whoami")
+			stdOut, stdErr, err := cli.Run("whoami")
 			assertWhoamiCmd(t, err, stdOut, stdErr)
 
 			assert.Contains(t, stdOut, "bob")
@@ -145,7 +121,7 @@ func testLogout(t *testing.T, tmpDir string, conjurCLI *conjurCLI, aoc authnOidc
 		assert.NoError(t, err)
 		modifiedDate := info.ModTime()
 
-		stdOut, stdErr, err = conjurCLI.Run("login", "-i", "not_in_conjur", "-p", "not_in_conjur")
+		_, stdErr, err := cli.Run("login", "-i", "not_in_conjur", "-p", "not_in_conjur")
 		assert.Error(t, err)
 		assert.Contains(t, stdErr, "Unable to authenticate")
 
@@ -156,13 +132,13 @@ func testLogout(t *testing.T, tmpDir string, conjurCLI *conjurCLI, aoc authnOidc
 	})
 
 	t.Run("logout", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("logout")
+		stdOut, stdErr, err := cli.Run("logout")
 		assertLogoutCmd(t, err, stdOut, stdErr)
 		assertAuthTokenPurged(t, err, tmpDir)
 	})
 
 	t.Run("whoami after logout", func(t *testing.T) {
-		stdOut, stdErr, err = conjurCLI.Run("whoami")
+		stdOut, stdErr, err := cli.Run("whoami")
 		assert.Error(t, err)
 		assert.Contains(t, stdErr, "Please login again")
 		assert.Equal(t, "", stdOut)
@@ -223,21 +199,16 @@ func RunOIDCIntegrationTests(t *testing.T) {
 
 	for _, tc := range TestCases {
 		t.Run(tc.description, func(t *testing.T) {
-			tmpDir := t.TempDir()
-			account := strings.Replace(tmpDir, "/", "", -1)
-			conjurCLI := newConjurCLI(tmpDir)
-
-			cleanUpConjurAccount := prepareConjurAccount(account)
-			defer cleanUpConjurAccount()
+			cli := newConjurTestCLI(t)
 
 			err := hasValidVariables(tc.envVars)
 			assert.Nil(t, err)
 
-			setupAuthenticator(account, tc.oidcConnection, tc.authnOidcConfig)
+			setupAuthenticator(cli.account, tc.oidcConnection, tc.authnOidcConfig)
 
-			testLogin(t, account, tmpDir, conjurCLI, tc.oidcCredentials, tc.authnOidcConfig)
-			testAuthenticatedCli(t, conjurCLI, tc.authnOidcConfig)
-			testLogout(t, tmpDir, conjurCLI, tc.authnOidcConfig)
+			testLogin(t, cli, tc.oidcCredentials, tc.authnOidcConfig)
+			testAuthenticatedCli(t, cli, tc.authnOidcConfig)
+			testLogout(t, cli.homeDir, cli, tc.authnOidcConfig)
 		})
 	}
 }

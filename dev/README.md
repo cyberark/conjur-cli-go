@@ -1,7 +1,8 @@
 # conjur-cli-go dev
 
 `./start` creates a dev environment, including a CLI container that is already
-logged into Conjur as the admin user.
+logged into Conjur as the admin user. You can optionally pass `--oidc-keycloak` to enable
+OIDC authentication with Keycloak.
 
 `./stop` tears down the environment.
 
@@ -11,7 +12,7 @@ logged into Conjur as the admin user.
 
 Note: This assumes you are able to retrieve dev secrets from ConjurOps via Summon.
 
-`summon -p summon-conjur -f ../ci/okta/secrets.yml -e development ./start --authn-oidc --oidc-okta`
+`summon -p summon-conjur -f ../ci/okta/secrets.yml -e development ./start --oidc-okta`
 
 ## Run Integration Tests
 
