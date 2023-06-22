@@ -6,18 +6,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- Nothing should go in this section, please add to the latest unreleased version
+  (and update the corresponding date), or add a new version.
+
+## [8.0.10] - 2023-06-29
+
 ### Security
 - Upgrade golang.org/x/net to v0.10.0
   [cyberark/conjur-cli-go#139](https://github.com/cyberark/conjur-cli-go/pull/139)
 - Upgrade golang.org/x/net to v0.10.0, golang.org/x/crypto to v0.9.0,
   golang.org/x/sys to v0.8.0, golang.org/x/text to v0.9.0, and Go to 1.20
   [cyberark/conjur-cli-go#138](https://github.com/cyberark/conjur-cli-go/pull/138)
-
-### Changed
-- Nothing should go in this section, please add to the latest unreleased version
-  (and update the corresponding date), or add a new version.
-
-## [8.0.10] - 2023-04-27
 
 ### Fixed
 - Fixed missing example commands in help output
