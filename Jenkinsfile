@@ -1,4 +1,5 @@
 #!/usr/bin/env groovy
+@Library("product-pipelines-shared-library") _
 
 // Automated release, promotion and dependencies
 properties([
@@ -6,7 +7,7 @@ properties([
   release.addParams(),
   // Dependencies of the project that should trigger builds
   dependencies([
-    'cyberark/conjur-api-go',
+    'conjur-enterprise/conjur-api-go',
   ])
 ])
 
@@ -23,11 +24,14 @@ if (params.MODE == "PROMOTE") {
     // NOTE: the use of --pull to ensure source images are pulled from internal registry
     sh "source ./bin/build_utils && ./bin/publish_container_images --promote --source ${sourceVersion}-\$(git_commit) --target ${targetVersion} --pull"
   }
+
+  // Copy Github Enterprise release to Github
+  release.copyEnterpriseRelease(params.VERSION_TO_PROMOTE)
   return
 }
 
 pipeline {
-  agent { label 'executor-v2' }
+  agent { label 'conjur-enterprise-common-agent' }
 
   options {
     timestamps()
@@ -45,6 +49,15 @@ pipeline {
   }
 
   stages {
+    stage('Get InfraPool ExecutorV2 Agent') {
+      steps {
+        script {
+          // Request ExecutorV2 agents for 1 hour(s)
+          INFRAPOOL_EXECUTORV2_AGENT_0 = getInfraPoolAgent.connected(type: "ExecutorV2", quantity: 1, duration: 1)[0]
+        }
+      }
+    }
+
     // Aborts any builds triggered by another project that wouldn't include any changes
     stage ("Skip build if triggering job didn't create a release") {
       when {
@@ -63,7 +76,11 @@ pipeline {
     stage('Validate') {
       parallel {
         stage('Changelog') {
-          steps { sh './bin/parse-changelog' }
+          steps { 
+            script {
+              INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './bin/parse-changelog'
+            }
+          }
         }
       }
     }
@@ -71,13 +88,20 @@ pipeline {
     // Generates a VERSION file based on the current build number and latest version in CHANGELOG.md
     stage('Validate changelog and set version') {
       steps {
-        updateVersion("CHANGELOG.md", "${BUILD_NUMBER}")
+        updateVersion(INFRAPOOL_EXECUTORV2_AGENT_0, "CHANGELOG.md", "${BUILD_NUMBER}")
       }
     }
 
     stage('Get latest upstream dependencies') {
       steps {
-        updateGoDependencies("${WORKSPACE}/go.mod")
+        script {
+          withCredentials([usernamePassword(credentialsId: 'jenkins_ci_token', usernameVariable: 'GITHUB_USER', passwordVariable: 'TOKEN')]) {
+            sh './bin/updateGoDependencies.sh -g "${WORKSPACE}/go.mod"'
+          }
+          // Copy the vendor directory onto infrapool
+          INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "vendor", to: "${WORKSPACE}"
+          INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "go.*", to: "${WORKSPACE}"
+        }
       }
     }
 
@@ -85,47 +109,58 @@ pipeline {
       parallel {
         stage('Run unit tests') {
           steps {
-            sh './bin/test_unit'
+            script {
+              INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './bin/test_unit'
+            }
           }
           post {
             always {
-              sh './bin/coverage'
-              junit 'junit.xml'
+              script {
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './bin/coverage'
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentStash name: 'xml-out', includes: '*.xml'
+                unstash 'xml-out'
+                junit 'junit.xml'
 
-              cobertura autoUpdateHealth: false,
-                autoUpdateStability: false,
-                coberturaReportFile: 'coverage.xml',
-                conditionalCoverageTargets: '70, 0, 0',
-                failUnhealthy: false,
-                failUnstable: false,
-                maxNumberOfBuilds: 0,
-                lineCoverageTargets: '70, 0, 0',
-                methodCoverageTargets: '70, 0, 0',
-                onlyStable: false,
-                sourceEncoding: 'ASCII',
-                zoomCoverageChart: false
-                ccCoverage("gocov", "--prefix github.com/cyberark/conjur-cli-go")
+                cobertura autoUpdateHealth: false,
+                  autoUpdateStability: false,
+                  coberturaReportFile: 'coverage.xml',
+                  conditionalCoverageTargets: '70, 0, 0',
+                  failUnhealthy: false,
+                  failUnstable: false,
+                  maxNumberOfBuilds: 0,
+                  lineCoverageTargets: '70, 0, 0',
+                  methodCoverageTargets: '70, 0, 0',
+                  onlyStable: false,
+                  sourceEncoding: 'ASCII',
+                  zoomCoverageChart: false
+                  codacy action: 'reportCoverage', filePath: "coverage.xml"
+              }
             }
           }
         }
 
         stage('Build release artifacts') {
           steps {
-            dir('./pristine-checkout') {
-              // Go releaser requires a pristine checkout
-              checkout scm
+            script {
+              INFRAPOOL_EXECUTORV2_AGENT_0.agentDir('./pristine-checkout') {
+                // Go releaser requires a pristine checkout
+                checkout scm
 
-              // Copy VERSION info into prisitine folder
-              sh "cp ../VERSION ./VERSION"
+                // Copy the checkout content onto infrapool
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "./", to: "."
 
-              // Create release artifacts without releasing to Github
-              sh "./bin/build_release --skip-validate --clean"
+                // Copy VERSION info into prisitine folder
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "cp ../VERSION ./VERSION"
 
-              // Build container images
-              sh "./bin/build_container_images"
+                // Create release artifacts without releasing to Github
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "./bin/build_release --skip-validate --clean"
 
-              // Archive release artifacts
-              archiveArtifacts 'dist/goreleaser/'
+                // Build container images
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "./bin/build_container_images"
+
+                // Archive release artifacts
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts artifacts: 'dist/goreleaser/'
+              }
             }
           }
         }
@@ -136,27 +171,31 @@ pipeline {
       parallel {
         stage('Run integration tests') {
           steps {
-            dir('ci') {
               script {
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentDir('ci') {
                 try{
-                  sh 'summon -f ./okta/secrets.yml -e ci ./test_integration'
+                  INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'summon -f ./okta/secrets.yml -e ci ./test_integration'
                 } finally {
-                  archiveArtifacts 'cleanup.log'
+                  INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts artifacts: 'cleanup.log'
                 }
               }
             }
           }
         }
 
-         stage("Scan container images for fixable issues") {
-           steps {
-             scanAndReport("${containerImageWithTag()}", "HIGH", false)
-           }
-         }
+        stage("Scan container images for fixable issues") {
+          steps {
+            script {
+              scanAndReport(INFRAPOOL_EXECUTORV2_AGENT_0, "${containerImageWithTag()}", "HIGH", false)
+            }
+          }
+        }
 
         stage("Scan container images for total issues") {
           steps {
-            scanAndReport("${containerImageWithTag()}", "NONE", true)
+            script {
+              scanAndReport(INFRAPOOL_EXECUTORV2_AGENT_0, "${containerImageWithTag()}", "NONE", true)
+            }
           }
         }
       }
@@ -169,28 +208,38 @@ pipeline {
         }
       }
       steps {
-        release { billOfMaterialsDirectory, assetDirectory, toolsDirectory ->
-          // Publish release artifacts to all the appropriate locations
-          // Copy any artifacts to assetDirectory to attach them to the Github release
+        script {
+          release(INFRAPOOL_EXECUTORV2_AGENT_0) { billOfMaterialsDirectory, assetDirectory, toolsDirectory ->
+            // Publish release artifacts to all the appropriate locations
+            // Copy any artifacts to assetDirectory to attach them to the Github release
 
-          // Copy assets to be published in Github release.
-          sh "./bin/copy_release_artifacts ${assetDirectory}"
+            // Copy assets to be published in Github release.
+            INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "./bin/copy_release_artifacts ${assetDirectory}"
 
-          // Create Go application SBOM using the go.mod version for the golang container image
-          sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
-          // Create Go module SBOM
-          sh """go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --output "${billOfMaterialsDirectory}/go-mod-bom.json" """
+            // Create Go application SBOM using the go.mod version for the golang container image
+            INFRAPOOL_EXECUTORV2_AGENT_0.agentSh """export PATH="${toolsDirectory}/bin:${PATH}" && go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
+            // Create Go module SBOM
+            INFRAPOOL_EXECUTORV2_AGENT_0.agentSh """export PATH="${toolsDirectory}/bin:${PATH}" && go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --output "${billOfMaterialsDirectory}/go-mod-bom.json" """
 
-          // Publish container images to internal registry
-          sh './bin/publish_container_images --internal'
+            // Publish container images to internal registry
+            INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './bin/publish_container_images --internal'
+          }
         }
+      }
+    }
+  }
+
+  post {
+    always {
+      script {
+        releaseInfraPoolAgent(".infrapool/release_agents")
       }
     }
   }
 }
 
 def containerImageWithTag() {
-  sh(
+  INFRAPOOL_EXECUTORV2_AGENT_0.agentSh(
     returnStdout: true,
     script: 'source ./bin/build_utils && echo "conjur-cli:$(project_version_with_commit)"'
   )
