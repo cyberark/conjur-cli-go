@@ -75,6 +75,11 @@ func (cli *testConjurCLI) Init(t *testing.T) {
 	assertInitCmd(t, err, stdOut, cli.homeDir)
 }
 
+func (cli *testConjurCLI) InitWithTrailingSlash(t *testing.T) {
+	stdOut, _, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur/", "-i", "--force-netrc", "--force")
+	assertInitCmd(t, err, stdOut, cli.homeDir)
+}
+
 func (cli *testConjurCLI) LoginAsAdmin(t *testing.T) {
 	stdOut, stdErr, err := cli.Run("login", "-i", "admin", "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": cli.account + ":user:admin"}))
 	assertLoginCmd(t, err, stdOut, stdErr)
