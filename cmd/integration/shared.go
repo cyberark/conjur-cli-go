@@ -85,6 +85,11 @@ func (cli *testConjurCLI) LoginAsAdmin(t *testing.T) {
 	assertLoginCmd(t, err, stdOut, stdErr)
 }
 
+func (cli *testConjurCLI) LoginAsHost(t *testing.T, host string) {
+	stdOut, stdErr, err := cli.Run("login", "-i", "host/" + host, "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": cli.account + ":host:" + host}))
+	assertLoginCmd(t, err, stdOut, stdErr)
+}
+
 func (cli *testConjurCLI) LoadPolicy(t *testing.T, policyText string) {
 	stdOut, stdErr, err := cli.RunWithStdin(
 		bytes.NewReader([]byte(policyText)),
