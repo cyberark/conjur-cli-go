@@ -86,7 +86,7 @@ func (cli *testConjurCLI) LoginAsAdmin(t *testing.T) {
 }
 
 func (cli *testConjurCLI) LoginAsHost(t *testing.T, host string) {
-	stdOut, stdErr, err := cli.Run("login", "-i", "host/" + host, "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": cli.account + ":host:" + host}))
+	stdOut, stdErr, err := cli.Run("login", "-i", "host/"+host, "-p", makeDevRequest("retrieve_api_key", map[string]string{"role_id": cli.account + ":host:" + host}))
 	assertLoginCmd(t, err, stdOut, stdErr)
 }
 

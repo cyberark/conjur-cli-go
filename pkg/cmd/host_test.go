@@ -9,20 +9,26 @@ import (
 )
 
 type mockHostClient struct {
-	t                *testing.T
-	hostRotateAPIKey func(*testing.T, string) ([]byte, error)
+	t                       *testing.T
+	rotateCurrentUserAPIKey func() ([]byte, error)
+	rotateHostAPIKey        func(*testing.T, string) ([]byte, error)
+}
+
+func (m mockHostClient) RotateCurrentUserAPIKey() ([]byte, error) {
+	return m.rotateCurrentUserAPIKey()
 }
 
 func (m mockHostClient) RotateHostAPIKey(hostID string) ([]byte, error) {
-	return m.hostRotateAPIKey(m.t, hostID)
+	return m.rotateHostAPIKey(m.t, hostID)
 }
 
-var hostRotateAPIKeyCmdTestCases = []struct {
-	name               string
-	args               []string
-	hostRotateAPIKey   func(t *testing.T, hostID string) ([]byte, error)
-	clientFactoryError error
-	assert             func(t *testing.T, stdout, stderr string, err error)
+var rotateHostAPIKeyCmdTestCases = []struct {
+	name                    string
+	args                    []string
+	rotateCurrentUserAPIKey func() ([]byte, error)
+	rotateHostAPIKey        func(t *testing.T, hostID string) ([]byte, error)
+	clientFactoryError      error
+	assert                  func(t *testing.T, stdout, stderr string, err error)
 }{
 	{
 		name: "without subcommand",
@@ -39,9 +45,19 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 		},
 	},
 	{
-		name: "successful rotation",
+		name: "rotate API key for logged in host",
+		args: []string{"host", "rotate-api-key"},
+		rotateCurrentUserAPIKey: func() ([]byte, error) {
+			return []byte("test-api-key"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "test-api-key")
+		},
+	},
+	{
+		name: "rotate API key for specified host",
 		args: []string{"host", "rotate-api-key", "--id=dev-host"},
-		hostRotateAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
+		rotateHostAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
 			// Assert on arguments
 			assert.Equal(t, "dev-host", hostID)
 
@@ -54,7 +70,7 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 	{
 		name: "client error",
 		args: []string{"host", "rotate-api-key", "--id=dev-host"},
-		hostRotateAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
+		rotateHostAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
 			return nil, fmt.Errorf("%s", "an error")
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
@@ -71,10 +87,10 @@ var hostRotateAPIKeyCmdTestCases = []struct {
 	},
 }
 
-func TestHostRotateAPIKeyCmd(t *testing.T) {
-	for _, tc := range hostRotateAPIKeyCmdTestCases {
+func TestRotateHostAPIKeyCmd(t *testing.T) {
+	for _, tc := range rotateHostAPIKeyCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockClient := mockHostClient{t: t, hostRotateAPIKey: tc.hostRotateAPIKey}
+			mockClient := mockHostClient{t: t, rotateHostAPIKey: tc.rotateHostAPIKey, rotateCurrentUserAPIKey: tc.rotateCurrentUserAPIKey}
 
 			cmd := newHostCmd(
 				func(cmd *cobra.Command) (hostClient, error) {

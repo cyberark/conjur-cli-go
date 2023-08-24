@@ -8,6 +8,7 @@ import (
 
 type hostClient interface {
 	RotateHostAPIKey(hostID string) ([]byte, error)
+	RotateCurrentUserAPIKey() ([]byte, error)
 }
 
 type hostClientFactoryFunc func(*cobra.Command) (hostClient, error)
@@ -35,9 +36,10 @@ func newHostRotateAPIKeyCmd(clientFactory hostClientFactoryFunc) *cobra.Command 
 	cmd := &cobra.Command{
 		Use:   "rotate-api-key",
 		Short: "Rotate a host's API key",
-		Long: `Rotate the API key of the host specified by the [id] parameter.
+		Long: `Rotate the API key of the host specified by the [id] parameter or for the currently logged-in host if no [id] is provided.
 
 Examples:
+- conjur host rotate-api-key
 - conjur host rotate-api-key --id ci-staging
 - conjur host rotate-api-key --id host:ci-staging
 - conjur host rotate-api-key --id dev:host:ci-staging`,
@@ -54,7 +56,13 @@ Examples:
 				return err
 			}
 
-			newAPIKey, err := client.RotateHostAPIKey(hostID)
+			var newAPIKey []byte
+			if hostID == "" {
+				newAPIKey, err = client.RotateCurrentUserAPIKey()
+			} else {
+				newAPIKey, err = client.RotateHostAPIKey(hostID)
+			}
+
 			if err != nil {
 				return err
 			}

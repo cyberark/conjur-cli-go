@@ -14,7 +14,6 @@ func TestHostIntegration(t *testing.T) {
 	cli := newConjurTestCLI(t)
 	cli.InitAndLoginAsAdmin(t)
 
-
 	t.Run("rotate own api key", func(t *testing.T) {
 		cli.LoginAsHost(t, "bob")
 
