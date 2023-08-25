@@ -1,5 +1,5 @@
 build:
-	go build -tags=dev -o ./dev/tmp/ ./cmd/conjur
+	go build -tags=dev -buildvcs=false -o ./dev/tmp/ ./cmd/conjur
 
 test:
 	go test -tags=dev -count=1 -v ./...
