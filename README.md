@@ -34,3 +34,10 @@ To stub out a new command, [use the cobra-cli tool](https://github.com/spf13/cob
 ## Transitioning from the docker based CLI to 8.x
 
 See the [transition guide](docs/UPGRADE_from_docker_based.md)
+
+## FIPS Compatibility
+
+The `amd64` binaries are built using RedHat's patched Go compiler and with
+`GOEXPERIMENT=boringcrypto`. When run on a FIPS-enabled system, the binary will
+use the OpenSSL FIPS module provided by the system. On non-FIPS systems, the
+binary will fall back to BoringCrypto.

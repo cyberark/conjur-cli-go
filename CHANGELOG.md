@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   [cyberark/conjur-cli-go#142](https://github.com/cyberark/conjur-cli-go/pull/142)
 - Allow API key rotation for logged-in host
   [cyberark/conjur-cli-go#143](https://github.com/cyberark/conjur-cli-go/pull/143)
+- Make `amd64` binary FIPS compliant on FIPS-enabled systems
+  [cyberark/conjur-cli-go#145](https://github.com/cyberark/conjur-cli-go/pull/145)
 
 ## [8.0.10] - 2023-06-29
 
