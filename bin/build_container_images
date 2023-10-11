@@ -16,7 +16,7 @@ function main() {
     CONTAINER_IMAGE_AND_TAG="conjur-cli:$(project_version_with_commit)"
 
     # Build container image/s by copying binaries
-    # 
+    #
     echo "Building ${CONTAINER_IMAGE_AND_TAG} container image"
     docker build \
         --tag "${CONTAINER_IMAGE_AND_TAG}" \
