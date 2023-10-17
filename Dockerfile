@@ -1,4 +1,4 @@
-FROM busybox:1.36.0 as conjur-cli-go
+FROM busybox:1.36.1 as conjur-cli-go
 LABEL org.opencontainers.image.authors="CyberArk Software Ltd."
 
 ENTRYPOINT [ "/usr/local/bin/conjur" ]
