@@ -7,7 +7,8 @@ RUN microdnf install -y go-toolset git
 
 # Add the WORKDIR as a safe directory so git commands
 # can be run in containers using this image
-RUN git config --global --add safe.directory /github.com/cyberark/conjur-cli-go
+RUN git config --global --add safe.directory /github.cyberng.com/Conjur-Enterprise/conjur-cli-go
+
 
 COPY builder_entrypoint.sh /builder_entrypoint.sh
 RUN chmod +x /builder_entrypoint.sh
