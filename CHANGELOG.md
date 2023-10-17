@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.12] - 2023-10-17
+
+### Fixed
+- Update busybox container image to 1.36.1
+  [cyberark/conjur-cli-go#147](https://github.com/cyberark/conjur-cli-go/pull/147)
+
 ## [8.0.11] - 2023-08-25
 
 ### Fixed
@@ -113,7 +119,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.10...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.12...HEAD
+[8.0.12]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.11...v8.0.12
+[8.0.11]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.10...v8.0.11
 [8.0.10]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.9...v8.0.10
 [8.0.9]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.8...v8.0.9
 [8.0.8]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.7...v8.0.8
