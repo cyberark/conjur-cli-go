@@ -2,7 +2,7 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:latest as conjur-cli-go-builder
 
 ENV VERSION=""
 
-RUN microdnf update
+RUN microdnf update -y
 RUN microdnf install -y go-toolset git
 
 # Add the WORKDIR as a safe directory so git commands
