@@ -13,7 +13,7 @@ properties([
 
 // Performs release promotion.  No other stages will be run
 if (params.MODE == "PROMOTE") {
-  release.promote(params.VERSION_TO_PROMOTE) { sourceVersion, targetVersion, assetDirectory ->
+  release.promote(params.VERSION_TO_PROMOTE) { infrapool, sourceVersion, targetVersion, assetDirectory ->
     // Any assets from sourceVersion Github release are available in assetDirectory
     // Any version number updates from sourceVersion to targetVersion occur here
     // Any publishing of targetVersion artifacts occur here
@@ -22,7 +22,7 @@ if (params.MODE == "PROMOTE") {
     // Promote source version to target version.
 
     // NOTE: the use of --pull to ensure source images are pulled from internal registry
-    sh "source ./bin/build_utils && ./bin/publish_container_images --promote --source ${sourceVersion}-\$(git_commit) --target ${targetVersion} --pull"
+    infrapool.agentSh "source ./bin/build_utils && ./bin/publish_container_images --promote --source ${sourceVersion}-\$(git_commit) --target ${targetVersion} --pull"
   }
 
   // Copy Github Enterprise release to Github
@@ -49,15 +49,6 @@ pipeline {
   }
 
   stages {
-    stage('Get InfraPool ExecutorV2 Agent') {
-      steps {
-        script {
-          // Request ExecutorV2 agents for 1 hour(s)
-          INFRAPOOL_EXECUTORV2_AGENT_0 = getInfraPoolAgent.connected(type: "ExecutorV2", quantity: 1, duration: 1)[0]
-        }
-      }
-    }
-
     // Aborts any builds triggered by another project that wouldn't include any changes
     stage ("Skip build if triggering job didn't create a release") {
       when {
@@ -69,6 +60,15 @@ pipeline {
         script {
           currentBuild.result = 'ABORTED'
           error("Aborting build because this build was triggered from upstream, but no release was built")
+        }
+      }
+    }
+
+    stage('Get InfraPool ExecutorV2 Agent') {
+      steps {
+        script {
+          // Request ExecutorV2 agents for 1 hour(s)
+          INFRAPOOL_EXECUTORV2_AGENT_0 = getInfraPoolAgent.connected(type: "ExecutorV2", quantity: 1, duration: 1)[0]
         }
       }
     }
@@ -101,6 +101,8 @@ pipeline {
           // Copy the vendor directory onto infrapool
           INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "vendor", to: "${WORKSPACE}"
           INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "go.*", to: "${WORKSPACE}"
+          // Add GOMODCACHE directory to infrapool allowing automated release to generate SBOMs
+          INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "/root/go", to: "/var/lib/jenkins/"
         }
       }
     }
