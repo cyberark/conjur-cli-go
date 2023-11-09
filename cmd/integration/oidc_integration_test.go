@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"text/template"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -153,7 +152,6 @@ func TestOIDCIntegration(t *testing.T) {
 		oidcCredentials oidcCredentials
 		authnOidcConfig authnOidcConfig
 		envVars         []string
-		beforeFunc      func() error
 	}{
 		{
 			description: "conjur cli user authenticates with keycloak",
@@ -220,31 +218,6 @@ func TestOIDCIntegration(t *testing.T) {
 				"IDENTITY_USERNAME",
 				"IDENTITY_PASSWORD",
 			},
-			beforeFunc: func() error {
-				tmp, err := template.ParseFiles("../../ci/identity/users.template.yml")
-				if err != nil {
-					return err
-				}
-
-				err = os.Remove("../../ci/identity/users.yml")
-				if err != nil {
-					return err
-				}
-
-				file, err := os.Create("../../ci/identity/users.yml")
-				if err != nil {
-					return err
-				}
-
-				defer file.Close()
-
-				err = tmp.Execute(file, map[string]string{"IDENTITY_USERNAME": os.Getenv("IDENTITY_USERNAME")})
-				if err != nil {
-					return err
-				}
-
-				return nil
-			},
 		},
 	}
 
@@ -255,12 +228,7 @@ func TestOIDCIntegration(t *testing.T) {
 			err := hasValidVariables(tc.envVars)
 			assert.Nil(t, err)
 
-			if tc.beforeFunc != nil {
-				err := tc.beforeFunc()
-				assert.Nil(t, err)
-			}
-
-			setupAuthenticator(account, tc.oidcConnection, tc.authnOidcConfig)
+			setupAuthenticator(cli.account, tc.oidcConnection, tc.authnOidcConfig)
 
 			testLogin(t, cli, tc.oidcCredentials, tc.authnOidcConfig)
 			testAuthenticatedCli(t, cli, tc.authnOidcConfig)

@@ -12,8 +12,8 @@ OIDC authentication with Keycloak.
 
 Note: This assumes you are able to retrieve dev secrets from ConjurOps via Summon.
 
-`summon -p summon-conjur -f ../ci/okta/secrets.yml -e development ./start --oidc-okta`
+`summon -p summon-conjur -f ../ci/secrets.yml -e development ./start --oidc-okta`
 
 ## Run Integration Tests
 
-`cd ci && summon -p summon-conjur -f ./okta/secrets.yml -e ci ./test_integration`
+`cd ci && summon -p summon-conjur -f ./secrets.yml -e development ./test_integration`

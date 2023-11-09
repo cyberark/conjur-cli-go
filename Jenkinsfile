@@ -174,14 +174,14 @@ pipeline {
         stage('Run integration tests') {
           steps {
             withCredentials([
-              conjurSecretCredential(credentialsId: "RnD-Global-Conjur-Ent-Conjur_Operating_System-WindowsDomainAccountDailyRotation-cyberng.com-svc_cnjr_enterprise_username", variable: 'IDENTITY_USERNAME'),
-              conjurSecretCredential(credentialsId: "RnD-Global-Conjur-Ent-Conjur_Operating_System-WindowsDomainAccountDailyRotation-cyberng.com-svc_cnjr_enterprise_password", variable: 'IDENTITY_PASSWORD')
+              conjurSecretCredential(credentialsId: "RnD-Global-Conjur-Ent-Conjur_Operating_System-WindowsDomainAccountDailyRotation-cyberng.com-svc_cnjr_enterprise_username", variable: 'INFRAPOOL_IDENTITY_USERNAME'),
+              conjurSecretCredential(credentialsId: "RnD-Global-Conjur-Ent-Conjur_Operating_System-WindowsDomainAccountDailyRotation-cyberng.com-svc_cnjr_enterprise_password", variable: 'INFRAPOOL_IDENTITY_PASSWORD')
             ]) 
             {
               script {
                 INFRAPOOL_EXECUTORV2_AGENT_0.agentDir('ci') {
                   try {
-                    INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'summon -f ./okta/secrets.yml -e ci ./test_integration'
+                    INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'summon -f ./secrets.yml -e ci ./test_integration'
                   } finally {
                     INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts artifacts: 'cleanup.log'
                   }

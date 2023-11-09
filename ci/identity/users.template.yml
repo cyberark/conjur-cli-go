@@ -1,12 +1,12 @@
 # Users with permission to authenticate
-- !user {{ .IDENTITY_USERNAME }}
+- !user {{ IDENTITY_USERNAME }}
 
 - !grant
   members:
-    - !user {{ .IDENTITY_USERNAME }}
+    - !user {{ IDENTITY_USERNAME }}
   role: !group conjur/authn-oidc/identity/authenticatable
 
 - !permit
-  role: !user {{ .IDENTITY_USERNAME }}
+  role: !user {{ IDENTITY_USERNAME }}
   privilege: [ read, update, create ]
   resource: !policy root

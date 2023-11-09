@@ -42,7 +42,7 @@ services:
       - IDENTITY_CLIENT_SECRET=$IDENTITY_CLIENT_SECRET
       - IDENTITY_PROVIDER_URI=$IDENTITY_PROVIDER_URI
       - IDENTITY_USERNAME=$IDENTITY_USERNAME
-      - IDENTITY_PASSWORD=$IDENTITY_PASSWORD
+      - IDENTITY_PASSWORD=$INFRAPOOL_IDENTITY_PASSWORD
     command: bash -c "cd ${PWD}/..; make install; sleep infinity"
     working_dir: ${PWD}/..
     restart: on-failure

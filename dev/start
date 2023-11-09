@@ -228,7 +228,7 @@ setup_keycloak() {
 
 setup_okta() {
   check_environment_variables "OKTA_PROVIDER_URI" "OKTA_CLIENT_ID" "OKTA_CLIENT_SECRET"
-  setup_oidc_client "okta-2" "${OKTA_PROVIDER_URI}oauth2/default" \
+  setup_oidc_client "okta" "${OKTA_PROVIDER_URI}oauth2/default" \
                     "${OKTA_CLIENT_ID}" "${OKTA_CLIENT_SECRET}" "preferred_username"
 }
 
@@ -264,7 +264,7 @@ function generate_identity_policy() {
   echo "Generating policy for AuthnOIDC V2 service 'identity' and user '$IDENTITY_USERNAME'"
   policy_dir="../ci/identity"
   rm -f "$policy_dir/users.yml"
-  sed -e "s#{{ .IDENTITY_USERNAME }}#$IDENTITY_USERNAME#g" "$policy_dir/users.template.yml" > "$policy_dir/users.yml"
+  sed -e "s#{{ IDENTITY_USERNAME }}#$IDENTITY_USERNAME#g" "$policy_dir/users.template.yml" > "$policy_dir/users.yml"
 }
 
 check_environment_variables() {
