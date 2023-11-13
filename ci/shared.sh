@@ -50,3 +50,10 @@ configure_oidc_providers() {
   create_keycloak_users
   echo "keycloak admin console url: http://0.0.0.0:7777/auth/admin"
 }
+
+generate_identity_policy() {  
+  echo "Generating policy for AuthnOIDC V2 service 'identity' and user '$IDENTITY_USERNAME'"
+  policy_dir="./identity"
+  rm -f "$policy_dir/users.yml"
+  sed -e "s#{{ IDENTITY_USERNAME }}#$IDENTITY_USERNAME#g" "$policy_dir/users.template.yml" > "$policy_dir/users.yml"
+}

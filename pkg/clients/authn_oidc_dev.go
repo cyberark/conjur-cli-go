@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"golang.org/x/exp/slices"
 	"html"
 	"io"
 	"io/ioutil"
@@ -18,6 +17,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 )
@@ -357,7 +358,6 @@ func fetchAuthTokenFromIdentity(httpClient *http.Client, providerURL string, use
 	}
 
 	primaryMechanisms := startResp.Result.Challenges[0].Mechanisms
-	secondaryMechanisms := startResp.Result.Challenges[1].Mechanisms
 
 	// Usually, we would iterate through MFA challenges sequentially.
 	// For our purposes, though, we want to make sure to use the Password
@@ -367,12 +367,6 @@ func fetchAuthTokenFromIdentity(httpClient *http.Client, providerURL string, use
 		primaryMechanisms,
 		func(m mechanism) bool {
 			return m.PromptSelectMech == "Password"
-		},
-	)]
-	mobileAuthMechanism := secondaryMechanisms[slices.IndexFunc(
-		secondaryMechanisms,
-		func(m mechanism) bool {
-			return m.PromptSelectMech == "Mobile Authenticator"
 		},
 	)]
 
@@ -391,61 +385,79 @@ func fetchAuthTokenFromIdentity(httpClient *http.Client, providerURL string, use
 		return "", errors.New(advanceResp.Message)
 	}
 
-	// Advance Mobile Authenticator-based authentication handshake.
+	// If only one challenge exists (Password), return the token immediately
+	if len(startResp.Result.Challenges) == 1 {
+		return resp.Cookies()[slices.IndexFunc(
+			resp.Cookies(), func(c *http.Cookie) bool {
+				return c.Name == ".ASPXAUTH"
+			},
+		)].Value, nil
+	} else {
 
-	resp, advanceResp, err = advanceAuthRequest(host, advanceAuthData{
-		Action:      "StartOOB",
-		MechanismId: mobileAuthMechanism.MechanismId,
-		SessionId:   startResp.Result.SessionId,
-	}, httpClient)
-	if err != nil {
-		return "", err
-	}
-	if !(advanceResp.Success) {
-		return "", errors.New(advanceResp.Message)
-	}
-	fmt.Println(fmt.Sprintf("\nDev env users: select %s in your Identity notification", advanceResp.Result.GeneratedAuthValue))
+		// Otherwise advance the Mobile Authenticator-based authentication handshake.
+		secondaryMechanisms := startResp.Result.Challenges[1].Mechanisms
 
-	// For 30 seconds, Poll for out-of-band authentication success.
+		mobileAuthMechanism := secondaryMechanisms[slices.IndexFunc(
+			secondaryMechanisms,
+			func(m mechanism) bool {
+				return m.PromptSelectMech == "Mobile Authenticator"
+			},
+		)]
 
-	poll := func() error {
-		ticker := time.NewTicker(3 * time.Second)
-		defer ticker.Stop()
-		timeout := time.After(30 * time.Second)
-		for {
-			select {
-			case <-timeout:
-				return errors.New("Timed out waiting for out-of-band authentication")
-			case <-ticker.C:
-				resp, advanceResp, err = advanceAuthRequest(host, advanceAuthData{
-					Action:      "Poll",
-					MechanismId: mobileAuthMechanism.MechanismId,
-					SessionId:   startResp.Result.SessionId,
-				}, httpClient)
-				if err != nil {
-					return err
-				}
+		resp, advanceResp, err = advanceAuthRequest(host, advanceAuthData{
+			Action:      "StartOOB",
+			MechanismId: mobileAuthMechanism.MechanismId,
+			SessionId:   startResp.Result.SessionId,
+		}, httpClient)
+		if err != nil {
+			return "", err
+		}
+		if !(advanceResp.Success) {
+			return "", errors.New(advanceResp.Message)
+		}
+		fmt.Println(fmt.Sprintf("\nDev env users: select %s in your Identity notification", advanceResp.Result.GeneratedAuthValue))
 
-				if advanceResp.Result.Summary == "LoginSuccess" {
-					return nil
+		// For 30 seconds, Poll for out-of-band authentication success.
+
+		poll := func() error {
+			ticker := time.NewTicker(3 * time.Second)
+			defer ticker.Stop()
+			timeout := time.After(30 * time.Second)
+			for {
+				select {
+				case <-timeout:
+					return errors.New("Timed out waiting for out-of-band authentication")
+				case <-ticker.C:
+					resp, advanceResp, err = advanceAuthRequest(host, advanceAuthData{
+						Action:      "Poll",
+						MechanismId: mobileAuthMechanism.MechanismId,
+						SessionId:   startResp.Result.SessionId,
+					}, httpClient)
+					if err != nil {
+						return err
+					}
+
+					if advanceResp.Result.Summary == "LoginSuccess" {
+						return nil
+					}
 				}
 			}
 		}
+
+		err = poll()
+		if err != nil {
+			return "", err
+		}
+
+		// When the OOB Poll response indicates LoginSuccess, the bearer token is
+		// included as an .ASPXAUTH cookie.
+
+		return resp.Cookies()[slices.IndexFunc(
+			resp.Cookies(), func(c *http.Cookie) bool {
+				return c.Name == ".ASPXAUTH"
+			},
+		)].Value, nil
 	}
-
-	err = poll()
-	if err != nil {
-		return "", err
-	}
-
-	// When the OOB Poll response indicates LoginSuccess, the bearer token is
-	// included as an .ASPXAUTH cookie.
-
-	return resp.Cookies()[slices.IndexFunc(
-		resp.Cookies(), func(c *http.Cookie) bool {
-			return c.Name == ".ASPXAUTH"
-		},
-	)].Value, nil
 }
 
 func extractHostname(providerURL string) string {

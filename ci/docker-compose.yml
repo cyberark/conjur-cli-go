@@ -11,7 +11,7 @@ services:
     environment:
       DATABASE_URL: postgres://postgres@pg/postgres
       CONJUR_DATA_KEY: Bd4+A1QnELGC1Fb5/KauFlVez981OoYblbyfNOCavuQ=
-      CONJUR_AUTHENTICATORS: authn,authn-oidc/keycloak,authn-oidc/okta-2
+      CONJUR_AUTHENTICATORS: authn,authn-oidc/keycloak,authn-oidc/okta
       CONJUR_FEATURE_PKCE_SUPPORT_ENABLED: 'true'
     volumes:
     # The files add the endpoint /dev to Conjur. This endpoint allows us to carry out typical development tasks such as fetching
@@ -38,6 +38,11 @@ services:
       - OKTA_PROVIDER_URI=$OKTA_PROVIDER_URI
       - OKTA_USERNAME=$OKTA_USERNAME
       - OKTA_PASSWORD=$OKTA_PASSWORD
+      - IDENTITY_CLIENT_ID=$IDENTITY_CLIENT_ID
+      - IDENTITY_CLIENT_SECRET=$IDENTITY_CLIENT_SECRET
+      - IDENTITY_PROVIDER_URI=$IDENTITY_PROVIDER_URI
+      - IDENTITY_USERNAME=$IDENTITY_USERNAME
+      - IDENTITY_PASSWORD=$INFRAPOOL_IDENTITY_PASSWORD
     command: bash -c "cd ${PWD}/..; make install; sleep infinity"
     working_dir: ${PWD}/..
     restart: on-failure

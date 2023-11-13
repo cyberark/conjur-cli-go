@@ -27,6 +27,11 @@ function main() {
   local conjur_account=dev
   local admin_initial_password='SuperSecret!!!!123'
 
+  # Add the domain to the Identity service account we fetch from Atlantis
+  if [[ -n "${INFRAPOOL_IDENTITY_USERNAME}" ]]; then
+    export IDENTITY_USERNAME="${INFRAPOOL_IDENTITY_USERNAME}@cyberark.com"
+  fi
+
   echo
   echo "Starting Containers"
   docker-compose up -d --no-deps "${services[@]}"
@@ -46,6 +51,8 @@ function main() {
   echo 'Setting up Keycloak'
   configure_oidc_providers
   echo 'Finished setting up Keycloak'
+
+  generate_identity_policy
 
   docker-compose exec -T cli make integration
 }

@@ -127,7 +127,7 @@ EOL
   if [ "$ENABLE_OIDC_OKTA" = true ]; then
     echo "Setting up Conjur for OIDC (Okta)"
     docker-compose exec cli-dev bash -c 'conjur logout
-conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id okta-2
+conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id okta
 conjur login -i $OKTA_USERNAME -p $OKTA_PASSWORD'
   elif [ "$ENABLE_OIDC_KEYCLOAK" = true ]; then
     echo "Setting up Conjur for OIDC (Keycloak)"
@@ -228,7 +228,7 @@ setup_keycloak() {
 
 setup_okta() {
   check_environment_variables "OKTA_PROVIDER_URI" "OKTA_CLIENT_ID" "OKTA_CLIENT_SECRET"
-  setup_oidc_client "okta-2" "${OKTA_PROVIDER_URI}oauth2/default" \
+  setup_oidc_client "okta" "${OKTA_PROVIDER_URI}oauth2/default" \
                     "${OKTA_CLIENT_ID}" "${OKTA_CLIENT_SECRET}" "preferred_username"
 }
 
@@ -292,8 +292,8 @@ enable_oidc_authenticators() {
   fi
 
   if [[ $ENABLE_OIDC_OKTA = true ]]; then
-    echo "Configuring Okta as OpenID provider for manual testing"
-    enabled_authenticators="$enabled_authenticators,authn-oidc/okta-2"
+    echo "Configuring OKTA as OpenID provider for manual testing"
+    enabled_authenticators="$enabled_authenticators,authn-oidc/okta"
   fi
 
   if [[ $ENABLE_OIDC_IDENTITY = true ]]; then
