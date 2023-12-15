@@ -27,7 +27,7 @@ enabled_authenticators="$default_authenticators"
 main() {
   parse_options "$@"
 
-  if docker-compose ps conjur | grep conjur >/dev/null 2>&1; then
+  if docker compose ps conjur | grep conjur >/dev/null 2>&1; then
     ./stop
   fi
 
@@ -72,10 +72,10 @@ EOL
 
   echo
   echo "Starting Containers"
-  docker-compose up -d --no-deps "${services[@]}"
+  docker compose up -d --no-deps "${services[@]}"
 
   echo
-  docker-compose exec -T pg bash -e <<EOL
+  docker compose exec -T pg bash -e <<EOL
 echo 'Waiting for Postgres to be ready...'
 for i in {1..90}
 do
@@ -93,7 +93,7 @@ EOL
 
   echo
   echo 'Setting up Conjur...'
-  docker-compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${admin_initial_password}]"
+  docker compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${admin_initial_password}]"
   echo 'Finished setting up Conjur'
 
   echo
@@ -103,12 +103,12 @@ EOL
 
   # Even when using OIDC, we need to set up conjur with the regular authenticator
   # so we can set up policy before dropping the user into the CLI container.
-  docker-compose exec cli-dev ./dev/refresh-admin-connection-details
+  docker compose exec cli-dev ./dev/refresh-admin-connection-details
 
   echo
   echo "Loading policy"
 
-  docker-compose exec -T conjur conjurctl policy load dev /dev/stdin < policy.yml
+  docker compose exec -T conjur conjurctl policy load dev /dev/stdin < policy.yml
 
   echo
   echo "Setting up authenticators"
@@ -121,28 +121,28 @@ EOL
   echo
   echo "Entering CLI container"
 
-  docker-compose exec cli-dev go mod download || true
+  docker compose exec cli-dev go mod download || true
 
   echo
   if [ "$ENABLE_OIDC_OKTA" = true ]; then
     echo "Setting up Conjur for OIDC (Okta)"
-    docker-compose exec cli-dev bash -c 'conjur logout
+    docker compose exec cli-dev bash -c 'conjur logout
 conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id okta
 conjur login -i $OKTA_USERNAME -p $OKTA_PASSWORD'
   elif [ "$ENABLE_OIDC_KEYCLOAK" = true ]; then
     echo "Setting up Conjur for OIDC (Keycloak)"
-    docker-compose exec cli-dev bash -c 'conjur logout
+    docker compose exec cli-dev bash -c 'conjur logout
 conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id keycloak
 conjur login -i alice -p alice'
   elif [ "$ENABLE_OIDC_IDENTITY" = true ]; then
     echo "Setting up Conjur for OIDC (Identity)"
-    docker-compose exec cli-dev bash -c 'conjur logout
+    docker compose exec cli-dev bash -c 'conjur logout
 conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id identity
 conjur login -i $IDENTITY_USERNAME'
   fi
 
   echo
-  docker-compose exec cli-dev bash
+  docker compose exec cli-dev bash
 }
 
 parse_options() {
@@ -171,31 +171,31 @@ parse_options() {
 
 start_conjur_server() {
   echo "Starting Conjur server"
-  docker-compose exec -d conjur conjurctl server
+  docker compose exec -d conjur conjurctl server
 
   echo 'Checking if Conjur server is ready'
   wait_for_conjur
 }
 
 wait_for_conjur() {
-  docker-compose exec conjur conjurctl wait
+  docker compose exec conjur conjurctl wait
 }
 
 client_load_policy() {
   local policy_file=$1
 
-  docker-compose exec -T cli-dev conjur policy load -b root -f - < "$policy_file"
+  docker compose exec -T cli-dev conjur policy load -b root -f - < "$policy_file"
 }
 
 client_add_secret() {
   local variable=$1
   local value=$2
 
-  docker-compose exec cli-dev conjur variable set -i "$variable" -v "$value"
+  docker compose exec cli-dev conjur variable set -i "$variable" -v "$value"
 }
 
 configure_oidc_providers() {
-  # Start conjur again, since it is recreating by docker-compose because of
+  # Start conjur again, since it is recreating by docker compose because of
   # dependency with keycloak
   if [[ $ENABLE_OIDC_KEYCLOAK = true ]]; then
     echo "Configuring Keycloak provider"
@@ -217,7 +217,7 @@ configure_oidc_providers() {
 
 setup_keycloak() {
   services+=(keycloak)
-  docker-compose up -d --no-deps "${services[@]}"
+  docker compose up -d --no-deps "${services[@]}"
   start_conjur_server
   wait_for_keycloak_server
   fetch_keycloak_certificate
@@ -308,7 +308,7 @@ start_auth_services() {
 
   # Will restart services if configuration has changed.  I think this happens
   # when additional authenticators are enabled.
-  docker-compose up -d --no-deps "${services[@]}"
+  docker compose up -d --no-deps "${services[@]}"
 
   # If that happens, we need to restart Conjur server.
   if [[ "$enabled_authenticators" != "$default_authenticators" ]]; then

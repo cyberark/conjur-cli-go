@@ -27,7 +27,7 @@ wait_for_cmd() {
 _wait_for_pg() {
   local svc=$1
   local pg_cmd=(psql -U postgres -c "select 1" -d postgres)
-  local dc_cmd=(docker-compose exec -T "$svc" "${pg_cmd[@]}")
+  local dc_cmd=(docker compose exec -T "$svc" "${pg_cmd[@]}")
 
   echo "Waiting for pg to come up..."
 
@@ -40,7 +40,7 @@ _wait_for_pg() {
 }
 
 wait_for_conjur() {
-  docker-compose exec -T conjur conjurctl wait
+  docker compose exec -T conjur conjurctl wait
 }
 
 

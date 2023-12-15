@@ -16,8 +16,8 @@ export COMPOSE_PROJECT_NAME
 
 cleanup_and_dump_logs() {
   echo "Cleaning up... Saving container logs in cleanup.log"
-  docker-compose logs &> cleanup.log
-  docker-compose rm --stop --force
+  docker compose logs &> cleanup.log
+  docker compose rm --stop --force
 }
 
 trap 'cleanup_and_dump_logs' EXIT
@@ -34,7 +34,7 @@ function main() {
 
   echo
   echo "Starting Containers"
-  docker-compose up -d --no-deps "${services[@]}"
+  docker compose up -d --no-deps "${services[@]}"
 
   echo
   _wait_for_pg pg
@@ -44,7 +44,7 @@ function main() {
 
   echo
   echo 'Setting up Conjur...'
-  docker-compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${admin_initial_password}]"
+  docker compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${admin_initial_password}]"
   echo 'Finished setting up Conjur'
 
   echo
@@ -54,7 +54,7 @@ function main() {
 
   generate_identity_policy
 
-  docker-compose exec -T cli make integration
+  docker compose exec -T cli make integration
 }
 
 main
