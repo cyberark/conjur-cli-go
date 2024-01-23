@@ -19,7 +19,9 @@ function main() {
   GOARCH=amd64 \
   GOEXPERIMENT=boringcrypto \
   go build \
-    -ldflags "-w -X github.com/cyberark/conjur-cli-go/pkg/version.Tag=$SHORT_COMMIT_HASH -X main.version=${VERSION}" \
+    -ldflags "-w \
+      -X github.com/cyberark/conjur-cli-go/pkg/version.Tag=$SHORT_COMMIT_HASH \
+      -X github.com/cyberark/conjur-cli-go/pkg/version.Version=$VERSION" \
     -o "$OUTPUT_DIR/conjur-cli-go_linux_amd64_v1/conjur" \
     ./cmd/conjur/main.go
 }
