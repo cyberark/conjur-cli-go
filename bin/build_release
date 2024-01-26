@@ -8,10 +8,9 @@ cd "$(dirname "$0")"
 
 . ./build_utils
 
-function main() {
-    local REPO_ROOT
-    local PROJECT_WD
-    local VERSION
+function build_binaries_and_archives() {
+    echo "building binaries and archives with GoReleaser..."
+
     local GO_VERSION
     local GORELEASER_IMAGE
 
@@ -19,10 +18,6 @@ function main() {
     # This image is recommended by the official GoReleaser docs
     # https://goreleaser.com/cookbooks/cgo-and-crosscompiling/
     GORELEASER_IMAGE="goreleaser/goreleaser-cross:v1.19"
-
-    REPO_ROOT="$(repo_root)"
-    PROJECT_WD="github.cyberng.com/Conjur-Enterprise/conjur-cli-go"
-    VERSION="$(project_semantic_version)"
 
     # Get the version of Go specified by the "go directive" in go.mod
     # Grep it to avoid Go binary dependency
@@ -37,7 +32,7 @@ function main() {
       --workdir "/${PROJECT_WD}" \
       conjur-cli-go-builder
 
-    # Compile binaries with Go Releaser
+    # Compile binaries with GoReleaser
     echo "Docker image for release build: ${GORELEASER_IMAGE}"
     docker run --rm \
       --env VERSION="${VERSION}" \
@@ -45,6 +40,65 @@ function main() {
       --volume "${REPO_ROOT}:/${PROJECT_WD}" \
       --workdir "/${PROJECT_WD}" \
       "${GORELEASER_IMAGE}" --clean "$@"
+
+    echo "Binaries and archives built."
+}
+
+# When nFPM is invoked via GoReleaser, generated DEB and RPM packages are
+# populated with metadata derived from the latest git tag instead of the
+# dynamically-generated VERSION file, which could cause filenames and package
+# names to display different versions.
+#
+# GoReleaser only allows for customizing a subset of nFPM config from upstream,
+# version being excluded - invoking nFPM directly means we can use the VERSION
+# file to sync file and package names.
+function build_packages() {
+    echo "building packages with nFPM..."
+
+    local NFPM_IMAGE
+    local ARCHITECTURES
+    local PACKAGERS
+    local TARGET_DIR
+
+    NFPM_IMAGE="goreleaser/nfpm:v2.35.2"
+    PACKAGERS=("deb" "rpm")
+    ARCHITECTURES=("386" "amd64" "arm64")
+    TARGET_DIR="dist/goreleaser"
+
+    for packager in "${PACKAGERS[@]}"; do
+      for arch in "${ARCHITECTURES[@]}"; do
+        target_file="conjur-cli-go_${VERSION}_${arch}.${packager}"
+
+        docker run --rm \
+          --env VERSION="${VERSION}" \
+          --env GOARCH="${arch}" \
+          --volume "${REPO_ROOT}:/${PROJECT_WD}" \
+          --workdir "/${PROJECT_WD}" \
+          "${NFPM_IMAGE}" package \
+            --config nfpm.yaml \
+            --packager "$packager" \
+            --target "$TARGET_DIR/$target_file"
+
+        sha256sum="$(openssl sha256 "../$TARGET_DIR/$target_file" | awk '{ print $2}')"
+        echo "$sha256sum  $target_file" | sudo tee -a "../$TARGET_DIR/SHA256SUMS.txt"
+      done
+    done
+
+    echo "Packages built."
+}
+
+
+function main() {
+    export REPO_ROOT
+    export PROJECT_WD
+    export VERSION
+
+    REPO_ROOT="$(repo_root)"
+    PROJECT_WD="github.cyberng.com/Conjur-Enterprise/conjur-cli-go"
+    VERSION="$(project_semantic_version)"
+
+    build_binaries_and_archives "$@"
+    build_packages
 
     echo "Releases built. Archives can be found in dist/goreleaser"
 }
