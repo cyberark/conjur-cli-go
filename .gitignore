@@ -21,3 +21,6 @@ conjur
 !cmd/conjur
 
 VERSION
+
+ci/conf/tls/*.crt
+ci/conf/tls/*.key

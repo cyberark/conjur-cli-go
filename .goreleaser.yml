@@ -79,18 +79,6 @@ brews:
       name: homebrew-tools
     skip_upload: true
 
-nfpms:
-  - bindir: /usr/bin
-    description: CyberArk Conjur command line interface (Golang)
-    file_name_template: "{{.ProjectName}}_{{.Env.VERSION}}_{{.Arch}}"
-    formats:
-      - deb
-      - rpm
-    homepage: https://conjur.org
-    license: "Apache 2.0"
-    maintainer: CyberArk Maintainers <conj_maintainers@cyberark.com>
-    vendor: CyberArk
-
 snapshot:
   name_template: "{{ .Tag }}-next"
 
