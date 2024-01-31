@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [8.0.13] - 2024-01-25
 
 ### Fixed
+- FIPS-compliant binaries work on RHEL 7/8
+  [Conjur-Enterprise/conjur-cli-go#8](https://github.cyberng.com/Conjur-Enterprise/conjur-cli-go/pull/8)
 - FIPS-compliant binaries report correct version when passed `--version` flag
   [Conjur-Enterprise/conjur-cli-go#7](https://github.cyberng.com/Conjur-Enterprise/conjur-cli-go/pull/7)
 - RPM and DEB packages contain correct version in installed package names
