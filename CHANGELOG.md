@@ -10,7 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.13] - 2024-01-25
+## [8.0.13] - 2024-02-26
+
+### Added
+- OIDC redirect URI supports IPv6 addresses (CNJR-3851)
 
 ### Fixed
 - FIPS-compliant binaries work on RHEL 7/8
