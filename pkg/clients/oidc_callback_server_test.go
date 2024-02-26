@@ -40,6 +40,14 @@ var testCases = []struct {
 		redirectURI: "http://127.0.0.1/callback",
 	},
 	{
+		name:        "Succeeds with ipv6 address and port",
+		redirectURI: "http://[::1]:8888/callback",
+	},
+	{
+		name:        "Succeeds with ipv6 address and default port",
+		redirectURI: "http://[::1]/callback",
+	},
+	{
 		name:          "Fails if redirect_uri path is wrong",
 		redirectURI:   "http://127.0.0.1:9999/incorrect_callback",
 		expectedError: "redirect_uri must be http://127.0.0.1[:port]/callback",
@@ -74,17 +82,16 @@ func TestHandleOidcFlow(t *testing.T) {
 			time.Sleep(200 * time.Millisecond)
 
 			// Check that the server is or is not running
-			port := portFromURL(tc.redirectURI)
 			if tc.expectedError != "" {
-				assert.False(t, isServerRunning(port))
+				assert.False(t, isServerRunning(tc.redirectURI))
 				assert.ErrorContains(t, serverError, tc.expectedError)
 			} else {
-				assert.True(t, isServerRunning(port))
+				assert.True(t, isServerRunning(tc.redirectURI))
 				_, err := httpClient.Get(tc.redirectURI + "?code=1234&state=test-state")
 				assert.NoError(t, err)
 				// Wait for the server to stop
 				time.Sleep(100 * time.Millisecond)
-				assert.False(t, isServerRunning(port))
+				assert.False(t, isServerRunning(tc.redirectURI))
 				assert.Equal(t, "1234", code)
 				assert.NoError(t, serverError)
 			}
@@ -111,7 +118,7 @@ func TestHandleOidcFlow(t *testing.T) {
 		time.Sleep(1 * time.Second)
 		// Ensure the open browser function was called and the server is running
 		assert.True(t, openBrowserCalled)
-		assert.True(t, isServerRunning(port))
+		assert.True(t, isServerRunning("http://127.0.0.1:"+port))
 		// Make a request to the callback endpoint without a code...
 		resp, err := httpClient.Get("http://127.0.0.1:" + port + "/callback?state=test-state")
 		assert.NoError(t, err)
@@ -128,7 +135,7 @@ func TestHandleOidcFlow(t *testing.T) {
 		assert.Contains(t, string(content), "Logged in successfully")
 		// Ensure server is shut down
 		time.Sleep(1 * time.Second)
-		assert.False(t, isServerRunning(port))
+		assert.False(t, isServerRunning("http://127.0.0.1:"+port))
 		// Ensure the code was returned
 		assert.Equal(t, "1234", code)
 		assert.NoError(t, serverError)
@@ -183,7 +190,7 @@ func TestHandleOidcFlow(t *testing.T) {
 		assert.True(t, openBrowserCalled)
 		// Ensure server is shut down
 		time.Sleep(250 * time.Millisecond)
-		assert.False(t, isServerRunning(port))
+		assert.False(t, isServerRunning("http://127.0.0.1:"+port))
 	})
 }
 
@@ -195,9 +202,20 @@ func TestGenerateState(t *testing.T) {
 	assert.Len(t, decodedState, 16)
 }
 
-func isServerRunning(port string) bool {
-	// Checks whether the server is running by attempting to connect to the port
-	conn, err := net.DialTimeout("tcp", "127.0.0.1:"+port, 1*time.Second)
+func isServerRunning(uri string) bool {
+	// Checks whether the server is running by attempting to connect to the host and port
+	u, err := url.Parse(uri)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	// If host is missing the port number append the default (:80)
+	if _, _, err := net.SplitHostPort(u.Host); err != nil {
+		u.Host = fmt.Sprintf("%s:80", u.Host)
+	}
+
+	conn, err := net.DialTimeout("tcp", u.Host, 1*time.Second)
 	if err != nil {
 		return false
 	}
@@ -211,16 +229,4 @@ func mockGenerateState() string {
 
 func randomPort() int {
 	return rand.Intn(65535-1024) + 1024
-}
-
-func portFromURL(uri string) string {
-	u, err := url.Parse(uri)
-	if err != nil {
-		return ""
-	}
-
-	if u.Port() == "" {
-		return "80"
-	}
-	return u.Port()
 }

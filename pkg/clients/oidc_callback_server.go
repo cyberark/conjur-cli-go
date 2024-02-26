@@ -69,7 +69,7 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 	}
 
 	queryVals := authURL.Query()
-	port, err := parseAndValidateRedirectPort(queryVals.Get("redirect_uri"))
+	host, port, err := parseAndValidateRedirectUri(queryVals.Get("redirect_uri"))
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +86,12 @@ func handleOpenIDFlow(authEndpointURL string, generateStateFn func() string, ope
 	mux.Handle("/callback", callbackEndpoint)
 	server.Handler = mux
 
-	server.Addr = "127.0.0.1:" + strconv.Itoa(port)
+	// If using ipv6 address it needs surrounding brackets
+	if isIPv6(host) {
+		server.Addr = fmt.Sprintf("[%s]:%d", host, port)
+	} else {
+		server.Addr = fmt.Sprintf("%s:%d", host, port)
+	}
 
 	queryVals.Set("state", callbackEndpoint.state)
 	authURL.RawQuery = queryVals.Encode()
@@ -133,24 +138,40 @@ func generateState() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func parseAndValidateRedirectPort(redirectURI string) (int, error) {
-	// Use regex to validate redirect_uri is in the format http://127.0.0.1[:port]/callback
-	if !regexp.MustCompile(`^http://127\.0\.0\.1(:[0-9]+)?/callback$`).MatchString(redirectURI) {
-		return 0, fmt.Errorf("redirect_uri must be http://127.0.0.1[:port]/callback")
+func parseAndValidateRedirectUri(redirectURI string) (string, int, error) {
+	// Use regex to validate redirect_uri is in the format http://127.0.0.1[:port]/callback or http://[::1][:port]/callback
+	if !regexp.MustCompile(`^http://(?:127\.0\.0\.1|\[::1\])(?::[0-9]+)?/callback$`).MatchString(redirectURI) {
+		return "", 0, fmt.Errorf("redirect_uri must be http://127.0.0.1[:port]/callback or http://[::1][:port]/callback")
 	}
 
-	// Get port from uri
 	uri, err := url.Parse(redirectURI)
 	if err != nil {
-		return 0, fmt.Errorf("Unable to parse redirect_uri: %s", err)
+		return "", 0, fmt.Errorf("Unable to parse redirect_uri: %s", err)
 	}
-	if uri.Port() != "" {
-		port, _ := strconv.Atoi(uri.Port()) // This is certain to be an integer since it passed the regex check
-		if port < 1 || port > 65535 {
-			return 0, fmt.Errorf("Port in redirect_uri must be between 1 and 65535")
+
+	host, port_str, err := net.SplitHostPort(uri.Host)
+	if err != nil {
+		if strings.Contains(err.Error(), "missing port in address") {
+			// If the port is missing, default to 80
+			host = uri.Host
+			port_str = "80"
+		} else {
+			return "", 0, fmt.Errorf("Unable to parse redirect_uri: %s", err)
 		}
-		return port, nil
 	}
-	// Default to port 80
-	return 80, nil
+
+	port, _ := strconv.Atoi(port_str) // This is certain to be an integer since it passed the regex check
+	if port < 1 || port > 65535 {
+		return "", 0, fmt.Errorf("Port in redirect_uri must be between 1 and 65535")
+	}
+
+	return host, port, nil
+}
+
+func isIPv6(ipStr string) bool {
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return false
+	}
+	return ip.To4() == nil // If To4() is nil, it's IPv6
 }
