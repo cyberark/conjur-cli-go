@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.13] - 2024-02-26
+## [8.0.13] - 2024-03-13
 
 ### Added
 - OIDC redirect URI supports IPv6 addresses (CNJR-3851)
@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   [Conjur-Enterprise/conjur-cli-go#7](https://github.cyberng.com/Conjur-Enterprise/conjur-cli-go/pull/7)
 - RPM and DEB packages contain correct version in installed package names
   [Conjur-Enterprise/conjur-cli-go#7](https://github.cyberng.com/Conjur-Enterprise/conjur-cli-go/pull/7)
+
+### Security
+- Upgrade golang.org/x/net to v0.17.0, golang.org/x/crypto to v0.14.0,
+  golang.org/x/sys to v0.13.0, golang.org/x/text to v0.13.0, and
+  golang.org/x/term to v0.13.0 (CNJR-3913)
 
 ## [8.0.12] - 2023-10-17
 
