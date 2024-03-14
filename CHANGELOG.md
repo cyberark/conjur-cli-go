@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [8.0.14] - 2024-03-14
 
+### Changed
+- Change base image to `ubi9/ubi-minimal:latest` (CNJR-3913)
+
 ## [8.0.13] - 2024-03-14
 
 ### Added
