@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.14] - 2024-03-14
+
 ## [8.0.13] - 2024-03-14
 
 ### Added
@@ -136,7 +138,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.13...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.14...HEAD
+[8.0.14]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.13...v8.0.14
 [8.0.13]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.12...v8.0.13
 [8.0.12]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.11...v8.0.12
 [8.0.11]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.10...v8.0.11
