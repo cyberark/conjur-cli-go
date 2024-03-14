@@ -10,18 +10,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.13] - 2024-03-13
+## [8.0.13] - 2024-03-14
 
 ### Added
 - OIDC redirect URI supports IPv6 addresses (CNJR-3851)
 
 ### Fixed
-- FIPS-compliant binaries work on RHEL 7/8
-  [Conjur-Enterprise/conjur-cli-go#8](https://github.cyberng.com/Conjur-Enterprise/conjur-cli-go/pull/8)
+- FIPS-compliant binaries work on RHEL 7/8 (CNJR-3544)
 - FIPS-compliant binaries report correct version when passed `--version` flag
-  [Conjur-Enterprise/conjur-cli-go#7](https://github.cyberng.com/Conjur-Enterprise/conjur-cli-go/pull/7)
+  (CNJR-3547)
 - RPM and DEB packages contain correct version in installed package names
-  [Conjur-Enterprise/conjur-cli-go#7](https://github.cyberng.com/Conjur-Enterprise/conjur-cli-go/pull/7)
+  (CNJR-3547)
 
 ### Security
 - Upgrade golang.org/x/net to v0.17.0, golang.org/x/crypto to v0.14.0,
