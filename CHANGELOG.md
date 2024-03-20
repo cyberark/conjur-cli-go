@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.15] - 2024-03-19
+
+### Fixed
+- Restored `tar` binary to container to allow for `kubectl cp` (CNJR-3913)
+
 ## [8.0.14] - 2024-03-14
 
 ### Changed
