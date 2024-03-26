@@ -94,7 +94,7 @@ function main() {
     export VERSION
 
     REPO_ROOT="$(repo_root)"
-    PROJECT_WD="github.cyberng.com/Conjur-Enterprise/conjur-cli-go"
+    PROJECT_WD="github.com/cyberark/conjur-cli-go"
     VERSION="$(project_semantic_version)"
 
     build_binaries_and_archives "$@"
