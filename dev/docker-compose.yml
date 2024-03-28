@@ -28,7 +28,7 @@ services:
     restart: on-failure
 
   cli-dev:
-    image: golang:1.19
+    image: golang:1.22
     environment:
       - OKTA_USERNAME=${OKTA_USERNAME:-user}
       - OKTA_PASSWORD=${OKTA_PASSWORD:-password}
