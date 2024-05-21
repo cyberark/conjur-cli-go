@@ -9,8 +9,18 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/stretchr/testify/assert"
 )
+
+type mockInitClient struct {
+	t               *testing.T
+	jwtAuthenticate func(t *testing.T, client clients.ConjurClient) error
+}
+
+func (m mockInitClient) JWTAuthenticate(client clients.ConjurClient) error {
+	return m.jwtAuthenticate(m.t, client)
+}
 
 var initCmdTestCases = []struct {
 	name string
@@ -22,9 +32,10 @@ var initCmdTestCases = []struct {
 	// Being unable to pipe responses to prompts is a known shortcoming of Survey.
 	// https://github.com/go-survey/survey/issues/394
 	// This flag is used to enable Pipe-based, and not PTY-based, tests.
-	pipe       bool
-	beforeTest func(t *testing.T, conjurrcInTmpDir string) func()
-	assert     func(t *testing.T, conjurrcInTmpDir string, stdout string)
+	pipe            bool
+	beforeTest      func(t *testing.T, conjurrcInTmpDir string) func()
+	assert          func(t *testing.T, conjurrcInTmpDir string, stdout string)
+	jwtAuthenticate func(t *testing.T, client clients.ConjurClient) error
 }{
 	{
 		name: "help",
@@ -61,6 +72,38 @@ service_id: test
 
 			assert.Equal(t, expectedConjurrc, string(data))
 			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
+		},
+	},
+	{
+		name: "writes conjurrc for jwt",
+		args: []string{"init", "-u=http://host", "-a=test-account", "-t=jwt", "--service-id=test", "--jwt-file=/path/to/jwt", "--jwt-host-id=host-id", "-i"},
+		jwtAuthenticate: func(t *testing.T, client clients.ConjurClient) error {
+			// Just return nil to simulate successful JWT authentication
+			return nil
+		},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
+			data, _ := os.ReadFile(conjurrcInTmpDir)
+			expectedConjurrc := `account: test-account
+appliance_url: http://host
+authn_type: jwt
+service_id: test
+jwt_host_id: host-id
+jwt_file: /path/to/jwt
+`
+
+			assert.Equal(t, expectedConjurrc, string(data))
+			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
+		},
+	},
+	{
+		name: "fails when jwt authentication fails",
+		args: []string{"init", "-u=http://host", "-a=test-account", "-t=jwt", "--service-id=test", "--jwt-file=/path/to/jwt", "--jwt-host-id=host-id", "-i"},
+		jwtAuthenticate: func(t *testing.T, client clients.ConjurClient) error {
+			return fmt.Errorf("jwt authentication failed")
+		},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
+			assert.Contains(t, stdout, "Unable to authenticate with Conjur using the provided JWT file: jwt authentication failed")
+			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
 	{
@@ -334,7 +377,11 @@ func TestInitCmd(t *testing.T) {
 			args = append(args, tc.args...)
 
 			// Create command tree for init
-			cmd := newInitCommand()
+			mockClient := mockInitClient{t: t, jwtAuthenticate: tc.jwtAuthenticate}
+
+			cmd := newInitCommand(initCmdFuncs{
+				JWTAuthenticate: mockClient.JWTAuthenticate,
+			})
 			rootCmd := newRootCommand()
 			rootCmd.AddCommand(cmd)
 			rootCmd.SetArgs(args)
@@ -359,7 +406,7 @@ func TestInitCmd(t *testing.T) {
 
 	// Other tests
 	t.Run("default flags", func(t *testing.T) {
-		cmd := newInitCommand()
+		cmd := newInitCommand(defaultInitCmdFuncs)
 
 		rootCmd := newRootCommand()
 		rootCmd.AddCommand(cmd)

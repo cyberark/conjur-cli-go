@@ -8,11 +8,20 @@ import (
 	"path/filepath"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
 
 	"github.com/spf13/cobra"
 )
+
+type initCmdFuncs struct {
+	JWTAuthenticate func(conjurClient clients.ConjurClient) error
+}
+
+var defaultInitCmdFuncs = initCmdFuncs{
+	JWTAuthenticate: clients.JWTAuthenticate,
+}
 
 type initCmdFlagValues struct {
 	account            string
@@ -22,6 +31,8 @@ type initCmdFlagValues struct {
 	conjurrcFilePath   string
 	certFilePath       string
 	caCert             string
+	jwtFilePath        string
+	jwtHostID          string
 	forceFileOverwrite bool
 	insecure           bool
 	selfSigned         bool
@@ -57,6 +68,14 @@ func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
 	if err != nil {
 		return initCmdFlagValues{}, err
 	}
+	jwtFilePath, err := cmd.Flags().GetString("jwt-file")
+	if err != nil {
+		return initCmdFlagValues{}, err
+	}
+	jwtHostID, err := cmd.Flags().GetString("jwt-host-id")
+	if err != nil {
+		return initCmdFlagValues{}, err
+	}
 	selfSigned, err := cmd.Flags().GetBool("self-signed")
 	if err != nil {
 		return initCmdFlagValues{}, err
@@ -82,6 +101,8 @@ func getInitCmdFlagValues(cmd *cobra.Command) (initCmdFlagValues, error) {
 		conjurrcFilePath:   conjurrcFilePath,
 		certFilePath:       certFilePath,
 		caCert:             caCert,
+		jwtFilePath:        jwtFilePath,
+		jwtHostID:          jwtHostID,
 		selfSigned:         selfSigned,
 		insecure:           insecure,
 		forceFileOverwrite: forceFileOverwrite,
@@ -107,7 +128,7 @@ func validateCmdFlags(cmdFlagVals initCmdFlagValues, cmd *cobra.Command) error {
 	return nil
 }
 
-func runInitCommand(cmd *cobra.Command, args []string) error {
+func runInitCommand(cmd *cobra.Command, funcs initCmdFuncs) error {
 	var err error
 
 	cmdFlagVals, err := getInitCmdFlagValues(cmd)
@@ -134,6 +155,21 @@ func runInitCommand(cmd *cobra.Command, args []string) error {
 		ApplianceURL: applianceURL,
 		AuthnType:    cmdFlagVals.authnType,
 		ServiceID:    cmdFlagVals.serviceID,
+		JWTFilePath:  cmdFlagVals.jwtFilePath,
+		JWTHostID:    cmdFlagVals.jwtHostID,
+	}
+
+	// If using JWT auth, we need to ensure that the JWT file exists and
+	// contains a valid JWT. To do this, we'll attempt to authenticate.
+	if config.AuthnType == "jwt" {
+		client, err := conjurapi.NewClient(config)
+		if err != nil {
+			return err
+		}
+		err = funcs.JWTAuthenticate(client)
+		if err != nil {
+			return fmt.Errorf("Unable to authenticate with Conjur using the provided JWT file: %s", err)
+		}
 	}
 
 	// If the user has specified the --force-netrc flag, don't try to use the native keychain
@@ -241,7 +277,7 @@ func writeFile(filePath string, fileContents []byte, forceFileOverwrite bool) er
 	return os.WriteFile(filePath, fileContents, 0644)
 }
 
-func newInitCommand() *cobra.Command {
+func newInitCommand(funcs initCmdFuncs) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize the Conjur CLI with a Conjur server",
@@ -249,7 +285,9 @@ func newInitCommand() *cobra.Command {
 
 The init command creates a configuration file (.conjurrc) that contains the details for connecting to Conjur. This file is located under the user's root directory.`,
 		SilenceUsage: true,
-		RunE:         runInitCommand,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runInitCommand(cmd, funcs)
+		},
 	}
 
 	userHomeDir, err := os.UserHomeDir()
@@ -266,6 +304,8 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 	cmd.Flags().String("cert-file", filepath.Join(userHomeDir, "conjur-server.pem"), "File to write the server's certificate to")
 	cmd.Flags().StringP("authn-type", "t", "", "Authentication type to use")
 	cmd.Flags().String("service-id", "", "Service ID if using alternative authentication type")
+	cmd.Flags().String("jwt-file", "", "Path to the JWT file if using authn-jwt")
+	cmd.Flags().String("jwt-host-id", "", "Host ID for authn-jwt (not required if JWT contains host ID)")
 	cmd.Flags().BoolP("self-signed", "s", false, "Allow self-signed certificates (insecure)")
 	cmd.Flags().BoolP("insecure", "i", false, "Allow non-HTTPS connections (insecure)")
 	cmd.Flags().Bool("force-netrc", false, "Use a file-based credential storage rather than OS-native keystore (for compatibility with Summon)")
@@ -275,6 +315,6 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 }
 
 func init() {
-	initCmd := newInitCommand()
+	initCmd := newInitCommand(defaultInitCmdFuncs)
 	rootCmd.AddCommand(initCmd)
 }

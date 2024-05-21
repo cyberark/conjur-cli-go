@@ -14,12 +14,14 @@ type loginCmdFuncs struct {
 	LoadAndValidateConjurConfig func() (conjurapi.Config, error)
 	LoginWithPromptFallback     func(client clients.ConjurClient, username string, password string) (*authn.LoginPair, error)
 	OidcLogin                   func(conjurClient clients.ConjurClient, username string, password string) (clients.ConjurClient, error)
+	JWTAuthenticate             func(conjurClient clients.ConjurClient) error
 }
 
 var defaultLoginCmdFuncs = loginCmdFuncs{
 	LoadAndValidateConjurConfig: clients.LoadAndValidateConjurConfig,
 	LoginWithPromptFallback:     clients.LoginWithPromptFallback,
 	OidcLogin:                   clients.OidcLogin,
+	JWTAuthenticate:             clients.JWTAuthenticate,
 }
 
 type loginCmdFlagValues struct {
@@ -95,6 +97,15 @@ Examples:
 				_, err = funcs.LoginWithPromptFallback(conjurClient, cmdFlagVals.identity, cmdFlagVals.password)
 			} else if config.AuthnType == "oidc" {
 				_, err = funcs.OidcLogin(conjurClient, cmdFlagVals.identity, cmdFlagVals.password)
+			} else if config.AuthnType == "jwt" {
+				// Just run authenticate to validate the jwt. This isn't
+				// necessary (since the JWT path is set in the `init` command)
+				// but is provided as a convenience to the user, to allow them
+				// to validate their jwt file before running other commands.
+				err = funcs.JWTAuthenticate(conjurClient)
+				if err != nil {
+					err = fmt.Errorf("Unable to authenticate with Conjur using the provided JWT file: %s", err)
+				}
 			} else {
 				return fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
 			}
