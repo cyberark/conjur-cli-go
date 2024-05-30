@@ -92,6 +92,13 @@ func TestPrettyPrintToJSON(t *testing.T) {
 			expected:    "",
 			expectedErr: "json: unsupported type: chan int",
 		},
+		{
+			name: "containing HTML escape characters",
+			obj:  map[string]interface{}{"foo": `A~@#$%^&*\!\() _+=-;:\"/?.>,<%Z`},
+			expected: `{
+  "foo": "A~@#$%^&*\\!\\() _+=-;:\\\"/?.>,<%Z"
+}`,
+		},
 	}
 
 	t.Parallel()

@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 )
 
 func PrettyPrintJSON(b []byte) ([]byte, error) {
@@ -14,9 +15,20 @@ func PrettyPrintJSON(b []byte) ([]byte, error) {
 // PrettyPrintToJSON receives an object of any type and returns a pretty-formatted
 // output
 func PrettyPrintToJSON(obj interface{}) (string, error) {
-	out, err := json.MarshalIndent(obj, "", "  ")
+	buf := &bytes.Buffer{}
+	encoder := json.NewEncoder(buf)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ")
+
+	err := encoder.Encode(obj)
 	if err != nil {
 		return "", err
 	}
-	return string(out), nil
+
+	res := string(buf.Bytes())
+
+	// Remove the extra newline added when using a plain Encoder
+	res = strings.TrimSuffix(res, "\n")
+
+	return res, nil
 }

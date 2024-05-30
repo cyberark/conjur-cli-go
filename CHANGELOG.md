@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.16] - 2024-05-29
+
+### Fixed
+- Fixed bug causing JSON output to be HTML escaped (CNJR-4574)
+
 ## [8.0.15] - 2024-03-19
 
 ### Fixed
