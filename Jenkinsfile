@@ -197,13 +197,13 @@ pipeline {
           }
         }
 
-        // stage("Scan container images for fixable issues") {
-        //   steps {
-        //     script {
-        //       scanAndReport(INFRAPOOL_EXECUTORV2_AGENT_0, "${containerImageWithTag()}", "HIGH", false)
-        //     }
-        //   }
-        // }
+        stage("Scan container images for fixable issues") {
+          steps {
+            script {
+              scanAndReport(INFRAPOOL_EXECUTORV2_AGENT_0, "${containerImageWithTag()}", "HIGH", false)
+            }
+          }
+        }
 
         stage("Scan container images for total issues") {
           steps {

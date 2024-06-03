@@ -15,10 +15,8 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.1
-
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
 )
-
-require golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 
 require (
 	github.com/alessio/shellescape v1.4.1 // indirect
