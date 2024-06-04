@@ -46,6 +46,11 @@ func LoginWithPromptFallback(
 	return authenticatePair, nil
 }
 
+func JWTAuthenticate(conjurClient ConjurClient) error {
+	_, err := conjurClient.GetAuthenticator().RefreshToken()
+	return err
+}
+
 // oidcLogin attempts to login to Conjur using the OIDC flow
 func oidcLogin(conjurClient ConjurClient, oidcPromptHandler func(string) error) (ConjurClient, error) {
 	config := conjurClient.GetConfig()

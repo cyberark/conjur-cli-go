@@ -10,7 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.16] - 2024-05-29
+## [8.0.16] - 2024-06-05
+
+### Added
+- Support for `-jwt-file` and `-jwt-host-id` init params for use with JWT authentication (CNJR-4966)
 
 ### Fixed
 - Fixed bug causing JSON output to be HTML escaped (CNJR-4574)

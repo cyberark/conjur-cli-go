@@ -9,16 +9,14 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7-0.20221124181729-2363ef255e14 // Run "go get github.com/AlecAivazis/survey/v2@debug-windows" to update (Until https://github.com/go-survey/survey/pull/474 is merged)
 	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2
 	github.com/creack/pty v1.1.18
-	github.com/cyberark/conjur-api-go v0.11.2-0.20230823163436-07f5cd532dbc // Run "go get github.com/cyberark/conjur-api-go@main" to update
+	github.com/cyberark/conjur-api-go v0.12.0 // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/hinshun/vt10x v0.0.0-20220301184237-5011da428d02
 	github.com/mattn/go-isatty v0.0.8
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.1
-
+	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
 )
-
-require golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 
 require (
 	github.com/alessio/shellescape v1.4.1 // indirect

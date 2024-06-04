@@ -101,6 +101,8 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 			client, err = Login(client)
 		} else if config.AuthnType == "oidc" {
 			client, err = OidcLogin(client, "", "")
+		} else if config.AuthnType == "jwt" {
+			// Will use the token in the config
 		} else {
 			return nil, fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
 		}
