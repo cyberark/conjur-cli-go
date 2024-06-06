@@ -162,7 +162,7 @@ func runInitCommand(cmd *cobra.Command, funcs initCmdFuncs) error {
 	// If using JWT auth, we need to ensure that the JWT file exists and
 	// contains a valid JWT. To do this, we'll attempt to authenticate.
 	if config.AuthnType == "jwt" {
-		client, err := conjurapi.NewClient(config)
+		client, err := conjurapi.NewClientFromJwt(config)
 		if err != nil {
 			return err
 		}

@@ -57,3 +57,14 @@ generate_identity_policy() {
   rm -f "$policy_dir/users.yml"
   sed -e "s#{{ IDENTITY_USERNAME }}#$IDENTITY_USERNAME#g" "$policy_dir/users.template.yml" > "$policy_dir/users.yml"
 }
+
+# Retrieves a JWT from keycloak and saves it to the file `/jwt` in the cli container.
+fetch_jwt() {
+  TOKEN=$(echo $(docker compose exec cli bash -c 'curl -X POST "http://keycloak:8080/auth/realms/master/protocol/openid-connect/token" \
+    --header "Content-Type: application/x-www-form-urlencoded" \
+    --data-urlencode "grant_type=client_credentials" \
+    --data-urlencode "client_id=conjurClient" \
+    --data-urlencode "client_secret=1234"') | jq -r ".access_token")
+
+  docker compose exec cli bash -c "echo $TOKEN > /jwt"
+}
