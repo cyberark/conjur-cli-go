@@ -56,6 +56,11 @@ function main() {
   configure_oidc_providers
   echo 'Finished setting up Keycloak'
 
+  echo
+  echo 'Fetching a JWT token'
+  fetch_jwt
+  echo 'Finished fetching a JWT token'
+
   generate_identity_policy
 
   docker compose exec -T cli make integration

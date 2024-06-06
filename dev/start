@@ -16,13 +16,11 @@ source "../ci/keycloak/keycloak_functions.sh"
 ENABLE_OIDC_KEYCLOAK=false
 ENABLE_OIDC_OKTA=false
 ENABLE_OIDC_IDENTITY=false
+ENABLE_JWT_KEYCLOAK=false
 export IDENTITY_USERNAME=""
 
 # Minimal set of services.  We add to this list based on cmd line flags.
 services=(pg conjur proxy cli-dev)
-
-default_authenticators="authn"
-enabled_authenticators="$default_authenticators"
 
 main() {
   parse_options "$@"
@@ -113,10 +111,7 @@ EOL
   echo
   echo "Setting up authenticators"
 
-  configure_oidc_providers
-
-  # Updates CONJUR_AUTHENTICATORS and restarts required services.
-  start_auth_services
+  configure_providers
   
   echo
   echo "Entering CLI container"
@@ -139,8 +134,12 @@ conjur login -i alice -p alice'
     docker compose exec cli-dev bash -c 'conjur logout
 conjur init --force-netrc --force -u http://conjur -i -a dev -t oidc --service-id identity
 conjur login -i $IDENTITY_USERNAME'
+  elif [ "$ENABLE_JWT_KEYCLOAK" = true ]; then
+    echo "Setting up Conjur for JWT (Keycloak)"
+    fetch_jwt
+    docker compose exec cli-dev bash -c 'conjur logout
+conjur init --force-netrc --force -u http://conjur -i -a dev -t jwt --service-id keycloak --jwt-file /jwt'
   fi
-
   echo
   docker compose exec cli-dev bash
 }
@@ -152,6 +151,7 @@ parse_options() {
       --oidc-okta ) ENABLE_OIDC_OKTA=true ; shift ;;
       --oidc-identity ) ENABLE_OIDC_IDENTITY=true ; shift ;;
       --identity-user ) IDENTITY_USERNAME="$2" ; shift ; shift ;;
+      --jwt-keycloak ) ENABLE_JWT_KEYCLOAK=true ; shift ;;
       # -h | --help ) print_help ; shift ;;
        * )
          if [ -z "$1" ]; then
@@ -194,10 +194,10 @@ client_add_secret() {
   docker compose exec cli-dev conjur variable set -i "$variable" -v "$value"
 }
 
-configure_oidc_providers() {
+configure_providers() {
   # Start conjur again, since it is recreating by docker compose because of
   # dependency with keycloak
-  if [[ $ENABLE_OIDC_KEYCLOAK = true ]]; then
+  if [[ $ENABLE_OIDC_KEYCLOAK = true || $ENABLE_JWT_KEYCLOAK = true ]]; then
     echo "Configuring Keycloak provider"
     setup_keycloak
   fi
@@ -211,8 +211,6 @@ configure_oidc_providers() {
     echo "Configuring Identity provider"
     setup_identity
   fi
-
-  enable_oidc_authenticators
 }
 
 setup_keycloak() {
@@ -221,8 +219,12 @@ setup_keycloak() {
   start_conjur_server
   wait_for_keycloak_server
   fetch_keycloak_certificate
-  setup_oidc_client "keycloak" "https://keycloak:8443/auth/realms/master" "conjurClient" "1234" "email"
   create_keycloak_users
+  if [[ $ENABLE_OIDC_KEYCLOAK = true ]]; then
+    setup_oidc_client "keycloak" "https://keycloak:8443/auth/realms/master" "conjurClient" "1234" "email"
+  else
+    setup_jwt_authenticator
+  fi
   echo "keycloak admin console url: http://0.0.0.0:7777/auth/admin"
 }
 
@@ -267,6 +269,26 @@ function generate_identity_policy() {
   sed -e "s#{{ IDENTITY_USERNAME }}#$IDENTITY_USERNAME#g" "$policy_dir/users.template.yml" > "$policy_dir/users.yml"
 }
 
+setup_jwt_authenticator() {
+  echo "Setting authn-jwt policy and variable values in Conjur"
+
+  client_load_policy "../ci/jwt/policy.yml"
+
+  client_add_secret "conjur/authn-jwt/keycloak/jwks-uri" "http://keycloak:8080/auth/realms/master/protocol/openid-connect/certs"
+  client_add_secret "conjur/authn-jwt/keycloak/token-app-property" "preferred_username"
+  client_add_secret "conjur/authn-jwt/keycloak/issuer" "http://keycloak:8080/auth/realms/master"
+}
+
+fetch_jwt() {
+  TOKEN=$(echo $(docker compose exec cli-dev bash -c 'curl -X POST "http://keycloak:8080/auth/realms/master/protocol/openid-connect/token" \
+    --header "Content-Type: application/x-www-form-urlencoded" \
+    --data-urlencode "grant_type=client_credentials" \
+    --data-urlencode "client_id=conjurClient" \
+    --data-urlencode "client_secret=1234"') | jq -r ".access_token")
+
+  docker compose exec cli-dev bash -c "echo $TOKEN > /jwt"
+}
+
 check_environment_variables() {
   vars=("$@")
   local valid=true
@@ -280,39 +302,6 @@ check_environment_variables() {
 
   if [[ $valid = false ]]; then
     exit 1
-  fi
-}
-
-enable_oidc_authenticators() {
-  if [[ $ENABLE_OIDC_KEYCLOAK = true ]]; then
-    echo "Configuring Keycloak as OpenID provider for automatic testing"
-    # We enable an OIDC authenticator without a service-id to test that it's
-    # invalid.
-    enabled_authenticators="$enabled_authenticators,authn-oidc/keycloak"
-  fi
-
-  if [[ $ENABLE_OIDC_OKTA = true ]]; then
-    echo "Configuring OKTA as OpenID provider for manual testing"
-    enabled_authenticators="$enabled_authenticators,authn-oidc/okta"
-  fi
-
-  if [[ $ENABLE_OIDC_IDENTITY = true ]]; then
-    echo "Configuring Identity as OpenID provider for manual testing"
-    enabled_authenticators="$enabled_authenticators,authn-oidc/identity"
-  fi
-}
-
-start_auth_services() {
-  echo "Setting CONJUR_AUTHENTICATORS to: $enabled_authenticators"
-  env_args+=(-e "CONJUR_AUTHENTICATORS=$enabled_authenticators")
-
-  # Will restart services if configuration has changed.  I think this happens
-  # when additional authenticators are enabled.
-  docker compose up -d --no-deps "${services[@]}"
-
-  # If that happens, we need to restart Conjur server.
-  if [[ "$enabled_authenticators" != "$default_authenticators" ]]; then
-    start_conjur_server
   fi
 }
 

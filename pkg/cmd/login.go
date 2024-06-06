@@ -98,6 +98,13 @@ Examples:
 			} else if config.AuthnType == "oidc" {
 				_, err = funcs.OidcLogin(conjurClient, cmdFlagVals.identity, cmdFlagVals.password)
 			} else if config.AuthnType == "jwt" {
+				// We have to recreate the client with the JWT method so it
+				// attaches a JWTAuthenticator to the client otherwise
+				// conjurClient.GetAuthenticator() will return nil
+				conjurClient, err = conjurapi.NewClientFromJwt(config)
+				if err != nil {
+					return err
+				}
 				// Just run authenticate to validate the jwt. This isn't
 				// necessary (since the JWT path is set in the `init` command)
 				// but is provided as a convenience to the user, to allow them

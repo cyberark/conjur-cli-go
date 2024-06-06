@@ -1,0 +1,29 @@
+- !policy
+  id: conjur/authn-jwt/keycloak
+  body:
+  - !webservice
+
+  - !variable jwks-uri
+  - !variable token-app-property
+  - !variable issuer
+
+  - !group authenticatable
+
+  - !permit
+    role: !group authenticatable
+    privilege: [ read, authenticate ]
+    resource: !webservice
+
+- !host
+  id: service-account-conjurclient
+  annotations:
+    authn-jwt/keycloak/azp: conjurClient
+
+- !grant
+  role: !group conjur/authn-jwt/keycloak/authenticatable
+  member: !host service-account-conjurclient
+
+- !permit
+  role: !host service-account-conjurclient
+  privilege: [ read, update, create ]
+  resource: !policy root

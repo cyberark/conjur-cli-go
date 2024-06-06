@@ -1,3 +1,5 @@
+version: 2
+
 project_name: conjur-cli-go
 
 before:
@@ -74,7 +76,7 @@ brews:
       bin.install "conjur"
     test: |
       system "#{bin}/conjur", "--version"
-    tap:
+    repository:
       owner: cyberark
       name: homebrew-tools
     skip_upload: true

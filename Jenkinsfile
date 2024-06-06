@@ -161,7 +161,7 @@ pipeline {
                 INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "cp ../VERSION ./VERSION"
 
                 // Create release artifacts without releasing to Github
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "./bin/build_release --skip-validate --clean"
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "./bin/build_release --skip=validate --clean"
 
                 // Build container images
                 INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "./bin/build_container_images"
