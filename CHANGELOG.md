@@ -10,13 +10,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.16] - 2024-06-05
+## [8.0.16] - 2024-06-11
 
 ### Added
 - Support for `-jwt-file` and `-jwt-host-id` init params for use with JWT authentication (CNJR-4966)
 
 ### Fixed
 - Fixed bug causing JSON output to be HTML escaped (CNJR-4574)
+
+### Security
+- Updated to Go 1.22 and use Microsoft's Golang image for FIPS compliance (CNJR-4923)
 
 ## [8.0.15] - 2024-03-19
 
