@@ -114,7 +114,7 @@ if [[ ${PROMOTE} = true ]]; then
   echo "Promoting image to ${REMOTE_TAG}"
   readonly TAGS=(
     "${REMOTE_TAG}"
-    # "latest"
+    "latest"
   )
 
   if [[ ${PULL_SOURCE_IMAGES} = true ]]; then
