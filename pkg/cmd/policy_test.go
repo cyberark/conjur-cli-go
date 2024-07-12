@@ -19,9 +19,16 @@ type loadPolicyTestFunc func(
 	policyBranch string, policySrc io.Reader,
 ) (*conjurapi.PolicyResponse, error)
 
+type validatePolicyTestFunc func(
+	t *testing.T,
+	mode conjurapi.PolicyMode,
+	policyBranch string, policySrc io.Reader,
+) (*conjurapi.DryRunPolicyResponse, error)
+
 type mockPolicyClient struct {
-	t          *testing.T
-	loadPolicy loadPolicyTestFunc
+	t            *testing.T
+	loadPolicy   loadPolicyTestFunc
+	dryRunPolicy validatePolicyTestFunc
 }
 
 func (m mockPolicyClient) LoadPolicy(
@@ -32,12 +39,21 @@ func (m mockPolicyClient) LoadPolicy(
 	return m.loadPolicy(m.t, mode, policyBranch, policySrc)
 }
 
+func (m mockPolicyClient) DryRunPolicy(
+	mode conjurapi.PolicyMode,
+	policyBranch string,
+	policySrc io.Reader,
+) (*conjurapi.DryRunPolicyResponse, error) {
+	return m.dryRunPolicy(m.t, mode, policyBranch, policySrc)
+}
+
 type policyCmdTestCase struct {
 	name string
 	args []string // $TMPFILE in any of the args is substituted
 	// for the temporary file created for each test
 	beforeTest         func(t *testing.T, pathToTmpfile string)
 	loadPolicy         loadPolicyTestFunc
+	dryRunPolicy       validatePolicyTestFunc
 	promptResponses    []promptResponse
 	clientFactoryError error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
@@ -190,6 +206,54 @@ func sharedPolicyCmdTestCases(
 				assert.Contains(t, stderr, "Error: required flag(s) \"branch\" not set\n")
 			},
 		},
+		{
+			name: fmt.Sprintf("%s subcommand with good response (dryrun)", subcommand),
+			args: []string{"policy", subcommand, "-b", "meow", "--dry-run", "-f", "-"},
+			dryRunPolicy: func(
+				t *testing.T,
+				mode conjurapi.PolicyMode,
+				policyBranch string,
+				policySrc io.Reader,
+			) (*conjurapi.DryRunPolicyResponse, error) {
+				return &conjurapi.DryRunPolicyResponse{
+					Status: "Valid YAML",
+				}, nil
+			},
+			assert: func(t *testing.T, stdout, stderr string, err error) {
+				assert.Contains(t, stdout, "Valid YAML")
+				assert.Contains(t, stderr, "Dry run policy 'meow'")
+			},
+		},
+		{
+			name: fmt.Sprintf("%s subcommand with bad response (dryrun)", subcommand),
+			args: []string{"policy", subcommand, "-b", "meow", "--dry-run", "-f", "-"},
+			dryRunPolicy: func(
+				t *testing.T,
+				mode conjurapi.PolicyMode,
+				policyBranch string,
+				policySrc io.Reader,
+			) (*conjurapi.DryRunPolicyResponse, error) {
+				return &conjurapi.DryRunPolicyResponse{
+					Status: "Invalid YAML",
+					Errors: []conjurapi.DryRunErrors{
+						conjurapi.DryRunErrors{
+							Line:    0,
+							Column:  0,
+							Message: "undefined method `referenced_records' for \"user alice\":String\n",
+						},
+					},
+				}, nil
+			},
+			assert: func(t *testing.T, stdout, stderr string, err error) {
+				assert.Contains(t, stdout, "status")
+				assert.Contains(t, stdout, "errors")
+				assert.Contains(t, stdout, "line")
+				assert.Contains(t, stdout, "column")
+				assert.Contains(t, stdout, "message")
+				assert.Contains(t, stdout, "Invalid YAML")
+				assert.Contains(t, stderr, "Dry run policy 'meow'")
+			},
+		},
 	}
 }
 
@@ -225,7 +289,7 @@ func TestPolicyCmd(t *testing.T) {
 				tc.beforeTest(t, pathToTmpfile)
 			}
 
-			mockClient := mockPolicyClient{t: t, loadPolicy: tc.loadPolicy}
+			mockClient := mockPolicyClient{t: t, loadPolicy: tc.loadPolicy, dryRunPolicy: tc.dryRunPolicy}
 
 			cmd := newPolicyCommand(
 				func(cmd *cobra.Command) (policyClient, error) {

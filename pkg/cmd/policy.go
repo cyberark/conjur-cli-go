@@ -16,6 +16,11 @@ func loadPolicyCommandRunner(
 	policyMode conjurapi.PolicyMode,
 ) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		dryrun, err := cmd.Flags().GetBool("dry-run")
+		if err != nil {
+			return err
+		}
+
 		branch, err := cmd.Flags().GetString("branch")
 		if err != nil {
 			return err
@@ -41,16 +46,7 @@ func loadPolicyCommandRunner(
 			return err
 		}
 
-		policyResponse, err := conjurClient.LoadPolicy(
-			policyMode,
-			branch,
-			inputReader,
-		)
-		if err != nil {
-			return err
-		}
-
-		data, err := json.Marshal(policyResponse)
+		data, err := DryRunOrLoadPolicy(conjurClient, dryrun, policyMode, branch, inputReader)
 		if err != nil {
 			return err
 		}
@@ -59,11 +55,63 @@ func loadPolicyCommandRunner(
 			data = prettyData
 		}
 
-		cmd.PrintErrf("Loaded policy '%s'\n", branch)
+		cmd.PrintErrf("%s policy '%s'\n", cmdMessage(dryrun), branch)
 		cmd.Println(string(data))
 
 		return nil
 	}
+}
+
+func cmdMessage(dryrun bool) string {
+	if dryrun {
+		return "Dry run"
+	} else {
+		return "Loaded"
+	}
+}
+
+func DryRunOrLoadPolicy(conjurClient policyClient, dryrun bool, policyMode conjurapi.PolicyMode, branch string, inputReader io.Reader) ([]byte, error) {
+	if dryrun {
+		return DryRunPolicy(conjurClient, policyMode, branch, inputReader)
+	} else {
+		return LoadPolicy(conjurClient, policyMode, branch, inputReader)
+	}
+}
+
+func DryRunPolicy(conjurClient policyClient, policyMode conjurapi.PolicyMode, branch string, inputReader io.Reader) ([]byte, error) {
+	policyResponse, err := conjurClient.DryRunPolicy(
+		policyMode,
+		branch,
+		inputReader,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := json.Marshal(policyResponse)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func LoadPolicy(conjurClient policyClient, policyMode conjurapi.PolicyMode, branch string, inputReader io.Reader) ([]byte, error) {
+	policyResponse, err := conjurClient.LoadPolicy(
+		policyMode,
+		branch,
+		inputReader,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := json.Marshal(policyResponse)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
@@ -74,6 +122,7 @@ func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 
 	policyCmd.PersistentFlags().StringP("branch", "b", "", "The parent policy branch")
 	policyCmd.PersistentFlags().StringP("file", "f", "", "The policy file to load")
+	policyCmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
 	policyCmd.MarkPersistentFlagRequired("branch")
 	policyCmd.MarkPersistentFlagRequired("file")
 
@@ -127,6 +176,7 @@ Examples:
 
 type policyClient interface {
 	LoadPolicy(mode conjurapi.PolicyMode, policyBranch string, policySrc io.Reader) (*conjurapi.PolicyResponse, error)
+	DryRunPolicy(mode conjurapi.PolicyMode, policyBranch string, policySrc io.Reader) (*conjurapi.DryRunPolicyResponse, error)
 }
 
 type policyClientFactoryFunc func(*cobra.Command) (policyClient, error)
