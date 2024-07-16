@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Support for `-jwt-file` and `-jwt-host-id` init params for use with JWT authentication (CNJR-4966)
 - Publish `latest` tag for Docker image (CNJR-5310)
+- Add `--dry-run` support for the policy operations (CNJR-4593)
 
 ### Fixed
 - Fixed bug causing JSON output to be HTML escaped (CNJR-4574)
