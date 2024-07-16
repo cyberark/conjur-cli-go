@@ -42,6 +42,8 @@ pipeline {
   environment {
     // Sets the MODE to the specified or autocalculated value as appropriate
     MODE = release.canonicalizeMode()
+    // Ensures CI uses the internal registry for conjur edge images
+    REGISTRY_URL = "registry.tld"
   }
 
   triggers {

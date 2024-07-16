@@ -65,17 +65,15 @@ func loadPolicyCommandRunner(
 func cmdMessage(dryrun bool) string {
 	if dryrun {
 		return "Dry run"
-	} else {
-		return "Loaded"
 	}
+	return "Loaded"
 }
 
 func DryRunOrLoadPolicy(conjurClient policyClient, dryrun bool, policyMode conjurapi.PolicyMode, branch string, inputReader io.Reader) ([]byte, error) {
 	if dryrun {
 		return DryRunPolicy(conjurClient, policyMode, branch, inputReader)
-	} else {
-		return LoadPolicy(conjurClient, policyMode, branch, inputReader)
 	}
+	return LoadPolicy(conjurClient, policyMode, branch, inputReader)
 }
 
 func DryRunPolicy(conjurClient policyClient, policyMode conjurapi.PolicyMode, branch string, inputReader io.Reader) ([]byte, error) {

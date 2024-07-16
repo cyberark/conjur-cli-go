@@ -19,7 +19,7 @@ type loadPolicyTestFunc func(
 	policyBranch string, policySrc io.Reader,
 ) (*conjurapi.PolicyResponse, error)
 
-type validatePolicyTestFunc func(
+type dryRunPolicyTestFunc func(
 	t *testing.T,
 	mode conjurapi.PolicyMode,
 	policyBranch string, policySrc io.Reader,
@@ -28,7 +28,7 @@ type validatePolicyTestFunc func(
 type mockPolicyClient struct {
 	t            *testing.T
 	loadPolicy   loadPolicyTestFunc
-	dryRunPolicy validatePolicyTestFunc
+	dryRunPolicy dryRunPolicyTestFunc
 }
 
 func (m mockPolicyClient) LoadPolicy(
@@ -53,7 +53,7 @@ type policyCmdTestCase struct {
 	// for the temporary file created for each test
 	beforeTest         func(t *testing.T, pathToTmpfile string)
 	loadPolicy         loadPolicyTestFunc
-	dryRunPolicy       validatePolicyTestFunc
+	dryRunPolicy       dryRunPolicyTestFunc
 	promptResponses    []promptResponse
 	clientFactoryError error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
