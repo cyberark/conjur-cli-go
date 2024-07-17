@@ -180,6 +180,9 @@ pipeline {
     stage('Integration test while scanning') {
       parallel {
         stage('Run integration tests') {
+          environment {
+            INFRAPOOL_REGISTRY_URL = "${REGISTRY_URL}"
+          }
           steps {
             withCredentials([
               conjurSecretCredential(credentialsId: "RnD-Global-Conjur-Ent-Conjur_Operating_System-WindowsDomainAccountDailyRotation-cyberng.com-svc_cnjr_enterprise_username", variable: 'INFRAPOOL_IDENTITY_USERNAME'),
