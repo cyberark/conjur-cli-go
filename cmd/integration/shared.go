@@ -205,6 +205,16 @@ func assertPolicyLoadCmd(t *testing.T, err error, stdOut string, stdErr string) 
 	assert.Equal(t, "Loaded policy 'root'\n", stdErr)
 }
 
+func assertPolicyValidateSuccessCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "Valid YAML")
+}
+
+func assertPolicyValidateInvalidCmd(t *testing.T, err error, stdOut string, stdErr string) {
+	assert.NoError(t, err)
+	assert.Contains(t, stdOut, "Invalid YAML")
+}
+
 func assertSetVariableCmd(t *testing.T, err error, stdOut string, stdErr string) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Value added\n", stdOut)
