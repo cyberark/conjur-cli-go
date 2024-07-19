@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type oidcConnection struct {
@@ -94,7 +95,7 @@ func testLogout(t *testing.T, tmpDir string, cli *testConjurCLI, aoc authnOidcCo
 		t.Run("login as another user", func(t *testing.T) {
 			// Get the modifieddate of the netrc file
 			info, err := os.Stat(tmpDir + "/.netrc")
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			modifiedDate := info.ModTime()
 
 			stdOut, stdErr, err := cli.Run("login", "-i", "bob.somebody", "-p", "bob")
@@ -102,7 +103,7 @@ func testLogout(t *testing.T, tmpDir string, cli *testConjurCLI, aoc authnOidcCo
 
 			// Check that the token file is modified
 			info, err = os.Stat(tmpDir + "/.netrc")
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotEqual(t, modifiedDate, info.ModTime())
 		})
 
@@ -118,7 +119,7 @@ func testLogout(t *testing.T, tmpDir string, cli *testConjurCLI, aoc authnOidcCo
 	t.Run("failed login doesn't modify netrc file", func(t *testing.T) {
 		// Get the modifieddate of the netrc file
 		info, err := os.Stat(tmpDir + "/.netrc")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		modifiedDate := info.ModTime()
 
 		_, stdErr, err := cli.Run("login", "-i", "not_in_conjur", "-p", "not_in_conjur")
@@ -127,7 +128,7 @@ func testLogout(t *testing.T, tmpDir string, cli *testConjurCLI, aoc authnOidcCo
 
 		// Check that the netrc file is not modified
 		info, err = os.Stat(tmpDir + "/.netrc")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, modifiedDate, info.ModTime())
 	})
 
@@ -267,13 +268,13 @@ func setupAuthenticator(account string, oc oidcConnection, aoc authnOidcConfig) 
 func assertAuthTokenCached(t *testing.T, tmpDir string) {
 	// Check that the netrc file contains the entry for the conjur server
 	contents, err := os.ReadFile(tmpDir + "/.netrc")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, string(contents), "http://conjur")
 }
 
 func assertAuthTokenPurged(t *testing.T, err error, tmpDir string) {
 	// Ensure that the netrc file does not contain the entry for the conjur server
 	contents, err := os.ReadFile(tmpDir + "/.netrc")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotContains(t, string(contents), "http://conjur")
 }
