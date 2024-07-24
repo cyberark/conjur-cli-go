@@ -66,4 +66,25 @@ func TestPolicyIntegration(t *testing.T) {
 		assert.Contains(t, stdOut, "version")
 		assert.Equal(t, "Loaded policy 'branch2'\n", stdErr)
 	})
+
+	t.Run("fetch policy", func(t *testing.T) {
+		policyText := `---
+- !policy
+  id: branch2
+  body:
+  - !policy
+    id: branch3
+    body: []
+  - !policy
+    id: branch4
+    body: []
+
+`
+		stdOut, _, err := cli.Run(
+			"policy", "fetch", "-b", "branch2",
+		)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, stdOut)
+		assert.Equal(t, policyText, stdOut)
+	})
 }
