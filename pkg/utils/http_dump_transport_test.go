@@ -3,7 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -40,7 +40,7 @@ func TestDumpTransport(t *testing.T) {
 				assert.Contains(t, dump, redactedString)
 				assert.NotContains(t, dump, "some-body")
 
-				reqBody, err := ioutil.ReadAll(req.Body)
+				reqBody, err := io.ReadAll(req.Body)
 				assert.Nil(t, err)
 				assert.Equal(t, string(reqBody), "some-body")
 			},
@@ -83,7 +83,7 @@ func TestDumpTransport(t *testing.T) {
 				assert.Contains(t, dump, redactedString)
 				assert.NotContains(t, dump, "{\"protected\":\"abcde\",\"payload\":\"fghijk\",\"signature\":\"lmnop\"}")
 
-				reqBody, err := ioutil.ReadAll(res.Body)
+				reqBody, err := io.ReadAll(res.Body)
 				assert.Nil(t, err)
 				assert.Contains(t, string(reqBody), "{\"protected\":\"abcde\",\"payload\":\"fghijk\",\"signature\":\"lmnop\"}")
 			},
@@ -100,7 +100,7 @@ func TestDumpTransport(t *testing.T) {
 	for _, tc := range respTestCases {
 		t.Run(tc.description, func(t *testing.T) {
 			resp := http.Response{
-				Body: ioutil.NopCloser(bytes.NewBufferString(tc.body)),
+				Body: io.NopCloser(bytes.NewBufferString(tc.body)),
 			}
 
 			dump := NewDumpTransport(nil, nil).dumpResponse(&resp)

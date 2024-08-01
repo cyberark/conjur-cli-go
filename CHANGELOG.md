@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.17] - 2024-08-01
+
 ## [8.0.16] - 2024-07-25
 
 ### Added
