@@ -233,7 +233,7 @@ pipeline {
             // Copy any artifacts to assetDirectory to attach them to the Github release
 
             // Copy assets to be published in Github release.
-            INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "./bin/copy_release_artifacts ${assetDirectory}"
+            INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "${toolsDirectory}/bin/copy_goreleaser_artifacts ${assetDirectory}"
 
             // Create Go application SBOM using the go.mod version for the golang container image
             INFRAPOOL_EXECUTORV2_AGENT_0.agentSh """export PATH="${toolsDirectory}/bin:${PATH}" && go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
