@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
@@ -62,6 +64,89 @@ func loadPolicyCommandRunner(
 	}
 }
 
+func fetchPolicyCommandRunner(
+	clientFactory policyClientFactoryFunc,
+) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		branch, err := cmd.Flags().GetString("branch")
+		if err != nil {
+			return err
+		}
+
+		file, err := cmd.Flags().GetString("file")
+		if err != nil {
+			return err
+		}
+
+		output, err := cmd.Flags().GetString("output")
+		if err != nil {
+			return err
+		}
+
+		// validate output arg
+		if output != "yaml" && output != "json" {
+			return errors.New("output format must be 'yaml' or 'json'")
+		}
+		var returnJSON bool
+		if output == "json" {
+			returnJSON = true
+		}
+
+		depth, err := cmd.Flags().GetUint("depth")
+		if err != nil {
+			return err
+		}
+
+		limit, err := cmd.Flags().GetUint("limit")
+		if err != nil {
+			return err
+		}
+
+		// validate file arg
+		if file != "" {
+			if err := validateFilePath(file); err != nil {
+				return err
+			}
+		}
+
+		conjurClient, err := clientFactory(cmd)
+		if err != nil {
+			return err
+		}
+
+		data, err := fetchPolicy(conjurClient, branch, returnJSON, depth, limit)
+		if err != nil {
+			return err
+		}
+
+		if output == "json" {
+			if prettyData, err := utils.PrettyPrintJSON(data); err == nil {
+				data = prettyData
+			}
+		}
+
+		if file == "" {
+			cmd.Println(string(data))
+		} else {
+			// Write data to a file
+			err := os.WriteFile(file, data, 0644)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+}
+
+func validateFilePath(path string) error {
+	dir := filepath.Dir(path)
+	if _, err := os.Stat(dir); err != nil {
+		return errors.New("directory " + dir + " does not exist")
+	}
+	return nil
+}
+
 func cmdMessage(dryrun bool) string {
 	if dryrun {
 		return "Dry run"
@@ -112,6 +197,15 @@ func LoadPolicy(conjurClient policyClient, policyMode conjurapi.PolicyMode, bran
 	return data, nil
 }
 
+func fetchPolicy(conjurClient policyClient, branch string, returnJSON bool, policyTreeDepth uint, sizeLimit uint) ([]byte, error) {
+	return conjurClient.FetchPolicy(
+		branch,
+		returnJSON,
+		policyTreeDepth,
+		sizeLimit,
+	)
+}
+
 func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	policyCmd := &cobra.Command{
 		Use:   "policy",
@@ -119,11 +213,9 @@ func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	}
 
 	policyCmd.PersistentFlags().StringP("branch", "b", "", "The parent policy branch")
-	policyCmd.PersistentFlags().StringP("file", "f", "", "The policy file to load")
-	policyCmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
 	policyCmd.MarkPersistentFlagRequired("branch")
-	policyCmd.MarkPersistentFlagRequired("file")
 
+	policyCmd.AddCommand(newPolicyFetchCommand(clientFactory))
 	policyCmd.AddCommand(newPolicyLoadCommand(clientFactory))
 	policyCmd.AddCommand(newPolicyUpdateCommand(clientFactory))
 	policyCmd.AddCommand(newPolicyReplaceCommand(clientFactory))
@@ -132,7 +224,7 @@ func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 }
 
 func newPolicyLoadCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "load",
 		Short: "Load a policy and create resources",
 		Long: `Load a policy and create resources.
@@ -142,10 +234,36 @@ Examples:
 		SilenceUsage: true,
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePost),
 	}
+	cmd.PersistentFlags().StringP("file", "f", "", "The policy file to load")
+	cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
+
+	cmd.MarkPersistentFlagRequired("file")
+
+	return cmd
+}
+
+func newPolicyFetchCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "fetch",
+		Short: "Fetch effective policy",
+		Long: `Fetch effective policy.
+
+Examples:
+- conjur policy fetch -b staging -o json`,
+		SilenceUsage: true,
+		RunE:         fetchPolicyCommandRunner(clientFactory),
+	}
+
+	cmd.PersistentFlags().UintP("depth", "D", 64, "The max depth of fetched policy")
+	cmd.PersistentFlags().UintP("limit", "l", 100000, "The max size of the output")
+	cmd.PersistentFlags().StringP("output", "o", "yaml", "The output format")
+	cmd.PersistentFlags().StringP("file", "f", "", "The file to save output to")
+
+	return cmd
 }
 
 func newPolicyUpdateCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update existing resources in the policy or create new resources",
 		Long: `Update existing resources in the policy or create new resources.
@@ -156,10 +274,16 @@ Examples:
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePatch),
 	}
 
+	cmd.PersistentFlags().StringP("file", "f", "", "The policy file to load")
+	cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
+
+	cmd.MarkPersistentFlagRequired("file")
+
+	return cmd
 }
 
 func newPolicyReplaceCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "replace",
 		Short: "Fully replace an existing policy",
 		Long: `Fully replace an existing policy.
@@ -170,11 +294,19 @@ Examples:
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePut),
 	}
 
+	cmd.PersistentFlags().StringP("file", "f", "", "The policy file to load")
+	cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
+
+	cmd.MarkPersistentFlagRequired("file")
+
+	return cmd
+
 }
 
 type policyClient interface {
 	LoadPolicy(mode conjurapi.PolicyMode, policyBranch string, policySrc io.Reader) (*conjurapi.PolicyResponse, error)
 	DryRunPolicy(mode conjurapi.PolicyMode, policyBranch string, policySrc io.Reader) (*conjurapi.DryRunPolicyResponse, error)
+	FetchPolicy(policyBranch string, returnJSON bool, policyTreeDepth uint, sizeLimit uint) ([]byte, error)
 }
 
 type policyClientFactoryFunc func(*cobra.Command) (policyClient, error)

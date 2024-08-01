@@ -22,6 +22,7 @@ type ConjurClient interface {
 	RotateHostAPIKey(hostID string) ([]byte, error)
 	InternalAuthenticate() ([]byte, error)
 	LoadPolicy(mode conjurapi.PolicyMode, policyID string, policy io.Reader) (*conjurapi.PolicyResponse, error)
+	FetchPolicy(policyID string, returnJSON bool, policyTreeDepth uint, sizeLimit uint) ([]byte, error)
 	DryRunPolicy(mode conjurapi.PolicyMode, policyID string, policy io.Reader) (*conjurapi.DryRunPolicyResponse, error)
 	AddSecret(variableID string, secretValue string) error
 	RetrieveSecret(variableID string) ([]byte, error)
