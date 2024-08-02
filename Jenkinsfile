@@ -88,7 +88,7 @@ pipeline {
         stage('Changelog') {
           steps { 
             script {
-              INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './bin/parse-changelog'
+              parseChangelog(INFRAPOOL_EXECUTORV2_AGENT_0)
             }
           }
         }
