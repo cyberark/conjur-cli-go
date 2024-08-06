@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"testing"
@@ -83,7 +82,7 @@ func executeCommandForTestWithPipeResponses(
 	// Collect stdOut
 	outW.Close()
 	errW.Close()
-	out, outErr := ioutil.ReadAll(combinedOutReader)
+	out, outErr := io.ReadAll(combinedOutReader)
 	if outErr != nil {
 		t.Fatal(outErr)
 	}

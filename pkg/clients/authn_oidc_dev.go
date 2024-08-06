@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"html"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -171,7 +170,7 @@ func fetchSessionTokenFromOkta(httpClient *http.Client, providerURL string, user
 	}
 	defer resp.Body.Close()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println(err)
 		return "", err
@@ -311,7 +310,7 @@ func authRequest[data startAuthData | advanceAuthData, responseContent startAuth
 		return nil, content, err
 	}
 	defer resp.Body.Close()
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, content, err
 	}
