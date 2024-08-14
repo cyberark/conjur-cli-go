@@ -133,7 +133,11 @@ func fetchPolicyCommandRunner(
 			if err != nil {
 				return err
 			}
+			cmd.Println("Policy has been fetched and saved to " + file)
 		}
+		warningMsg := "\nWarning: The effective policy's output may not fully replicate " +
+			"the policy defined in Conjur. If you try to upload the output to Conjur, the upload may fail."
+		cmd.Println(warningMsg)
 
 		return nil
 	}

@@ -145,7 +145,8 @@ var policyCmdTestCases = []policyCmdTestCase{
 			return []byte("---\npolicy\n  id: root\n  body: []"), nil
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error, pathToTmpDir string) {
-			assert.Equal(t, "---\npolicy\n  id: root\n  body: []\n", stdout)
+			warningMsg := "\nWarning: The effective policy's output may not fully replicate the policy defined in Conjur. If you try to upload the output to Conjur, the upload may fail.\n"
+			assert.Equal(t, "---\npolicy\n  id: root\n  body: []\n"+warningMsg, stdout)
 		},
 	},
 	{
@@ -162,7 +163,8 @@ var policyCmdTestCases = []policyCmdTestCase{
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error, pathToTmpDir string) {
 			json, _ := utils.PrettyPrintJSON([]byte("[{\"policy\":{\"id\":\"root\",\"body\":[]}}]\n"))
-			assert.Equal(t, string(json), stdout)
+			warningMsg := "\nWarning: The effective policy's output may not fully replicate the policy defined in Conjur. If you try to upload the output to Conjur, the upload may fail.\n"
+			assert.Equal(t, string(json)+warningMsg, stdout)
 		},
 	},
 	{
@@ -178,8 +180,11 @@ var policyCmdTestCases = []policyCmdTestCase{
 			return []byte("---\npolicy\n  id: root\n  body: []"), nil
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error, pathToTmpDir string) {
-			assert.Empty(t, stdout)
+			warningMsg := "Warning: The effective policy's output may not fully replicate the policy defined in Conjur. If you try to upload the output to Conjur, the upload may fail."
 			contents, _ := os.ReadFile(pathToTmpDir + "/somefile.yaml")
+
+			assert.Contains(t, stdout, "Policy has been fetched and saved to "+pathToTmpDir+"/somefile.yaml")
+			assert.Contains(t, stdout, warningMsg)
 			assert.Equal(t, "---\npolicy\n  id: root\n  body: []", string(contents))
 		},
 	},
