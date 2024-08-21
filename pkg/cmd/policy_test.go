@@ -133,6 +133,38 @@ var policyCmdTestCases = []policyCmdTestCase{
 		},
 	},
 	{
+		name: "fetch subcommand invalid depth",
+		args: []string{"policy", "fetch", "-b", "meow", "-l", "100001"},
+		fetchPolicy: func(
+			t *testing.T,
+			policyBranch string,
+			returnJSON bool,
+			policyTreeDepth uint,
+			sizeLimit uint,
+		) ([]byte, error) {
+			return []byte("---\npolicy\n  id: root\n  body: []"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error, pathToTmpDir string) {
+			assert.Contains(t, stderr, "Error: limit must be less than or equal to 100000\n")
+		},
+	},
+	{
+		name: "fetch subcommand invalid limit",
+		args: []string{"policy", "fetch", "-b", "meow", "-D", "65"},
+		fetchPolicy: func(
+			t *testing.T,
+			policyBranch string,
+			returnJSON bool,
+			policyTreeDepth uint,
+			sizeLimit uint,
+		) ([]byte, error) {
+			return []byte("---\npolicy\n  id: root\n  body: []"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error, pathToTmpDir string) {
+			assert.Contains(t, stderr, "Error: depth must be less than or equal to 64\n")
+		},
+	},
+	{
 		name: "fetch subcommand with good YAML response",
 		args: []string{"policy", "fetch", "-b", "meow"},
 		fetchPolicy: func(

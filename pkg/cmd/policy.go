@@ -96,10 +96,16 @@ func fetchPolicyCommandRunner(
 		if err != nil {
 			return err
 		}
+		if depth > 64 {
+			return errors.New("depth must be less than or equal to 64")
+		}
 
 		limit, err := cmd.Flags().GetUint("limit")
 		if err != nil {
 			return err
+		}
+		if limit > 100000 {
+			return errors.New("limit must be less than or equal to 100000")
 		}
 
 		// validate file arg
