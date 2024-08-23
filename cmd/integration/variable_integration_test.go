@@ -29,6 +29,11 @@ func TestVariableIntegration(t *testing.T) {
 		assertGetTwoVariablesCmd(t, err, stdOut, stdErr)
 	})
 
+	t.Run("get duplicated variables", func(t *testing.T) {
+		stdOut, stdErr, err := cli.Run("variable", "get", "-i", "meow,woof,meow")
+		assertGetTwoVariablesCmd(t, err, stdOut, stdErr)
+	})
+
 	t.Run("get updated variable without version", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("variable", "set", "-i", "meow", "-v", "moo2")
 		assertSetVariableCmd(t, err, stdOut, stdErr)
