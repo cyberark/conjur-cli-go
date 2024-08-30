@@ -79,6 +79,8 @@ func TestPolicyIntegration(t *testing.T) {
     id: branch4
     body: []
 
+
+Warning: The effective policy's output may not fully replicate the policy defined in Conjur. If you try to upload the output to Conjur, the upload may fail.
 `
 		stdOut, _, err := cli.Run(
 			"policy", "fetch", "-b", "branch2",

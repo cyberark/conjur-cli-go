@@ -96,10 +96,16 @@ func fetchPolicyCommandRunner(
 		if err != nil {
 			return err
 		}
+		if depth > 64 {
+			return errors.New("depth must be less than or equal to 64")
+		}
 
 		limit, err := cmd.Flags().GetUint("limit")
 		if err != nil {
 			return err
+		}
+		if limit > 100000 {
+			return errors.New("limit must be less than or equal to 100000")
 		}
 
 		// validate file arg
@@ -133,7 +139,11 @@ func fetchPolicyCommandRunner(
 			if err != nil {
 				return err
 			}
+			cmd.Println("Policy has been fetched and saved to " + file)
 		}
+		warningMsg := "\nWarning: The effective policy's output may not fully replicate " +
+			"the policy defined in Conjur. If you try to upload the output to Conjur, the upload may fail."
+		cmd.Println(warningMsg)
 
 		return nil
 	}
