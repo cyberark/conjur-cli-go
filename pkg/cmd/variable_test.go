@@ -133,6 +133,20 @@ var variableCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "get duplicated variables",
+		args: []string{"variable", "get", "-i", "meow,woof,meow"},
+		getBatch: func(t *testing.T, path []string) (map[string][]byte, error) {
+			// Assert on arguments
+			assert.Equal(t, "meow", path[0])
+			assert.Equal(t, "woof", path[1])
+			return map[string][]byte{"meow": []byte("moo"), "woof": []byte("quack")}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "moo")
+			assert.Contains(t, stdout, "quack")
+		},
+	},
+	{
 		name: "set subcommand",
 		args: []string{"variable", "set", "-i", "meow", "-v", "moo"},
 		set: func(t *testing.T, path, value string) error {

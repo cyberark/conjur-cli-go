@@ -98,9 +98,19 @@ Examples:
 			if err != nil {
 				return err
 			}
+			// Remove Duplicates
+			uniqueIDs := make([]string, 0, len(id))
+			idSet := make(map[string]struct{})
+			for _, variableID := range id {
+				if _, exists := idSet[variableID]; !exists {
+					idSet[variableID] = struct{}{}
+					uniqueIDs = append(uniqueIDs, variableID)
+				}
+			}
+
 			singleID := ""
-			if len(id) == 1 {
-				singleID = id[0]
+			if len(uniqueIDs) == 1 {
+				singleID = uniqueIDs[0]
 			}
 			client, err := clientFactory(cmd)
 			if err != nil {
@@ -115,9 +125,9 @@ Examples:
 			data := map[string][]byte{}
 
 			if versionStr == "" {
-				data, err = client.RetrieveBatchSecretsSafe(id)
+				data, err = client.RetrieveBatchSecretsSafe(uniqueIDs)
 			} else {
-				if len(id) > 1 {
+				if len(uniqueIDs) > 1 {
 					return fmt.Errorf("version can not be used with multiple variables")
 				}
 				var version int
