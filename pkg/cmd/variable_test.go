@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"testing"
+	"encoding/json"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -118,11 +119,26 @@ var variableCmdTestCases = []struct {
 			// Assert on arguments
 			assert.Equal(t, "meow", path[0])
 			assert.Equal(t, "woof", path[1])
-			return map[string][]byte{"meow": []byte("moo"), "woof": []byte("quack")}, nil
+			return map[string][]byte{
+				"meow": []byte("moo\nwith newline"),
+				"woof": []byte("quack\nanother newline"),
+			}, nil
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stdout, "moo")
-			assert.Contains(t, stdout, "quack")
+			assert.NoError(t, err)
+
+			expectedMap := map[string]string{
+				"meow": "moo\nwith newline",
+				"woof": "quack\nanother newline",
+			}
+	
+			// Unmarshal the JSON from stdout
+			var result map[string]string
+			err = json.Unmarshal([]byte(stdout), &result)
+			assert.NoError(t, err, "Output should be valid JSON")
+	
+			// Check that the result matches the expected map
+			assert.Equal(t, expectedMap, result, "The JSON output should match the expected key-value pairs")
 		},
 	},
 	{
