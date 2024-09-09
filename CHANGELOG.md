@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add `--dry-run` support for the policy operations (CNJR-4593)
 - Add `fetch` subcommand for policy commands to retrieve policy from Conjur (CNJR-5673)
 - Return requested variable duplicate instead of displaying 500 error (CNJR-5006)
+- Fixed a json when using batch retrieval of secrets (CNJR-6362)
 
 ### Fixed
 - Fixed bug causing JSON output to be HTML escaped (CNJR-4574)
