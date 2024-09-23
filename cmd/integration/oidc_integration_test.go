@@ -162,6 +162,7 @@ func TestOIDCIntegration(t *testing.T) {
 				clientSecret: "1234",
 			},
 			oidcCredentials: oidcCredentials{
+				// file deepcode ignore NoHardcodedCredentials/test: Only used for automated tests
 				username: "alice",
 				password: "alice",
 			},
