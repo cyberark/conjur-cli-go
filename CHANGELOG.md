@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Security
 - Run the CLI as a non-root user in the Docker image (CNJR-6439)
+- Use Sha256 certificate fingerprint when confirming server's authenticity (CNJR-6438)
 
 ## [8.0.16] - 2024-07-25
 

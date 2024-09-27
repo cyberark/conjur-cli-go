@@ -35,7 +35,7 @@ func TestInitIntegration(t *testing.T) {
 
 		stdOut, stdErr, err = cli.Run("init", "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force", "--self-signed")
 		assert.NotContains(t, stdErr, "Unable to retrieve and validate certificate")
-		assert.Contains(t, stdOut, "The server's certificate fingerprint is")
+		assert.Contains(t, stdOut, "The server's certificate Sha256 fingerprint is")
 		assert.Contains(t, stdErr, selfSignedWarning)
 	})
 

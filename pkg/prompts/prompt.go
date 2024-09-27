@@ -85,9 +85,9 @@ func AskToOverwriteFile(filePath string) error {
 
 // AskToTrustCert presents a prompt to get confirmation from a user to trust a certificate
 func AskToTrustCert(fingerprint string) error {
-	warning := fmt.Sprintf("\nThe server's certificate fingerprint is %s.\n", fingerprint) +
+	warning := fmt.Sprintf("\nThe server's certificate Sha256 fingerprint is %s.\n", fingerprint) +
 		"Please verify this certificate on the appliance using command:\n" +
-		"openssl x509 -fingerprint -noout -in ~conjur/etc/ssl/conjur.pem\n\n"
+		"openssl x509 -fingerprint -sha256 -noout -in ~conjur/etc/ssl/conjur.pem\n\n"
 	os.Stdout.Write([]byte(warning))
 
 	userInput, err := confirm("Trust this certificate?")

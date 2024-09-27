@@ -28,7 +28,7 @@ func TestGetServerCert(t *testing.T) {
 		server := startSelfSignedServer(t, 8080)
 		defer server.Close()
 
-		selfSignedFingerprint := getSha1Fingerprint(server.Certificate().Raw)
+		selfSignedFingerprint := getSha256Fingerprint(server.Certificate().Raw)
 
 		cert, err := GetServerCert("localhost:8080", true)
 		assert.NoError(t, err)

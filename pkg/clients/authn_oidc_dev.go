@@ -69,6 +69,7 @@ func fetchOidcCodeFromProvider(username, password string) func(providerURL strin
 
 func fetchOidcCodeFromKeycloak(httpClient *http.Client, username, password, providerURL string) error {
 	// Note: This shouldn't be required to make keycloak work, but it doesn't matter much since it's only used for tests
+	// deepcode ignore TooPermissiveTrustManager: This code only runs in dev mode (to test OIDC login with Keycloak)
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	// Get the provider's login page
@@ -195,6 +196,7 @@ func fetchSessionTokenFromOkta(httpClient *http.Client, providerURL string, user
 func callbackRedirect(location string) error {
 	go func() {
 		// Send a request to the callback URL to pass the code back to the CLI
+		// deepcode ignore Ssrf: This code only runs in dev mode (to test OIDC login)
 		resp, err := http.Get(location)
 		if err != nil {
 			fmt.Println(err)

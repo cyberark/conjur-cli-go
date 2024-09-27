@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
@@ -54,7 +54,7 @@ func GetServerCert(host string, allowSelfSigned bool) (ServerCert, error) {
 	}
 
 	// Calculate the fingerprint of the cert
-	fingerprint := getSha1Fingerprint(cert.Raw)
+	fingerprint := getSha256Fingerprint(cert.Raw)
 	pem := pem.EncodeToMemory(&pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: cert.Raw,
@@ -63,7 +63,7 @@ func GetServerCert(host string, allowSelfSigned bool) (ServerCert, error) {
 	return ServerCert{Fingerprint: fingerprint, Cert: string(pem)}, nil
 }
 
-func getSha1Fingerprint(cert []byte) string {
-	sha1sum := sha1.Sum(cert)
-	return strings.ToUpper(fmt.Sprintf("%x", sha1sum))
+func getSha256Fingerprint(cert []byte) string {
+	sum := sha256.Sum256(cert)
+	return strings.ToUpper(fmt.Sprintf("%x", sum))
 }
