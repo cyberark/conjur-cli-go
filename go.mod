@@ -51,3 +51,6 @@ replace golang.org/x/net v0.0.0-20220722155237-a158d28d115b => golang.org/x/net 
 replace golang.org/x/net v0.6.0 => golang.org/x/net v0.17.0
 
 replace golang.org/x/net v0.10.0 => golang.org/x/net v0.17.0
+
+// DO NOT REMOVE: WE WANT THIS LINE TO PREVENT ACCIDENTALLY COMMITTING A VERSION OF conjur-api-go WHEN UPDATING DEPENDENCIES
+replace github.com/cyberark/conjur-api-go => github.com/cyberark/conjur-api-go latest
