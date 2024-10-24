@@ -10,7 +10,7 @@ type roleClient interface {
 	RoleExists(roleID string) (bool, error)
 	Role(roleID string) (role map[string]interface{}, err error)
 	RoleMembers(roleID string) (members []map[string]interface{}, err error)
-	RoleMemberships(roleID string) (memberships []map[string]interface{}, err error)
+	RoleMembershipsAll(roleID string) (memberships []string, err error)
 }
 
 type roleClientFactoryFunc func(*cobra.Command) (roleClient, error)
@@ -223,17 +223,12 @@ Examples:
 				return err
 			}
 
-			result, err := client.RoleMemberships(roleID)
+			result, err := client.RoleMembershipsAll(roleID)
 			if err != nil {
 				return err
 			}
 
-			memberships := make([]string, 0)
-			for _, element := range result {
-				memberships = append(memberships, element["role"].(string))
-			}
-
-			prettyResult, _ := utils.PrettyPrintToJSON(memberships)
+			prettyResult, _ := utils.PrettyPrintToJSON(result)
 			if err != nil {
 				return err
 			}

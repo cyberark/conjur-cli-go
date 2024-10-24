@@ -10,7 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.17] - 2024-09-25
+## [8.0.17] - 2024-10-24
+
+### Fixed
+- `role memberships` command now returns all memberships, including inherited memberships (CNJR-5213)
 
 ### Security
 - Run the CLI as a non-root user in the Docker image (CNJR-6439)

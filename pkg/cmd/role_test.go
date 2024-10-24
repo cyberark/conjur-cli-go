@@ -9,11 +9,11 @@ import (
 )
 
 type mockRoleClient struct {
-	t               *testing.T
-	roleExists      func(t *testing.T, roleID string) (bool, error)
-	role            func(t *testing.T, roleID string) (role map[string]interface{}, err error)
-	roleMembers     func(t *testing.T, roleID string) (members []map[string]interface{}, err error)
-	roleMemberships func(t *testing.T, roleID string) (memberships []map[string]interface{}, err error)
+	t                  *testing.T
+	roleExists         func(t *testing.T, roleID string) (bool, error)
+	role               func(t *testing.T, roleID string) (role map[string]interface{}, err error)
+	roleMembers        func(t *testing.T, roleID string) (members []map[string]interface{}, err error)
+	roleMembershipsAll func(t *testing.T, roleID string) (memberships []string, err error)
 }
 
 func (m mockRoleClient) RoleExists(roleID string) (bool, error) {
@@ -28,8 +28,8 @@ func (m mockRoleClient) RoleMembers(roleID string) (members []map[string]interfa
 	return m.roleMembers(m.t, roleID)
 }
 
-func (m mockRoleClient) RoleMemberships(roleID string) (memberships []map[string]interface{}, err error) {
-	return m.roleMemberships(m.t, roleID)
+func (m mockRoleClient) RoleMembershipsAll(roleID string) (memberships []string, err error) {
+	return m.roleMembershipsAll(m.t, roleID)
 }
 
 type roleCmdTestCase struct {
@@ -38,7 +38,7 @@ type roleCmdTestCase struct {
 	roleExists         func(t *testing.T, roleID string) (bool, error)
 	role               func(t *testing.T, roleID string) (role map[string]interface{}, err error)
 	roleMembers        func(t *testing.T, roleID string) (members []map[string]interface{}, err error)
-	roleMemberships    func(t *testing.T, roleID string) (memberships []map[string]interface{}, err error)
+	roleMembershipsAll func(t *testing.T, roleID string) (memberships []string, err error)
 	clientFactoryError error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
 }
@@ -304,10 +304,10 @@ var roleMembershipsCmdTestCases = []roleCmdTestCase{
 	{
 		name: "role memberships return memberships in pretty format",
 		args: []string{"memberships", "meow"},
-		roleMemberships: func(t *testing.T, roleID string) (memberships []map[string]interface{}, err error) {
+		roleMembershipsAll: func(t *testing.T, roleID string) (memberships []string, err error) {
 			assert.Equal(t, "meow", roleID)
 
-			return []map[string]interface{}{{"admin_option": "true", "role": "role1", "member": "mabc"}}, nil
+			return []string{"role1"}, nil
 		},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
 			assert.Contains(t, stdout, "[\n  \"role1\"\n]\n")
@@ -316,7 +316,7 @@ var roleMembershipsCmdTestCases = []roleCmdTestCase{
 	{
 		name: "role memberships return no members",
 		args: []string{"memberships", "meow"},
-		roleMemberships: func(t *testing.T, roleID string) (memberships []map[string]interface{}, err error) {
+		roleMembershipsAll: func(t *testing.T, roleID string) (memberships []string, err error) {
 			assert.Equal(t, "meow", roleID)
 
 			return nil, fmt.Errorf("%s", "an error")
@@ -328,7 +328,7 @@ var roleMembershipsCmdTestCases = []roleCmdTestCase{
 	{
 		name: "role memberships client error",
 		args: []string{"memberships", "abcdefg"},
-		roleMemberships: func(t *testing.T, roleID string) (memberships []map[string]interface{}, err error) {
+		roleMembershipsAll: func(t *testing.T, roleID string) (memberships []string, err error) {
 			return nil, fmt.Errorf("%s", "an error")
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
@@ -399,7 +399,7 @@ func TestRoleMembersCmd(t *testing.T) {
 func TestRoleMembershipsCmd(t *testing.T) {
 	for _, tc := range roleMembershipsCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockClient := mockRoleClient{t: t, roleMemberships: tc.roleMemberships}
+			mockClient := mockRoleClient{t: t, roleMembershipsAll: tc.roleMembershipsAll}
 
 			cmd := newRoleMembershipsCmd(
 				func(cmd *cobra.Command) (roleClient, error) {

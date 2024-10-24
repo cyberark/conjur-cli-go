@@ -19,6 +19,12 @@ func TestRoleIntegration(t *testing.T) {
   role: !layer test-layer
   members:
   - !user alice
+
+- !user bob
+
+- !grant
+  role: !user alice
+  member: !user bob
 `)
 
 	t.Run("role exists returns true", func(t *testing.T) {
@@ -74,6 +80,13 @@ func TestRoleIntegration(t *testing.T) {
 
 	t.Run("role memberships", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("role", "memberships", cli.account+":user:alice")
+		assert.NoError(t, err)
+		assert.Empty(t, stdErr)
+		assert.Contains(t, stdOut, cli.account+":layer:test-layer")
+	})
+
+	t.Run("role memberships recursive", func(t *testing.T) {
+		stdOut, stdErr, err := cli.Run("role", "memberships", cli.account+":user:bob")
 		assert.NoError(t, err)
 		assert.Empty(t, stdErr)
 		assert.Contains(t, stdOut, cli.account+":layer:test-layer")
