@@ -41,7 +41,7 @@ type ConjurClient interface {
 	RoleExists(roleID string) (bool, error)
 	Role(roleID string) (role map[string]interface{}, err error)
 	RoleMembers(roleID string) (members []map[string]interface{}, err error)
-	RoleMemberships(roleID string) (memberships []map[string]interface{}, err error)
+	RoleMembershipsAll(roleID string) (memberships []string, err error)
 	CreateToken(durationStr string, hostFactory string, cidrs []string, count int) ([]conjurapi.HostFactoryTokenResponse, error)
 	DeleteToken(token string) error
 	CreateHost(id string, token string) (conjurapi.HostFactoryHostResponse, error)

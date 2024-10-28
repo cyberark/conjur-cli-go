@@ -98,11 +98,11 @@ additional options have been added in 8.x
 ### `conjur ldap-sync`
 ```
 The conjur ldap-sync is not supported in version 8.x. The curl command and the rest API can be used to
-access the ldap-sync data. Use the following command with the specicic cacert and conjur-fqdn to
+access the ldap-sync data. Use the following command with the specific cacert and conjur-fqdn to
 get the ldap-sync data and save it to a file.
 curl -v \
   --cacert "/root/conjur-<account>.pem" \
-  --header "$(conjur authn authenticate -H)" \
+  --header "$(conjur authenticate -H)" \
   https://<conjur-fqdn>/api/ldap-sync/policy?config_name=default
   | jq '.policy' --raw-output \
   > ldap-sync.yaml
