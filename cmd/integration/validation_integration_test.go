@@ -6,9 +6,11 @@ package main
 import (
 	"bytes"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPolicyValidationIntegration(t *testing.T) {
@@ -22,7 +24,7 @@ func TestPolicyValidationIntegration(t *testing.T) {
 		tempDir := t.TempDir()
 		policyFile := tempDir + "/policy.yml"
 		err := os.WriteFile(policyFile, []byte(policyText), 0644)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		stdOut, stdErr, err := cli.Run("policy", "load", "-b", "root", "--dry-run", "-f", policyFile)
 		assertPolicyValidateSuccessCmd(t, err, stdOut, stdErr)
@@ -49,7 +51,7 @@ func TestPolicyValidationIntegration(t *testing.T) {
 			bytes.NewReader([]byte(policyText)),
 			"policy", "load", "-b", "branch2", "--dry-run", "-f", "-",
 		)
-		assert.Contains(t, stdErr, "Error: 404 Not Found.")
+		require.Contains(t, stdErr, "Error: 404 Not Found.")
 		assert.Contains(t, stdOut, "")
 	})
 
@@ -62,7 +64,7 @@ func TestPolicyValidationIntegration(t *testing.T) {
 			bytes.NewReader([]byte(policyText)),
 			"policy", "update", "-b", "branch2", "--dry-run", "-f", "-",
 		)
-		assert.Contains(t, stdErr, "Error: 404 Not Found.")
+		require.Contains(t, stdErr, "Error: 404 Not Found.")
 		assert.Contains(t, stdOut, "")
 	})
 
@@ -73,7 +75,7 @@ func TestPolicyValidationIntegration(t *testing.T) {
 		tempDir := t.TempDir()
 		policyFile := tempDir + "/policy.yml"
 		err := os.WriteFile(policyFile, []byte(policyText), 0644)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		stdOut, stdErr, err := cli.Run("policy", "load", "-b", "root", "--dry-run", "-f", policyFile)
 		assertPolicyValidateInvalidCmd(t, err, stdOut, stdErr)
@@ -87,7 +89,7 @@ func TestPolicyValidationIntegration(t *testing.T) {
 		tempDir := t.TempDir()
 		policyFile := tempDir + "/policy.yml"
 		err := os.WriteFile(policyFile, []byte(policyText), 0644)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		stdOut, stdErr, err := cli.Run("policy", "load", "-b", "root", "--dry-run", "-f", policyFile)
 		assertPolicyValidateInvalidCmd(t, err, stdOut, stdErr)
@@ -108,24 +110,71 @@ func TestPolicyValidationIntegration(t *testing.T) {
   body
   - !user me
 `
-		policyResponse := `{
-  "status": "Invalid YAML",
-  "errors": [
-    {
-      "line": 5,
-      "column": 3,
-      "message": "could not find expected ':' while scanning a simple key\nThis error can occur when you have a missing ':' or missing space after ':'"
-    }
-  ]
-}
-`
+		policyResponse := `(?s)"status": "Invalid YAML",.*"errors":.*"line": 5,.*"column": 3,.*"message": "could not find expected ':' while scanning a simple key.*This error can occur when you have a missing ':' or missing space after ':'`
+
 		tempDir := t.TempDir()
 		policyFile := tempDir + "/policy.yml"
 		err := os.WriteFile(policyFile, []byte(policyText), 0644)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		stdOut, stdErr, err := cli.Run("policy", "load", "-b", "root", "--dry-run", "-f", policyFile)
 		assertPolicyValidateInvalidCmd(t, err, stdOut, stdErr)
-		assert.Equal(t, policyResponse, stdOut)
+		assert.Regexp(t, regexp.MustCompile(policyResponse), stdOut)
+	})
+
+	t.Run("dry run load of a new policy returns content in the Created section", func(t *testing.T) {
+		// Load empty policy to clear
+		cli.LoadPolicy(t, emptyPolicy)
+
+		// Load new policy to Create
+		stdOut, stdErr, err := cli.DryRunPolicy(t, "load", "root", testPolicy)
+		require.NoError(t, err)
+		assert.Contains(t, stdErr, "Dry run policy 'root'")
+		assert.Regexp(t, regexp.MustCompile(`(?s)created`), stdOut)
+	})
+
+	t.Run("dry run update of an existing policy returns content in the Updated sections", func(t *testing.T) {
+		// Load test policy as baseline
+		cli.LoadPolicy(t, testPolicy)
+
+		// Update policy
+		stdOut, stdErr, err := cli.DryRunPolicy(t, "update", "root",
+			`
+- !permit
+  role: !user alice
+  resource: !variable woof
+  privileges: [ write ]
+`)
+		require.NoError(t, err)
+		assert.Contains(t, stdErr, "Dry run policy 'root'")
+		assert.Regexp(t, regexp.MustCompile(`(?s)created.*updated.*before.*items.*permissions.*variable:meow.*after.*items.*permissions.*variable:meow.*variable:woof`), stdOut)
+	})
+
+	t.Run("dry run replace of an existing policy returns content in the Deleted section", func(t *testing.T) {
+		// Load test policy as baseline
+		cli.LoadPolicy(t, testPolicy)
+
+		// Replace policy 
+		stdOut, stdErr, err := cli.DryRunPolicy(t, "replace", "root", emptyPolicy)
+		require.NoError(t, err)
+		assert.Contains(t, stdErr, "Dry run policy 'root'")
+		assert.Regexp(t, regexp.MustCompile(`(?s)status.*deleted`), stdOut)
+	})
+
+	t.Run("dry run load against an existing policy returns content in all sections", func(t *testing.T) {
+		// Load test policy as baseline
+		cli.LoadPolicy(t, testPolicy)
+
+		// Load a policy causing all types of changes
+		stdOut, stdErr, err := cli.DryRunPolicy(t, "replace", "root",
+			`
+- !user charles
+- !delete
+  record: !variable meow
+- !variable blub
+            `)
+		require.NoError(t, err)
+		assert.Contains(t, stdErr, "Dry run policy 'root'")
+		assert.Regexp(t, regexp.MustCompile(`(?s)status.*created.*updated.*deleted.*errors`), stdOut)
 	})
 }
