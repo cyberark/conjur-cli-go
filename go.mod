@@ -9,7 +9,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7-0.20221124181729-2363ef255e14 // Run "go get github.com/AlecAivazis/survey/v2@debug-windows" to update (Until https://github.com/go-survey/survey/pull/474 is merged)
 	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2
 	github.com/creack/pty v1.1.18
-	github.com/cyberark/conjur-api-go v0.12.5 // Run "go get github.com/cyberark/conjur-api-go@main" to update
+	github.com/cyberark/conjur-api-go v0.12.8 // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/hinshun/vt10x v0.0.0-20220301184237-5011da428d02
 	github.com/mattn/go-isatty v0.0.8
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8

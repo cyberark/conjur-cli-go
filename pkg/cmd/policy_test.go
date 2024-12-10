@@ -404,7 +404,7 @@ func sharedLoadPolicyCmdTestCases(
 			) (*conjurapi.DryRunPolicyResponse, error) {
 				return &conjurapi.DryRunPolicyResponse{
 					Status: "Invalid YAML",
-					Errors: []conjurapi.DryRunErrors{
+					Errors: []conjurapi.DryRunError{
 						{
 							Line:    0,
 							Column:  0,
