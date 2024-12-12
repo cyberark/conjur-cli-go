@@ -16,15 +16,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-const pathToBinary = "conjur"
+const (
+	pathToBinary = "conjur"
 
-const insecureModeWarning = "Warning: Running the command with '--insecure' makes your system vulnerable to security attacks\n" +
+	insecureModeWarning = "Warning: Running the command with '--insecure' makes your system vulnerable to security attacks\n" +
 	"If you prefer to communicate with the server securely you must reinitialize the client in secure mode.\n"
-const selfSignedWarning = "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data\n"
+	selfSignedWarning = "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data\n"
 
-const testPolicy = `
+	testPolicy = `
 - !variable meow
 - !variable woof
 - !user alice
@@ -35,6 +37,8 @@ const testPolicy = `
   role: !user alice
   privileges: [ read ]
 `
+	emptyPolicy = `#`
+)
 
 func newConjurTestCLI(t *testing.T) (cli *testConjurCLI) {
 	homeDir := t.TempDir()
@@ -96,6 +100,13 @@ func (cli *testConjurCLI) LoadPolicy(t *testing.T, policyText string) {
 		"policy", "load", "-b", "root", "-f", "-",
 	)
 	assertPolicyLoadCmd(t, err, stdOut, stdErr)
+}
+
+func (cli *testConjurCLI) DryRunPolicy(t *testing.T, mode string, branch string, policyText string) (stdOut string, stdErr string, err error){
+	return cli.RunWithStdin(
+		bytes.NewReader([]byte(policyText)),
+		"policy", mode, "--dry-run", "-b", branch, "-f", "-",
+	)
 }
 
 func (cli *testConjurCLI) RunWithStdin(stdIn io.Reader, args ...string) (stdOut string, stdErr string, err error) {
@@ -199,19 +210,19 @@ func assertNotFound(t *testing.T, err error, stdOut string, stdErr string) {
 }
 
 func assertPolicyLoadCmd(t *testing.T, err error, stdOut string, stdErr string) {
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, stdOut, "created_roles")
 	assert.Contains(t, stdOut, "version")
 	assert.Equal(t, "Loaded policy 'root'\n", stdErr)
 }
 
 func assertPolicyValidateSuccessCmd(t *testing.T, err error, stdOut string, stdErr string) {
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, stdOut, "Valid YAML")
 }
 
 func assertPolicyValidateInvalidCmd(t *testing.T, err error, stdOut string, stdErr string) {
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, stdOut, "Invalid YAML")
 }
 
