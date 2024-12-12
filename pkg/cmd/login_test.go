@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-api-go/conjurapi/authn"
@@ -172,7 +173,7 @@ func TestLoginCmd(t *testing.T) {
 					LoginWithPromptFallback: mockClient.LoginWithPromptFallback,
 					OidcLogin:               mockClient.OidcLogin,
 					JWTAuthenticate:         mockClient.JWTAuthenticate,
-					LoadAndValidateConjurConfig: func() (conjurapi.Config, error) {
+					LoadAndValidateConjurConfig: func(time.Duration) (conjurapi.Config, error) {
 						return tc.conjurConfig, nil
 					},
 				},

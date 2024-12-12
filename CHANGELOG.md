@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [8.0.17] - 2024-10-24
 
+### Added
+- Add user-friendly error message on timeout and add HTTP timeout flag.
+  CNJR-7343 [#150](https://github.com/cyberark/conjur-cli-go/issues/150)
+
 ### Fixed
 - `role memberships` command now returns all memberships, including inherited memberships (CNJR-5213)
 
