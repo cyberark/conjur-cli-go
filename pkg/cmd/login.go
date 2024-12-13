@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-api-go/conjurapi/authn"
@@ -11,7 +12,7 @@ import (
 )
 
 type loginCmdFuncs struct {
-	LoadAndValidateConjurConfig func() (conjurapi.Config, error)
+	LoadAndValidateConjurConfig func(timeout time.Duration) (conjurapi.Config, error)
 	LoginWithPromptFallback     func(client clients.ConjurClient, username string, password string) (*authn.LoginPair, error)
 	OidcLogin                   func(conjurClient clients.ConjurClient, username string, password string) (clients.ConjurClient, error)
 	JWTAuthenticate             func(conjurClient clients.ConjurClient) error
@@ -78,7 +79,12 @@ Examples:
 				return err
 			}
 
-			config, err := funcs.LoadAndValidateConjurConfig()
+			timeout, err := clients.GetTimeout(cmd)
+			if err != nil {
+				return err
+			}
+
+			config, err := funcs.LoadAndValidateConjurConfig(timeout)
 			if err != nil {
 				return err
 			}

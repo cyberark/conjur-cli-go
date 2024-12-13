@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 
@@ -49,7 +50,7 @@ type ConjurClient interface {
 }
 
 // LoadAndValidateConjurConfig loads and validate Conjur configuration
-func LoadAndValidateConjurConfig() (conjurapi.Config, error) {
+func LoadAndValidateConjurConfig(timeout time.Duration) (conjurapi.Config, error) {
 	// TODO: extract this common code for gathering configuring into a seperate package
 	// Some of the code is in conjur-api-go and needs to be made configurable so that you can pass a custom path to .conjurrc
 
@@ -58,6 +59,10 @@ func LoadAndValidateConjurConfig() (conjurapi.Config, error) {
 		return config, err
 	}
 
+	if timeout > 0 {
+		// do not overwrite the value set in the env or .conjurrc file
+		config.HTTPTimeout = int(timeout.Seconds())
+	}
 	err = config.Validate()
 
 	return config, err
@@ -80,7 +85,12 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		MaybeDebugLoggingForClient(debug, cmd, client)
 	}
 
-	config, err := LoadAndValidateConjurConfig()
+	timeout, err := GetTimeout(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := LoadAndValidateConjurConfig(timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -116,4 +126,17 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 	}
 
 	return client, nil
+}
+
+// GetTimeout extracts the timeout from the command flags only if explicitly set
+func GetTimeout(cmd *cobra.Command) (timeout time.Duration, err error) {
+	if cmd.Flags().Changed("timeout") {
+		// do not use the cobra default value in case it was not explicitly provided
+		// otherwise it would overwrite the value set in the env or .conjurrc file
+		timeout, err = cmd.Flags().GetDuration("timeout")
+		if err != nil {
+			return 0, err
+		}
+	}
+	return timeout, nil
 }
