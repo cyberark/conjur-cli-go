@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.17] - 2024-10-24
+## [8.0.17] - 2024-12-27
 
 ### Added
 - Add user-friendly error message on timeout and add HTTP timeout flag.
@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - `role memberships` command now returns all memberships, including inherited memberships (CNJR-5213)
+- Checks Conjur server version before using policy dry-run and fetch
+  (CNJR-7207, [#149](https://github.com/cyberark/conjur-cli-go/issues/149))
 
 ### Security
 - Run the CLI as a non-root user in the Docker image (CNJR-6439)
