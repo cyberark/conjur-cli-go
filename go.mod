@@ -6,16 +6,16 @@ go 1.22.7
 // replace github.com/cyberark/conjur-api-go => ./conjur-api-go
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.7-0.20221124181729-2363ef255e14 // Run "go get github.com/AlecAivazis/survey/v2@debug-windows" to update (Until https://github.com/go-survey/survey/pull/474 is merged)
+	github.com/AlecAivazis/survey/v2 v2.3.7 // Run "go get github.com/AlecAivazis/survey/v2@debug-windows" to update (Until https://github.com/go-survey/survey/pull/474 is merged)
 	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2
-	github.com/creack/pty v1.1.18
+	github.com/creack/pty v1.1.24
 	github.com/cyberark/conjur-api-go v0.12.10 // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/hinshun/vt10x v0.0.0-20220301184237-5011da428d02
-	github.com/mattn/go-isatty v0.0.8
-	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/spf13/cobra v1.5.0
-	github.com/stretchr/testify v1.9.0
-	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
+	github.com/mattn/go-isatty v0.0.20
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
+	github.com/spf13/cobra v1.8.1
+	github.com/stretchr/testify v1.10.0
+	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8
 )
 
 require (
@@ -25,13 +25,13 @@ require (
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/zalando/go-keyring v0.2.6 // indirect
 	golang.org/x/sys v0.28.0 // indirect
