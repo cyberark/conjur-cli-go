@@ -1,6 +1,9 @@
 #!/usr/bin/env groovy
 @Library("product-pipelines-shared-library") _
 
+def productName = 'Conjur CLI'
+def productTypeName = 'Conjur Enterprise'
+
 // Automated release, promotion and dependencies
 properties([
   // Include the automated release parameters for the build
@@ -18,6 +21,17 @@ if (params.MODE == "PROMOTE") {
     // Any version number updates from sourceVersion to targetVersion occur here
     // Any publishing of targetVersion artifacts occur here
     // Anything added to assetDirectory will be attached to the Github Release
+
+    env.INFRAPOOL_PRODUCT_NAME = "${productName}"
+    env.INFRAPOOL_DD_PRODUCT_TYPE_NAME = "${productTypeName}"
+
+    // Scan the image before promoting
+    runSecurityScans(infrapool,
+      image: "registry.tld/conjur-cli:${sourceVersion}",
+      buildMode: params.MODE,
+      branch: env.BRANCH_NAME,
+      arch: 'linux/amd64'
+    )
 
     // Promote source version to target version.
 
@@ -86,7 +100,7 @@ pipeline {
     stage('Validate') {
       parallel {
         stage('Changelog') {
-          steps { 
+          steps {
             script {
               parseChangelog(INFRAPOOL_EXECUTORV2_AGENT_0)
             }
@@ -177,17 +191,30 @@ pipeline {
       }
     }
 
+    // Publish container images to internal registry. Need to push before we do security scans
+    // since the Snyk scans pull from artifactory on a seprate executor node
+    stage('Push images to internal registry') {
+      steps {
+        script {
+          INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './bin/publish_container_images --internal'
+        }
+      }
+    }
+
     stage('Integration test while scanning') {
+      environment {
+        INFRAPOOL_REGISTRY_URL = "${REGISTRY_URL}"
+        // Values to direct scan results to the right place in DefectDojo
+        INFRAPOOL_PRODUCT_NAME = "${productName}"
+        INFRAPOOL_DD_PRODUCT_TYPE_NAME = "${productTypeName}"
+      }
       parallel {
         stage('Run integration tests') {
-          environment {
-            INFRAPOOL_REGISTRY_URL = "${REGISTRY_URL}"
-          }
           steps {
             withCredentials([
               conjurSecretCredential(credentialsId: "RnD-Global-Conjur-Ent-Conjur_Operating_System-WindowsDomainAccountDailyRotation-cyberng.com-svc_cnjr_enterprise_username", variable: 'INFRAPOOL_IDENTITY_USERNAME'),
               conjurSecretCredential(credentialsId: "RnD-Global-Conjur-Ent-Conjur_Operating_System-WindowsDomainAccountDailyRotation-cyberng.com-svc_cnjr_enterprise_password", variable: 'INFRAPOOL_IDENTITY_PASSWORD')
-            ]) 
+            ])
             {
               script {
                 INFRAPOOL_EXECUTORV2_AGENT_0.agentDir('ci') {
@@ -202,18 +229,15 @@ pipeline {
           }
         }
 
-        stage("Scan container images for fixable issues") {
+        stage("Scan main Docker image") {
           steps {
             script {
-              scanAndReport(INFRAPOOL_EXECUTORV2_AGENT_0, "${containerImageWithTag()}", "HIGH", false)
-            }
-          }
-        }
-
-        stage("Scan container images for total issues") {
-          steps {
-            script {
-              scanAndReport(INFRAPOOL_EXECUTORV2_AGENT_0, "${containerImageWithTag()}", "NONE", true)
+              runSecurityScans(INFRAPOOL_EXECUTORV2_AGENT_0,
+                image: "registry.tld/${containerImageWithTag()}",
+                buildMode: params.MODE,
+                branch: env.BRANCH_NAME,
+                arch: 'linux/amd64'
+              )
             }
           }
         }
@@ -239,9 +263,6 @@ pipeline {
             INFRAPOOL_EXECUTORV2_AGENT_0.agentSh """export PATH="${toolsDirectory}/bin:${PATH}" && go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
             // Create Go module SBOM
             INFRAPOOL_EXECUTORV2_AGENT_0.agentSh """export PATH="${toolsDirectory}/bin:${PATH}" && go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --output "${billOfMaterialsDirectory}/go-mod-bom.json" """
-
-            // Publish container images to internal registry
-            INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './bin/publish_container_images --internal'
           }
         }
       }
