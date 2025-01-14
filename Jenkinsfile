@@ -27,7 +27,7 @@ if (params.MODE == "PROMOTE") {
 
     // Scan the image before promoting
     runSecurityScans(infrapool,
-      image: "registry.tld/conjur-cli:${sourceVersion}",
+      image: "registry.tld/${containerImageWithTag()}",
       buildMode: params.MODE,
       branch: env.BRANCH_NAME,
       arch: 'linux/amd64'
