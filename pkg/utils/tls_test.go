@@ -12,7 +12,7 @@ import (
 
 func TestGetServerCert(t *testing.T) {
 	t.Run("Returns an error when the server doesn't exist", func(t *testing.T) {
-		_, err := GetServerCert("example.com:444", false)
+		_, err := GetServerCert("localhost:444", false)
 		assert.Error(t, err)
 	})
 
