@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.19] - 2025-02-03
+
+### Fixed
+- Fix false positive on version check
+  (CNJR-7876, [cyberark/conjur-cli-go#152](https://github.com/cyberark/conjur-cli-go/issues/152))
+
 ## [8.0.18] - 2025-01-10
 
 ### Security
