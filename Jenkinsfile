@@ -16,7 +16,7 @@ properties([
 
 // Performs release promotion.  No other stages will be run
 if (params.MODE == "PROMOTE") {
-  release.promote(params.VERSION_TO_PROMOTE) { infrapool, sourceVersion, targetVersion, assetDirectory ->
+  release.promote(params.VERSION_TO_PROMOTE) { INFRAPOOL_EXECUTORV2_AGENT_0, sourceVersion, targetVersion, assetDirectory ->
     // Any assets from sourceVersion Github release are available in assetDirectory
     // Any version number updates from sourceVersion to targetVersion occur here
     // Any publishing of targetVersion artifacts occur here
@@ -26,7 +26,7 @@ if (params.MODE == "PROMOTE") {
     env.INFRAPOOL_DD_PRODUCT_TYPE_NAME = "${productTypeName}"
 
     // Scan the image before promoting
-    runSecurityScans(infrapool,
+    runSecurityScans(INFRAPOOL_EXECUTORV2_AGENT_0,
       image: "registry.tld/${containerImageWithTag()}",
       buildMode: params.MODE,
       branch: env.BRANCH_NAME,
@@ -36,7 +36,7 @@ if (params.MODE == "PROMOTE") {
     // Promote source version to target version.
 
     // NOTE: the use of --pull to ensure source images are pulled from internal registry
-    infrapool.agentSh "source ./bin/build_utils && ./bin/publish_container_images --promote --source ${sourceVersion}-\$(git_commit) --target ${targetVersion} --pull"
+    INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "source ./bin/build_utils && ./bin/publish_container_images --promote --source ${sourceVersion}-\$(git_commit) --target ${targetVersion} --pull"
   }
 
   // Copy Github Enterprise release to Github
