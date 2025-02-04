@@ -27,7 +27,7 @@ if (params.MODE == "PROMOTE") {
 
     // Scan the image before promoting
     runSecurityScans(INFRAPOOL_EXECUTORV2_AGENT_0,
-      image: "registry.tld/${containerImageWithTag()}",
+      image: "registry.tld/${containerImageWithTag(INFRAPOOL_EXECUTORV2_AGENT_0)}",
       buildMode: params.MODE,
       branch: env.BRANCH_NAME,
       arch: 'linux/amd64'
@@ -233,7 +233,7 @@ pipeline {
           steps {
             script {
               runSecurityScans(INFRAPOOL_EXECUTORV2_AGENT_0,
-                image: "registry.tld/${containerImageWithTag()}",
+                image: "registry.tld/${containerImageWithTag(INFRAPOOL_EXECUTORV2_AGENT_0)}",
                 buildMode: params.MODE,
                 branch: env.BRANCH_NAME,
                 arch: 'linux/amd64'
@@ -278,8 +278,8 @@ pipeline {
   }
 }
 
-def containerImageWithTag() {
-  INFRAPOOL_EXECUTORV2_AGENT_0.agentSh(
+def containerImageWithTag(infrapool) {
+  infrapool.agentSh(
     returnStdout: true,
     script: 'source ./bin/build_utils && echo "conjur-cli:$(project_version_with_commit)"'
   )
