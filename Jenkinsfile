@@ -27,7 +27,7 @@ if (params.MODE == "PROMOTE") {
 
     // Scan the image before promoting
     runSecurityScans(INFRAPOOL_EXECUTORV2_AGENT_0,
-      image: "registry.tld/${containerImageWithTag(INFRAPOOL_EXECUTORV2_AGENT_0)}",
+      image: "registry.tld/conjur-cli:${sourceVersion}-${gitCommit(INFRAPOOL_EXECUTORV2_AGENT_0)}",
       buildMode: params.MODE,
       branch: env.BRANCH_NAME,
       arch: 'linux/amd64'
@@ -276,6 +276,13 @@ pipeline {
       }
     }
   }
+}
+
+def gitCommit(infrapool) {
+  infrapool.agentSh(
+    returnStdout: true,
+    script: 'source ./bin/build_utils && echo "$(git_commit)"'
+  )
 }
 
 def containerImageWithTag(infrapool) {
