@@ -34,6 +34,7 @@ type ConjurClient interface {
 	ResourceExists(resourceID string) (bool, error)
 	Resource(resourceID string) (resource map[string]interface{}, err error)
 	Resources(filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error)
+	ResourcesCount(filter *conjurapi.ResourceFilter) (*conjurapi.ResourcesCount, error)
 	PermittedRoles(resourceID, privilege string) ([]string, error)
 	ListOidcProviders() ([]conjurapi.OidcProvider, error)
 	RefreshToken() error

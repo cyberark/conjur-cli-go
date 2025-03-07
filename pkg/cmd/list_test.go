@@ -41,18 +41,24 @@ var clientResponse = make([]map[string]interface{}, 1)
 var _ = json.Unmarshal([]byte(clientResponseStr), &clientResponse)
 
 type mockListClient struct {
-	t             *testing.T
-	listResources func(t *testing.T, filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error)
+	t              *testing.T
+	listResources  func(t *testing.T, filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error)
+	resourcesCount func(t *testing.T, filter *conjurapi.ResourceFilter) (*conjurapi.ResourcesCount, error)
 }
 
 func (m mockListClient) Resources(filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error) {
 	return m.listResources(m.t, filter)
 }
 
+func (m mockListClient) ResourcesCount(filter *conjurapi.ResourceFilter) (*conjurapi.ResourcesCount, error) {
+	return m.resourcesCount(m.t, filter)
+}
+
 var listCmdTestCases = []struct {
 	name               string
 	args               []string
 	listResources      func(t *testing.T, filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error)
+	resourcesCount     func(t *testing.T, filter *conjurapi.ResourceFilter) (*conjurapi.ResourcesCount, error)
 	roleMembers        func(t *testing.T, roleID string) (members []map[string]interface{}, err error)
 	permittedRoles     func(t *testing.T, resourceID, privilege string) ([]string, error)
 	clientFactoryError error
@@ -229,12 +235,32 @@ var listCmdTestCases = []struct {
 			assert.Contains(t, stderr, "Error: client factory error\n")
 		},
 	},
+	{
+		name: "list count",
+		args: []string{"list", "-c"},
+		resourcesCount: func(t *testing.T, filter *conjurapi.ResourceFilter) (*conjurapi.ResourcesCount, error) {
+			return &conjurapi.ResourcesCount{Count: 3}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, `"count": 3`)
+		},
+	},
+	{
+		name: "list count client error",
+		args: []string{"list", "-c"},
+		resourcesCount: func(t *testing.T, filter *conjurapi.ResourceFilter) (*conjurapi.ResourcesCount, error) {
+			return nil, fmt.Errorf("%s", "an error")
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: an error\n")
+		},
+	},
 }
 
 func TestListCmd(t *testing.T) {
 	for _, tc := range listCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockClient := mockListClient{t: t, listResources: tc.listResources}
+			mockClient := mockListClient{t: t, listResources: tc.listResources, resourcesCount: tc.resourcesCount}
 			mockRoleClient := mockRoleClient{t: t, roleMembers: tc.roleMembers}
 			mockResourceClient := mockResourceClient{t: t, permittedRoles: tc.permittedRoles}
 

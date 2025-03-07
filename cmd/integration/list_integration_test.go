@@ -123,6 +123,18 @@ func TestListIntegration(t *testing.T) {
 		assert.NotContains(t, stdOut, cli.account+":variable:woof")
 		assert.NotContains(t, stdOut, cli.account+":variable:meow")
 	})
+
+	t.Run("list with count", func(t *testing.T) {
+		stdOut, stdErr, err := cli.Run("list", "--count")
+		assert.NoError(t, err)
+		assert.Empty(t, stdErr)
+
+		assert.Contains(t, stdOut, `"count": 5`)
+		assert.NotContains(t, stdOut, cli.account+":policy:")
+		assert.NotContains(t, stdOut, cli.account+":user:")
+		assert.NotContains(t, stdOut, cli.account+":host:")
+		assert.NotContains(t, stdOut, cli.account+":variable:")
+	})
 }
 
 func assertListsAllResources(t *testing.T, stdOut string, cli *testConjurCLI) {

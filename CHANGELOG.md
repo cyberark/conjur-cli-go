@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.0.20] - 2025-03-07
+
+### Added
+- New `--count` option for the `conjur list` command to allow getting only the amount
+  or resources after applying filters without actually listing the resources.
+  CNJR-8654
+
 ## [8.0.19] - 2025-02-03
 
 ### Fixed
