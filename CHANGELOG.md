@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   or resources after applying filters without actually listing the resources.
   CNJR-8654
 
+### Changed
+- Use go 1.23 and 1.24
+
 ## [8.0.19] - 2025-02-03
 
 ### Fixed
