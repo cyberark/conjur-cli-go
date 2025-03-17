@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/oss/go/microsoft/golang:1.22-fips-bullseye as conjur-cli-go-builder
+FROM mcr.microsoft.com/oss/go/microsoft/golang:1.23-fips-bullseye as conjur-cli-go-builder
 
 ENV VERSION=""
 

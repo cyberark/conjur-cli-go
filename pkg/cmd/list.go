@@ -11,6 +11,7 @@ import (
 
 type listClient interface {
 	Resources(filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error)
+	ResourcesCount(filter *conjurapi.ResourceFilter) (*conjurapi.ResourcesCount, error)
 }
 
 type listClientFactoryFunc func(*cobra.Command) (listClient, error)
@@ -60,7 +61,9 @@ Optional flags can be used to narrow down specific resources.
 
 Examples:
 - List all resources      : conjur list
+- Count all resources     : conjur list -c
 - List all users          : conjur list -k user
+- Count all users         : conjur list -k user -c
 - List first 5 users      : conjur list -k user -l 5
 - List next 5 users       : conjur list -k user -l 5 -o 5
 - List staging hosts      : conjur list -k host -s staging
@@ -110,6 +113,27 @@ Examples:
 				return err
 			}
 
+			count, err := cmd.Flags().GetBool("count")
+			if err != nil {
+				return err
+			}
+
+			if count {
+				count, err := client.ResourcesCount(rf)
+				if err != nil {
+					return err
+				}
+
+				prettyResult, err := utils.PrettyPrintToJSON(count)
+				if err != nil {
+					return err
+				}
+
+				cmd.Println(prettyResult)
+
+				return nil
+			}
+
 			resources, err := client.Resources(rf)
 			if err != nil {
 				return err
@@ -150,6 +174,7 @@ Examples:
 	cmd.Flags().IntP("offset", "o", 0, "Offset to start from")
 	cmd.Flags().StringP("role", "r", "", "Role whose resource list you want to view")
 	cmd.Flags().BoolP("inspect", "i", false, "Show resource details")
+	cmd.Flags().BoolP("count", "c", false, "Show resources count only without listing them")
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	cmd.Flags().StringP("members-of", "m", "", "List members within a role")
