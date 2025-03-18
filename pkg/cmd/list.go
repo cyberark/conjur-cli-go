@@ -168,13 +168,13 @@ Examples:
 		},
 	}
 
-	cmd.Flags().StringP("kind", "k", "", "Filter by kind")
-	cmd.Flags().StringP("search", "s", "", "Full-text search on resourceID and annotation values")
-	cmd.Flags().IntP("limit", "l", 0, "Maximum number of records to return")
-	cmd.Flags().IntP("offset", "o", 0, "Offset to start from")
-	cmd.Flags().StringP("role", "r", "", "Role whose resource list you want to view")
-	cmd.Flags().BoolP("inspect", "i", false, "Show resource details")
-	cmd.Flags().BoolP("count", "c", false, "Show resources count only without listing them")
+	cmd.Flags().StringP("kind", "k", "", "Filters the resources by the specified `kind`, which must one of these: user | host | layer | group | policy | variable | webservice | host_factory")
+	cmd.Flags().StringP("search", "s", "", "Filters returned resources according to the specified text. Results are weighted as follows, from highest to lowest priority: resource's identifier, annotations, and kind")
+	cmd.Flags().IntP("limit", "l", 0, "Sets the maximum number of returned resources")
+	cmd.Flags().IntP("offset", "o", 0, "Skips the specified number of resources from the first resource of a zero-based resource array")
+	cmd.Flags().StringP("role", "r", "", "Retrieves the resources that the specified role is entitled to see. You must specify the role's full ID: {account}:{kind}:{identifier}. For example: --role myorg:user:alice")
+	cmd.Flags().BoolP("inspect", "i", false, "Lists the metadata for resources")
+	cmd.Flags().BoolP("count", "c", false, "When `true`, only the number of matched resources is returned (instead of an array listing resource properties)")
 
 	// BEGIN COMPATIBILITY WITH PYTHON CLI
 	cmd.Flags().StringP("members-of", "m", "", "List members within a role")
