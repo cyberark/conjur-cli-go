@@ -169,7 +169,7 @@ Examples:
 	}
 
 	cmd.Flags().StringP("kind", "k", "", "Filters the resources by the specified `kind`, which must one of these: user | host | layer | group | policy | variable | webservice | host_factory")
-	cmd.Flags().StringP("search", "s", "", "Filters returned resources according to the specified text. Results are weighted as follows, from highest to lowest priority: resource's identifier, annotation and kind")
+	cmd.Flags().StringP("search", "s", "", "Filters returned resources according to the specified text. Results are weighted as follows, from highest to lowest priority: resource's identifier, annotations, and kind")
 	cmd.Flags().IntP("limit", "l", 0, "Sets the maximum number of returned resources")
 	cmd.Flags().IntP("offset", "o", 0, "Skips the specified number of resources from the first resource of a zero-based resource array")
 	cmd.Flags().StringP("role", "r", "", "Retrieves the resources that the specified role is entitled to see. You must specify the role's full ID: {account}:{kind}:{identifier}. For example: --role myorg:user:alice")
