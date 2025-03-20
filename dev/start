@@ -17,10 +17,11 @@ ENABLE_OIDC_KEYCLOAK=false
 ENABLE_OIDC_OKTA=false
 ENABLE_OIDC_IDENTITY=false
 ENABLE_JWT_KEYCLOAK=false
+ENABLE_LDAP=false
 export IDENTITY_USERNAME=""
 
 # Minimal set of services.  We add to this list based on cmd line flags.
-services=(pg conjur proxy cli-dev)
+services=(pg conjur proxy cli-dev ldap-server)
 
 main() {
   parse_options "$@"
@@ -115,8 +116,7 @@ EOL
   
   echo
   echo "Entering CLI container"
-
-  docker compose exec cli-dev go mod download || true
+  docker compose exec cli-dev make install
 
   echo
   if [ "$ENABLE_OIDC_OKTA" = true ]; then
@@ -139,6 +139,11 @@ conjur login -i $IDENTITY_USERNAME'
     fetch_jwt
     docker compose exec cli-dev bash -c 'conjur logout
 conjur init --force-netrc --force -u http://conjur -i -a dev -t jwt --service-id keycloak --jwt-file /jwt'
+  elif [ "$ENABLE_LDAP" = true ]; then
+    echo "Setting up Conjur for LDAP"
+    docker compose exec cli-dev bash -c 'conjur logout
+conjur init --force-netrc --force -u http://conjur -i -a dev -t ldap --service-id test-service
+conjur login -i alice -p aliceLdapPwd'
   fi
   echo
   docker compose exec cli-dev bash
@@ -152,6 +157,7 @@ parse_options() {
       --oidc-identity ) ENABLE_OIDC_IDENTITY=true ; shift ;;
       --identity-user ) IDENTITY_USERNAME="$2" ; shift ; shift ;;
       --jwt-keycloak ) ENABLE_JWT_KEYCLOAK=true ; shift ;;
+      --ldap ) ENABLE_LDAP=true ; shift ;;
       # -h | --help ) print_help ; shift ;;
        * )
          if [ -z "$1" ]; then

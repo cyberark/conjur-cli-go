@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.20] - 2025-03-07
+## [8.0.20] - 2025-03-20
 
 ### Added
 - New `--count` option for the `conjur list` command to allow getting only the amount
@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Use go 1.23 and 1.24
+
+### Fixed
+- Fix URL for rotating API keys when using authn-ldap
+  (CNJR-9014, [cyberark/conjur-cli-go#153](https://github.com/cyberark/conjur-cli-go/issues/153))
 
 ## [8.0.19] - 2025-02-03
 
