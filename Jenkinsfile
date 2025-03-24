@@ -40,7 +40,7 @@ if (params.MODE == "PROMOTE") {
 
     // Ensure the working directory is a safe git directory for the subsequent
     // promotion operations after this block.
-    INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'git config --global --add safe.directory "$(pwd)"'
+    sh 'git config --global --add safe.directory "$(pwd)"'
   }
 
   // Copy Github Enterprise release to Github
