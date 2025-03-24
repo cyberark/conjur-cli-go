@@ -33,13 +33,14 @@ if (params.MODE == "PROMOTE") {
       arch: 'linux/amd64'
     )
 
-    // Ensure the working directory is a safe git directory for the subsequent
-    // promotion operations after this block.
-    INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'git config --global --add safe.directory "$(pwd)"'
     // Promote source version to target version.
 
     // NOTE: the use of --pull to ensure source images are pulled from internal registry
     INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "source ./bin/build_utils && ./bin/publish_container_images --promote --source ${sourceVersion}-\$(git_commit) --target ${targetVersion} --pull"
+
+    // Ensure the working directory is a safe git directory for the subsequent
+    // promotion operations after this block.
+    INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'git config --global --add safe.directory "$(pwd)"'
   }
 
   // Copy Github Enterprise release to Github
