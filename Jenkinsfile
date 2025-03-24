@@ -35,7 +35,7 @@ if (params.MODE == "PROMOTE") {
 
     // Ensure the working directory is a safe git directory for the subsequent
     // promotion operations after this block.
-    infrapool.agentSh 'git config --global --add safe.directory "$(pwd)"'
+    INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'git config --global --add safe.directory "$(pwd)"'
     // Promote source version to target version.
 
     // NOTE: the use of --pull to ensure source images are pulled from internal registry
