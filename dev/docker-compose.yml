@@ -10,13 +10,21 @@ services:
     environment:
       DATABASE_URL: postgres://postgres@pg/postgres
       CONJUR_DATA_KEY: Bd4+A1QnELGC1Fb5/KauFlVez981OoYblbyfNOCavuQ=
-      CONJUR_AUTHENTICATORS: authn,authn-jwt/keycloak,authn-oidc/keycloak,authn-oidc/okta,authn-oidc/identity
+      CONJUR_AUTHENTICATORS: authn,authn-ldap/test-service,authn-jwt/keycloak,authn-oidc/keycloak,authn-oidc/okta,authn-oidc/identity
+      LDAP_URI: ldap://ldap-server:389
+      LDAP_BASE: dc=conjur,dc=net
+      LDAP_BINDDN: cn=admin,dc=conjur,dc=net
+      LDAP_BINDPW: ldapsecret
+      LDAP_FILTER: (uid=%s)
     volumes:
     # The files add the endpoint /dev to Conjur. This endpoint allows us to carry out typical development tasks such as fetching
     # any role's API key via an unauthenticated HTTP request to Conjur.
       - ../ci/conjur-hacks/dev_initializer.rb:/opt/conjur-server/config/initializers/dev_initializer.rb
       - ../ci/conjur-hacks/dev_controller.rb:/opt/conjur-server/app/controllers/dev_controller.rb
       - ../ci/keycloak:/oauth/keycloak/scripts
+    depends_on:
+      - pg
+      - ldap-server
 
   proxy:
     image: nginx:1.13.6-alpine
@@ -65,6 +73,20 @@ services:
     volumes:
       - ../ci/keycloak:/scripts
       - ../ci/keycloak/standalone.xml:/opt/jboss/keycloak/standalone/configuration/standalone.xml
+
+  ldap-server:
+    image: osixia/openldap
+    command: --copy-service --loglevel debug
+    hostname: ldap-server
+    environment:
+      LDAP_ORGANISATION: CyberArk
+      LDAP_DOMAIN: conjur.net
+      LDAP_ADMIN_PASSWORD: ldapsecret
+      LDAP_TLS: false
+    ports:
+      - "389:389"
+    volumes:
+      - ../ci/ldap:/container/service/slapd/assets/config/bootstrap/ldif/custom
 
 volumes:
   go-modules:

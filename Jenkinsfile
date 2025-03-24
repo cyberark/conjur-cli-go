@@ -97,18 +97,6 @@ pipeline {
       }
     }
 
-    stage('Validate') {
-      parallel {
-        stage('Changelog') {
-          steps {
-            script {
-              parseChangelog(INFRAPOOL_EXECUTORV2_AGENT_0)
-            }
-          }
-        }
-      }
-    }
-
     // Generates a VERSION file based on the current build number and latest version in CHANGELOG.md
     stage('Validate changelog and set version') {
       steps {

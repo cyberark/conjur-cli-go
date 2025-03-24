@@ -1,0 +1,17 @@
+- !policy
+  id: conjur/authn-ldap/test-service
+  body:
+  - !webservice
+
+  - !group users
+
+  - !permit
+    role: !group users
+    privilege: [ read, authenticate ]
+    resource: !webservice
+
+- !user alice
+
+- !grant
+  role: !group conjur/authn-ldap/test-service/users
+  member: !user alice

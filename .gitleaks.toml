@@ -1,4 +1,0 @@
-[whitelist]
-files = [
-    "ci/conf/tls/nginx.key",
-]
