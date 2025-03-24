@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.0.20] - 2025-03-20
+## [8.1.0] - 2025-03-24
 
 ### Added
 - New `--count` option for the `conjur list` command to allow getting only the amount
@@ -203,7 +203,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.16...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.0...HEAD
+[8.1.0]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.19...v8.1.0
+[8.0.19]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.18...v8.0.19
+[8.0.18]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.17...v8.0.18
+[8.0.17]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.16...v8.0.17
 [8.0.16]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.15...v8.0.16
 [8.0.15]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.14...v8.0.15
 [8.0.14]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.13...v8.0.14
