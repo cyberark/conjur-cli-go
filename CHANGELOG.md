@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.1.1] - 2025-03-25
+
+### Changed
+- Updated Go dependencies
+
 ## [8.1.0] - 2025-03-24
 
 ### Added
