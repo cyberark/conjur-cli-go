@@ -18,18 +18,24 @@ contributor!
 Releases should be created by maintainers only. To create and promote a
 release, follow the instructions in this section.
 
-### Update the changelog and notices
-
-**NOTE:** If the Changelog and NOTICES.txt are already up-to-date, skip this
-step and promote the desired build from the master branch.
-
-1. Create a new branch for the version bump.
-1. Based on the changelog content, determine the new version number and update.
-1. Review the git log and ensure the [changelog](CHANGELOG.md) contains all
-   relevant recent changes with references to GitHub issues or PRs, if possible.
-1. Review the changes since the last tag, and if the dependencies have changed
-   revise the [NOTICES](NOTICES.txt) to correctly capture the included
-   dependencies and their licenses / copyrights.
+### Update the changelog and notices (if necessary)
+1. Update the `CHANGELOG.md` file with the new version and the changes that are included in the release.
+1. Update `NOTICES.txt`
+    ```sh-session
+    go install github.com/google/go-licenses@latest
+    # Verify that dependencies fit into supported licenses types.
+    # If there is new dependency having unsupported license, that license should be
+    # included to notices.tpl file in order to get generated in NOTICES.txt.
+    $(go env GOPATH)/bin/go-licenses check ./... \
+      --allowed_licenses="MIT,ISC,Apache-2.0,BSD-3-Clause,BSD-2-Clause,MPL-2.0" \
+      --ignore $(go list std | awk 'NR > 1 { printf(",") } { printf("%s",$0) } END { print "" }')
+    # If no errors occur, proceed to generate updated NOTICES.txt
+    $(go env GOPATH)/bin/go-licenses report ./... \
+      --template notices.tpl \
+      --ignore github.com/cyberark/conjur-cli-go \
+      --ignore $(go list std | awk 'NR > 1 { printf(",") } { printf("%s",$0) } END { print "" }') \
+      > NOTICES.txt
+    ```
 1. Commit these changes - `Bump version to x.y.z` is an acceptable commit
    message - and open a PR for review.
 
