@@ -33,6 +33,19 @@ if (params.MODE == "PROMOTE") {
       arch: 'linux/amd64'
     )
 
+    //Sign *.deb, *.exe, *.tar.gz and conjur_darwin_* artifacts
+    INFRAPOOL_EXECUTORV2_AGENT_0.agentGet from: "${assetDirectory}/", to: "./"
+
+    signArtifacts patterns: ["*.tar.gz"]
+    signArtifacts patterns: ["conjur_darwin_*"]
+    signArtifacts patterns: ["*.deb"]
+    signArtifacts patterns: ["*.exe"]
+
+    INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "*.sig", to: "${assetDirectory}"
+    INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "*.deb", to: "${assetDirectory}"
+    INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "*.exe", to: "${assetDirectory}"
+    INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "conjur_darwin_*", to: "${assetDirectory}"
+
     // Promote source version to target version.
 
     // NOTE: the use of --pull to ensure source images are pulled from internal registry
