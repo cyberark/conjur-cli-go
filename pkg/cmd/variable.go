@@ -30,7 +30,7 @@ func newVariableCmd(
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	ids := make([]string, 0)
-	variableGetCmd.Flags().StringSliceP("id", "i", ids, "Provide variable identifiers")
+	variableGetCmd.Flags().StringSliceP("id", "i", ids, "(Required) Provide variable identifiers")
 	variableGetCmd.MarkFlagRequired("id")
 
 	// Variable versions start from 1 and then increase so we don't know
@@ -38,9 +38,9 @@ func newVariableCmd(
 	// this flag is an integer. Use a string to provide a default of "".
 	variableGetCmd.Flags().StringP("version", "v", "", "Specify the desired version of a single variable value")
 
-	variableSetCmd.Flags().StringP("id", "i", "", "Provide variable identifier")
+	variableSetCmd.Flags().StringP("id", "i", "", "(Required) Provide variable identifier")
 	variableSetCmd.MarkFlagRequired("id")
-	variableSetCmd.Flags().StringP("value", "v", "", "Set the value of the specified variable")
+	variableSetCmd.Flags().StringP("value", "v", "", "(Required) Set the value of the specified variable")
 	variableSetCmd.MarkFlagRequired("value")
 
 	return variableCmd

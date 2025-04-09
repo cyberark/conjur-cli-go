@@ -131,8 +131,8 @@ Examples:
 		},
 	}
 
-	cmd.Flags().StringP("id", "i", "", "")
-	cmd.Flags().StringP("password", "p", "", "")
+	cmd.Flags().StringP("id", "i", "", "The identity to authenticate with. For hosts: 'host/<full path>'.")
+	cmd.Flags().StringP("password", "p", "", "Password or API key for the specified identity.")
 
 	return cmd
 }

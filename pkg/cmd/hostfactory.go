@@ -81,9 +81,9 @@ Example:
 		},
 	}
 
-	hostsCreateCmd.Flags().StringP("token", "t", "", "Token")
+	hostsCreateCmd.Flags().StringP("token", "t", "", "(Required) Token")
 	hostsCreateCmd.MarkFlagRequired("token")
-	hostsCreateCmd.Flags().StringP("id", "i", "", "ID")
+	hostsCreateCmd.Flags().StringP("id", "i", "", "(Required) ID")
 	hostsCreateCmd.MarkFlagRequired("id")
 
 	return hostsCreateCmd
@@ -257,7 +257,7 @@ Example:
 		},
 	}
 
-	tokensRevokeCmd.Flags().StringP("token", "t", "", "The token to revoke")
+	tokensRevokeCmd.Flags().StringP("token", "t", "", "(Required) The token to revoke")
 	tokensRevokeCmd.MarkFlagRequired("token")
 
 	return tokensRevokeCmd

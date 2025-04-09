@@ -298,12 +298,12 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 	}
 
 	cmd.Flags().StringP("account", "a", "", "Conjur organization account name")
-	cmd.Flags().StringP("url", "u", "", "URL of the Conjur service")
+	cmd.Flags().StringP("url", "u", "", "URL of the Conjur service. Will prompt if omitted.")
 	cmd.Flags().StringP("ca-cert", "c", "", "Conjur SSL certificate (will be obtained from host unless provided by this option)")
 	cmd.Flags().StringP("file", "f", filepath.Join(userHomeDir, ".conjurrc"), "File to write the configuration to. You must set the CONJURRC environment variable to the same value for this file to be used for further commands.")
 	cmd.Flags().String("cert-file", filepath.Join(userHomeDir, "conjur-server.pem"), "File to write the server's certificate to")
-	cmd.Flags().StringP("authn-type", "t", "", "Authentication type to use")
-	cmd.Flags().String("service-id", "", "Service ID if using alternative authentication type")
+	cmd.Flags().StringP("authn-type", "t", "", "Authentication type to use (e.g. LDAP, OIDC, JWT)")
+	cmd.Flags().String("service-id", "", "Service ID if using alternative authentication type (e.g., LDAP, OIDC, JWT)")
 	cmd.Flags().String("jwt-file", "", "Path to the JWT file if using authn-jwt")
 	cmd.Flags().String("jwt-host-id", "", "Host ID for authn-jwt (not required if JWT contains host ID)")
 	cmd.Flags().BoolP("self-signed", "s", false, "Allow self-signed certificates (insecure)")
