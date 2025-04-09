@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.1.2] - 2025-04-09
+
+### Changed
+- Updated Go to 1.24 (CNJR-8641)
+
 ## [8.1.1] - 2025-04-01
 
 ### Changed
