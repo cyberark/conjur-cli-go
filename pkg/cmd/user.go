@@ -118,7 +118,7 @@ Examples:
 		},
 	}
 
-	cmd.Flags().StringP("password", "p", "", "The new password")
+	cmd.Flags().StringP("password", "p", "", "The new password. Will prompt if omitted.")
 
 	return cmd
 }

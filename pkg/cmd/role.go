@@ -30,7 +30,7 @@ var roleCmd = &cobra.Command{
 
 func newRoleExistsCmd(clientFactory roleClientFactoryFunc) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "exists",
+		Use:   "exists <role-id>",
 		Short: "Check if a role exists",
 		Long: `Check if a role exists
 		
@@ -92,7 +92,7 @@ Examples:
 
 func newRoleShowCmd(clientFactory roleClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:   "show",
+		Use:   "show <role-id>",
 		Short: "Show a role",
 		Long: `Show a role
 		
@@ -134,7 +134,7 @@ Examples:
 
 func newRoleMembersCmd(clientFactory roleClientFactoryFunc) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "members",
+		Use:   "members <role-id>",
 		Short: "List members within a role",
 		Long: `List members within a role
 
@@ -200,7 +200,7 @@ Examples:
 
 func newRoleMembershipsCmd(clientFactory roleClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:   "memberships",
+		Use:   "memberships <role-id>",
 		Short: "List memberships of a role",
 		Long: `List memberships of a role
 		

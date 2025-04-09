@@ -222,7 +222,7 @@ func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 		Short: "Manage Conjur policies",
 	}
 
-	policyCmd.PersistentFlags().StringP("branch", "b", "", "The parent policy branch")
+	policyCmd.PersistentFlags().StringP("branch", "b", "", "(Required) The parent policy branch")
 	policyCmd.MarkPersistentFlagRequired("branch")
 
 	policyCmd.AddCommand(newPolicyFetchCommand(clientFactory))
@@ -244,7 +244,7 @@ Examples:
 		SilenceUsage: true,
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePost),
 	}
-	cmd.PersistentFlags().StringP("file", "f", "", "The policy file to load")
+	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
 	cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
 
 	cmd.MarkPersistentFlagRequired("file")
@@ -284,7 +284,7 @@ Examples:
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePatch),
 	}
 
-	cmd.PersistentFlags().StringP("file", "f", "", "The policy file to load")
+	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
 	cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
 
 	cmd.MarkPersistentFlagRequired("file")
@@ -304,7 +304,7 @@ Examples:
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePut),
 	}
 
-	cmd.PersistentFlags().StringP("file", "f", "", "The policy file to load")
+	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
 	cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
 
 	cmd.MarkPersistentFlagRequired("file")

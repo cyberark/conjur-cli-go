@@ -29,7 +29,7 @@ var resourceCmd = &cobra.Command{
 
 func newResourceExistsCmd(clientFactory resourceClientFactoryFunc) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "exists",
+		Use:   "exists <resource-id>",
 		Short: "Check if a resource exists",
 		Long: `Check if a resource exists, given a [resource-id].
 		
@@ -87,7 +87,7 @@ Examples:
 
 func newResourcePermittedRolesCmd(clientFactory resourceClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:   "permitted-roles",
+		Use:   "permitted-roles <resource-id> <privilege>",
 		Short: "List roles with a specified privilege on the resource",
 		Long: `List roles with a specified privilege on the resource
 		
@@ -129,7 +129,7 @@ Examples:
 
 func newResourceShowCmd(clientFactory resourceClientFactoryFunc) *cobra.Command {
 	return &cobra.Command{
-		Use:   "show",
+		Use:   "show <resource-id>",
 		Short: "Show a resource",
 		Long: `Show a resource
 		
