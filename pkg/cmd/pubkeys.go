@@ -53,6 +53,9 @@ Examples:
 }
 
 func init() {
-	pubKeysCmd := newPubKeysCommand(pubKeysClientFactory)
-	rootCmd.AddCommand(pubKeysCmd)
+	config, _ := clients.LoadAndValidateConjurConfig(0)
+	if config.IsConjurCE() || config.IsConjurOSS() {
+		pubKeysCmd := newPubKeysCommand(pubKeysClientFactory)
+		rootCmd.AddCommand(pubKeysCmd)
+	}
 }

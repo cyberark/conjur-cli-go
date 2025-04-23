@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
@@ -31,6 +32,16 @@ func newAccountPrompt() *survey.Question {
 	return &survey.Question{
 		Prompt:   &survey.Input{Message: "Enter your organization account name:"},
 		Validate: survey.Required,
+	}
+}
+
+func newEnvironmentPrompt() *survey.Select {
+	return &survey.Select{
+		Message: "Select the environment you want to use:",
+		Options: conjurapi.SupportedEnvironments,
+		Default: string(conjurapi.EnvironmentCE),
+		Help:    "The environment you want to use. The default is enterprise.",
+		VimMode: true,
 	}
 }
 
@@ -167,13 +178,9 @@ func MaybeAskForConnectionDetails(account string, applianceURL string, cmd *cobr
 	var err error
 	var userInput string
 
-	if len(applianceURL) == 0 {
-		q := newApplianceURLPrompt()
-		err := survey.AskOne(q.Prompt, &userInput, survey.WithValidator(q.Validate), survey.WithShowCursor(true))
-		if err != nil {
-			return "", "", err
-		}
-		applianceURL = userInput
+	applianceURL, err = MaybeAskForURL(applianceURL, cmd)
+	if err != nil {
+		return "", "", err
 	}
 
 	if len(account) == 0 {
@@ -186,6 +193,23 @@ func MaybeAskForConnectionDetails(account string, applianceURL string, cmd *cobr
 	}
 
 	return account, applianceURL, err
+}
+
+// MaybeAskForURL presents a prompt to retrieve missing Conjur URL from the user
+func MaybeAskForURL(url string, _ *cobra.Command) (string, error) {
+	var err error
+	var userInput string
+
+	if len(url) == 0 {
+		q := newApplianceURLPrompt()
+		err := survey.AskOne(q.Prompt, &userInput, survey.WithValidator(q.Validate), survey.WithShowCursor(true))
+		if err != nil {
+			return "", err
+		}
+		url = userInput
+	}
+
+	return url, err
 }
 
 // MaybeAskToOverwriteFile checks if a file exists and asks the user if they want to overwrite it. Returns `nil` if
@@ -203,4 +227,19 @@ func MaybeAskToOverwriteFile(filePath string) error {
 	}
 
 	return nil
+}
+
+// MaybeAskForEnvironment presents a prompt to retrieve missing environment from the user
+func MaybeAskForEnvironment(env string) (string, error) {
+	var err error
+	var userInput string
+
+	if len(env) == 0 {
+		q := newEnvironmentPrompt()
+		if err := survey.AskOne(q, &userInput, survey.WithShowCursor(true)); err != nil {
+			return "", err
+		}
+		env = userInput
+	}
+	return env, err
 }

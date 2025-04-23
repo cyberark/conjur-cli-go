@@ -4,6 +4,7 @@
 package main
 
 import (
+	"github.com/cyberark/conjur-api-go/conjurapi"
 	"os/exec"
 	"testing"
 
@@ -27,20 +28,20 @@ func TestInitIntegration(t *testing.T) {
 	})
 
 	t.Run("init with self-signed cert", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("init", "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force")
+		stdOut, stdErr, err := cli.Run("init", string(conjurapi.EnvironmentCE), "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force")
 		assert.Error(t, err)
 		assert.Equal(t, "", stdOut)
 		assert.Contains(t, stdErr, "Unable to retrieve and validate certificate")
 		assert.Contains(t, stdErr, "re-run the init command with the `--self-signed` flag")
 
-		stdOut, stdErr, err = cli.Run("init", "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force", "--self-signed")
+		stdOut, stdErr, err = cli.Run("init", string(conjurapi.EnvironmentCE), "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force", "--self-signed")
 		assert.NotContains(t, stdErr, "Unable to retrieve and validate certificate")
 		assert.Contains(t, stdOut, "The server's certificate Sha256 fingerprint is")
 		assert.Contains(t, stdErr, selfSignedWarning)
 	})
 
 	t.Run("init with insecure flag", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
+		stdOut, stdErr, err := cli.Run("init", string(conjurapi.EnvironmentCE), "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
 		assertInitCmd(t, err, stdOut, cli.homeDir)
 		assert.Equal(t, insecureModeWarning, stdErr)
 	})

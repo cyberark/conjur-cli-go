@@ -25,3 +25,15 @@ func TestAuthenticateIntegration(t *testing.T) {
 		assert.Regexp(t, `^Authorization: Token token=\"(.+)\"\n$`, stdOut)
 	})
 }
+
+func TestAuthenticateIntegrationCloud(t *testing.T) {
+	cli := newConjurTestCLI(t)
+	cli.InitCloud(t)
+
+	t.Run("authenticate command", func(t *testing.T) {
+		stdOut, stdErr, err := cli.Run("authenticate")
+		assert.Error(t, err)
+		assert.Empty(t, stdOut)
+		assert.Equal(t, "Error: unknown command \"authenticate\" for \"conjur\"\n\nDid you mean this?\n\tauthenticator\n\nRun 'conjur --help' for usage.\n", stdErr)
+	})
+}

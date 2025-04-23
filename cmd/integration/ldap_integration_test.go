@@ -4,6 +4,7 @@
 package main
 
 import (
+	"github.com/cyberark/conjur-api-go/conjurapi"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,7 +13,7 @@ import (
 func testLDAPLogin(t *testing.T, cli *testConjurCLI) {
 	t.Run("init", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run(
-			"init", "-a", cli.account,
+			"init", string(conjurapi.EnvironmentCE), "-a", cli.account,
 			"-u", "http://conjur",
 			"-t", "ldap",
 			"--service-id=test-service",
@@ -20,7 +21,7 @@ func testLDAPLogin(t *testing.T, cli *testConjurCLI) {
 			"-i", "--force",
 		)
 		assertInitCmd(t, err, stdOut, cli.homeDir)
-		assert.Equal(t, insecureModeWarning, stdErr)
+		assert.Contains(t, stdErr, insecureModeWarning)
 	})
 
 	t.Run("login", func(t *testing.T) {

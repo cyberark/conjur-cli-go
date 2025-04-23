@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/cyberark/conjur-api-go/conjurapi"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,7 +25,7 @@ type authnJwtConfig struct {
 func testJwtLogin(t *testing.T, cli *testConjurCLI, jwtConfig authnJwtConfig) {
 	t.Run("init", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run(
-			"init", "-a", cli.account,
+			"init", string(conjurapi.EnvironmentCE), "-a", cli.account,
 			"-u", "http://conjur",
 			"-t", "jwt",
 			"--jwt-file", jwtConfig.jwtFilePath,
@@ -33,7 +34,7 @@ func testJwtLogin(t *testing.T, cli *testConjurCLI, jwtConfig authnJwtConfig) {
 			"-i", "--force",
 		)
 		assertInitCmd(t, err, stdOut, cli.homeDir)
-		assert.Equal(t, insecureModeWarning, stdErr)
+		assert.Contains(t, stdErr, insecureModeWarning)
 	})
 
 	t.Run("login", func(t *testing.T) {

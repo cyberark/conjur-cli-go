@@ -48,6 +48,7 @@ type ConjurClient interface {
 	DeleteToken(token string) error
 	CreateHost(id string, token string) (conjurapi.HostFactoryHostResponse, error)
 	PublicKeys(kind string, identifier string) ([]byte, error)
+	EnableAuthenticator(authenticatorType string, serviceID string, enabled bool) error
 
 	Issuer(issuerID string) (issuer conjurapi.Issuer, err error)
 	Issuers() (issuers []conjurapi.Issuer, err error)
@@ -79,10 +80,28 @@ func LoadAndValidateConjurConfig(timeout time.Duration) (conjurapi.Config, error
 // configuration, environment variables and then ultimately falling back on prompting the user for credentials.
 func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, error) {
 	var err error
+	var debug bool
 
-	debug, err := cmd.Flags().GetBool("debug")
+	config, err := LoadAndValidateConjurConfig(0)
 	if err != nil {
 		return nil, err
+	}
+
+	// Debug flag is not supported in Conjur Cloud
+	if config.IsConjurCE() || config.IsConjurOSS() {
+		debug, err = cmd.Flags().GetBool("debug")
+		if err != nil {
+			return nil, err
+		}
+		timeout, err := GetTimeout(cmd)
+		if err != nil {
+			return nil, err
+		}
+		// Overwrite config with the timeout value
+		config, err = LoadAndValidateConjurConfig(timeout)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// TODO: This is called multiple time because each operation potentially uses a new HTTP client bound to the
@@ -90,16 +109,6 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 	// we should just have one then the rest is an attempt to get an authenticator
 	decorateConjurClient := func(client ConjurClient) {
 		MaybeDebugLoggingForClient(debug, cmd, client)
-	}
-
-	timeout, err := GetTimeout(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	config, err := LoadAndValidateConjurConfig(timeout)
-	if err != nil {
-		return nil, err
 	}
 
 	var client ConjurClient

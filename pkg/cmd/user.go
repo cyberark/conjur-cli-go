@@ -124,7 +124,9 @@ Examples:
 }
 
 func init() {
-	userCmd := newUserCmd(userClientFactory)
-
-	rootCmd.AddCommand(userCmd)
+	config, _ := clients.LoadAndValidateConjurConfig(0)
+	if config.IsConjurCE() || config.IsConjurOSS() {
+		userCmd := newUserCmd(userClientFactory)
+		rootCmd.AddCommand(userCmd)
+	}
 }

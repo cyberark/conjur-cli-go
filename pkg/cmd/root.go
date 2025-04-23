@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"os"
 	"time"
 
@@ -11,15 +12,24 @@ import (
 )
 
 func newRootCommand() *cobra.Command {
-	rootCmd := &cobra.Command{
-		Use:     "conjur",
-		Short:   "Conjur CLI",
-		Long:    "Command-line toolkit for managing Conjur resources and performing common tasks.",
-		Version: version.FullVersionName,
+	disableCompletion := false
+	config, _ := clients.LoadAndValidateConjurConfig(0)
+	if config.IsConjurCloud() {
+		disableCompletion = true
 	}
 
-	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug logging enabled")
-	rootCmd.PersistentFlags().Duration("timeout", time.Minute, "HTTP timeout duration, between 1s and 10m")
+	rootCmd := &cobra.Command{
+		Use:               "conjur",
+		Short:             "Conjur CLI",
+		Long:              "Command-line toolkit for managing Conjur resources and performing common tasks.",
+		Version:           version.FullVersionName,
+		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: disableCompletion},
+	}
+
+	if config.IsConjurCE() || config.IsConjurOSS() {
+		rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug logging enabled")
+		rootCmd.PersistentFlags().Duration("timeout", time.Minute, "HTTP timeout duration, between 1s and 10m")
+	}
 	rootCmd.SetVersionTemplate("Conjur CLI version {{.Version}}\n")
 	return rootCmd
 }

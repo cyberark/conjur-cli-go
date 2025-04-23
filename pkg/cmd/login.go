@@ -44,7 +44,11 @@ func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 		return loginCmdFlagValues{}, err
 	}
 
-	debug, err := cmd.Flags().GetBool("debug")
+	config, _ := clients.LoadAndValidateConjurConfig(0)
+	var debug bool
+	if config.IsConjurCE() || config.IsConjurOSS() {
+		debug, err = cmd.Flags().GetBool("debug")
+	}
 	if err != nil {
 		return loginCmdFlagValues{}, err
 	}

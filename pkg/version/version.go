@@ -1,6 +1,8 @@
 package version
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Version field is a SemVer that should indicate the baked-in version
 // of the CLI
@@ -13,6 +15,11 @@ var Version = "unset"
 // this variable.
 var Tag = "unset"
 
+var buildYear = "2025"
+
+// DisclaimerText field
+var disclaimerText = fmt.Sprintf("Copyright (c) %v CyberArk Software Ltd. All rights reserved.\n<www.cyberark.com>", buildYear)
+
 // FullVersionName is the user-visible aggregation of version and tag
 // of this codebase
-var FullVersionName = fmt.Sprintf("%s-%s", Version, Tag)
+var FullVersionName = fmt.Sprintf("%s-%s\n\n%s", Version, Tag, disclaimerText)

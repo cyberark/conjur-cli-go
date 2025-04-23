@@ -93,8 +93,8 @@ func TestListIntegration(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Empty(t, stdErr)
 
+		assert.Contains(t, stdOut, cli.account+":group:conjur/authn-iam/prod/clients")
 		assert.Contains(t, stdOut, cli.account+":host:bob")
-		assert.Contains(t, stdOut, cli.account+":policy:root")
 		assert.NotContains(t, stdOut, cli.account+":variable:meow")
 		assert.NotContains(t, stdOut, cli.account+":variable:woof")
 		assert.NotContains(t, stdOut, cli.account+":user:alice")
@@ -107,9 +107,10 @@ func TestListIntegration(t *testing.T) {
 
 		assert.Contains(t, stdOut, cli.account+":variable:meow")
 		assert.Contains(t, stdOut, cli.account+":variable:woof")
+		assert.Contains(t, stdOut, cli.account+":policy:conjur/authn-iam/prod")
 		assert.Contains(t, stdOut, cli.account+":user:alice")
 		assert.NotContains(t, stdOut, cli.account+":host:bob")
-		assert.NotContains(t, stdOut, cli.account+":policy:root")
+		assert.NotContains(t, stdOut, cli.account+":group:conjur/authn-iam/prod/clients")
 	})
 
 	t.Run("list with limit and offset", func(t *testing.T) {
@@ -117,9 +118,9 @@ func TestListIntegration(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Empty(t, stdErr)
 
-		assert.Contains(t, stdOut, cli.account+":policy:root")
-		assert.Contains(t, stdOut, cli.account+":user:alice")
-		assert.NotContains(t, stdOut, cli.account+":host:bob")
+		assert.Contains(t, stdOut, cli.account+":host:bob")
+		assert.Contains(t, stdOut, cli.account+":policy:conjur/authn-iam/prod")
+		assert.NotContains(t, stdOut, cli.account+":policy:root")
 		assert.NotContains(t, stdOut, cli.account+":variable:woof")
 		assert.NotContains(t, stdOut, cli.account+":variable:meow")
 	})
@@ -129,7 +130,7 @@ func TestListIntegration(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Empty(t, stdErr)
 
-		assert.Contains(t, stdOut, `"count": 5`)
+		assert.Contains(t, stdOut, `"count": 8`)
 		assert.NotContains(t, stdOut, cli.account+":policy:")
 		assert.NotContains(t, stdOut, cli.account+":user:")
 		assert.NotContains(t, stdOut, cli.account+":host:")
@@ -143,6 +144,9 @@ func assertListsAllResources(t *testing.T, stdOut string, cli *testConjurCLI) {
 	assert.Contains(t, stdOut, cli.account+":variable:woof")
 	assert.Contains(t, stdOut, cli.account+":user:alice")
 	assert.Contains(t, stdOut, cli.account+":host:bob")
+	assert.Contains(t, stdOut, cli.account+":policy:conjur/authn-iam/prod")
+	assert.Contains(t, stdOut, cli.account+":group:conjur/authn-iam/prod/clients")
+	assert.Contains(t, stdOut, cli.account+":webservice:conjur/authn-iam/prod")
 }
 
 func assertContainsMetadata(t *testing.T, stdOut string, cli *testConjurCLI) {

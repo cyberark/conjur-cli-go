@@ -37,6 +37,7 @@ builds:
       - -w
       - -X "github.com/cyberark/conjur-cli-go/pkg/version.Tag={{ .ShortCommit }}"
       - -X "github.com/cyberark/conjur-cli-go/pkg/version.Version={{ .Env.VERSION }}"
+      - -X "github.com/cyberark/conjur-cli-go/pkg/version.buildYear={{ .Env.BUILD_YEAR }}"
     hooks:
       post:
         # Copy the separately-built FIPS binaries into the GoReleaser build directory

@@ -69,6 +69,9 @@ func newAuthenticateCommand(clientFactory authenticateClientFactoryFunc) *cobra.
 }
 
 func init() {
-	authenticateCmd := newAuthenticateCommand(authenticateClientFactory)
-	rootCmd.AddCommand(authenticateCmd)
+	config, _ := clients.LoadAndValidateConjurConfig(0)
+	if config.IsConjurCE() || config.IsConjurOSS() {
+		authenticateCmd := newAuthenticateCommand(authenticateClientFactory)
+		rootCmd.AddCommand(authenticateCmd)
+	}
 }

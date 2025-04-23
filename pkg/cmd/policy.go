@@ -18,7 +18,14 @@ func loadPolicyCommandRunner(
 	policyMode conjurapi.PolicyMode,
 ) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		dryrun, err := cmd.Flags().GetBool("dry-run")
+		var dryrun bool
+		var err error
+
+		config, _ := clients.LoadAndValidateConjurConfig(0)
+		if config.IsConjurCE() || config.IsConjurOSS() {
+			dryrun, err = cmd.Flags().GetBool("dry-run")
+		}
+
 		if err != nil {
 			return err
 		}
@@ -225,15 +232,20 @@ func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	policyCmd.PersistentFlags().StringP("branch", "b", "", "(Required) The parent policy branch")
 	policyCmd.MarkPersistentFlagRequired("branch")
 
-	policyCmd.AddCommand(newPolicyFetchCommand(clientFactory))
-	policyCmd.AddCommand(newPolicyLoadCommand(clientFactory))
-	policyCmd.AddCommand(newPolicyUpdateCommand(clientFactory))
-	policyCmd.AddCommand(newPolicyReplaceCommand(clientFactory))
+	config, _ := clients.LoadAndValidateConjurConfig(0)
+
+	if config.IsConjurCE() || config.IsConjurOSS() {
+		policyCmd.AddCommand(newPolicyFetchCommand(clientFactory))
+	}
+
+	policyCmd.AddCommand(newPolicyLoadCommand(clientFactory, config))
+	policyCmd.AddCommand(newPolicyUpdateCommand(clientFactory, config))
+	policyCmd.AddCommand(newPolicyReplaceCommand(clientFactory, config))
 
 	return policyCmd
 }
 
-func newPolicyLoadCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
+func newPolicyLoadCommand(clientFactory policyClientFactoryFunc, config conjurapi.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "load",
 		Short: "Load a policy and create resources",
@@ -245,7 +257,9 @@ Examples:
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePost),
 	}
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
-	cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
+	if config.IsConjurCE() || config.IsConjurOSS() {
+		cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
+	}
 
 	cmd.MarkPersistentFlagRequired("file")
 
@@ -272,7 +286,7 @@ Examples:
 	return cmd
 }
 
-func newPolicyUpdateCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
+func newPolicyUpdateCommand(clientFactory policyClientFactoryFunc, config conjurapi.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update existing resources in the policy or create new resources",
@@ -285,14 +299,16 @@ Examples:
 	}
 
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
-	cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
+	if config.IsConjurCE() || config.IsConjurOSS() {
+		cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
+	}
 
 	cmd.MarkPersistentFlagRequired("file")
 
 	return cmd
 }
 
-func newPolicyReplaceCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
+func newPolicyReplaceCommand(clientFactory policyClientFactoryFunc, config conjurapi.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "replace",
 		Short: "Fully replace an existing policy",
@@ -305,7 +321,9 @@ Examples:
 	}
 
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
-	cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
+	if config.IsConjurCE() || config.IsConjurOSS() {
+		cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
+	}
 
 	cmd.MarkPersistentFlagRequired("file")
 

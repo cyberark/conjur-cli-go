@@ -78,7 +78,9 @@ Examples:
 }
 
 func init() {
-	checkCmd := newCheckCmd(checkClientFactory)
-
-	rootCmd.AddCommand(checkCmd)
+	config, _ := clients.LoadAndValidateConjurConfig(0)
+	if config.IsConjurCE() || config.IsConjurOSS() {
+		checkCmd := newCheckCmd(checkClientFactory)
+		rootCmd.AddCommand(checkCmd)
+	}
 }

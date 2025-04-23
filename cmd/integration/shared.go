@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"github.com/cyberark/conjur-api-go/conjurapi"
 	"io"
 	"log"
 	"net/http"
@@ -23,7 +24,7 @@ const (
 	pathToBinary = "conjur"
 
 	insecureModeWarning = "Warning: Running the command with '--insecure' makes your system vulnerable to security attacks\n" +
-	"If you prefer to communicate with the server securely you must reinitialize the client in secure mode.\n"
+		"If you prefer to communicate with the server securely you must reinitialize the client in secure mode.\n"
 	selfSignedWarning = "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data\n"
 
 	testPolicy = `
@@ -36,6 +37,16 @@ const (
   resource: !variable meow
   role: !user alice
   privileges: [ read ]
+
+- !policy
+  id: conjur/authn-iam/prod
+  body:
+    - !webservice
+    - !group clients
+    - !permit
+      role: !group clients
+      privilege: [ read, authenticate ]
+      resource: !webservice
 `
 	emptyPolicy = `#`
 )
@@ -75,12 +86,17 @@ func (cli *testConjurCLI) InitAndLoginAsAdmin(t *testing.T) {
 }
 
 func (cli *testConjurCLI) Init(t *testing.T) {
-	stdOut, _, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
+	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentCE), "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
+	assertInitCmd(t, err, stdOut, cli.homeDir)
+}
+
+func (cli *testConjurCLI) InitCloud(t *testing.T) {
+	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentCC), "-u", "https://tenant.secretsmgr.cyberark.cloud", "--ca-cert", "conjur-server.pem", "--force")
 	assertInitCmd(t, err, stdOut, cli.homeDir)
 }
 
 func (cli *testConjurCLI) InitWithTrailingSlash(t *testing.T) {
-	stdOut, _, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur/", "-i", "--force-netrc", "--force")
+	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentCE), "-a", cli.account, "-u", "http://conjur/", "-i", "--force-netrc", "--force")
 	assertInitCmd(t, err, stdOut, cli.homeDir)
 }
 
@@ -102,7 +118,7 @@ func (cli *testConjurCLI) LoadPolicy(t *testing.T, policyText string) {
 	assertPolicyLoadCmd(t, err, stdOut, stdErr)
 }
 
-func (cli *testConjurCLI) DryRunPolicy(t *testing.T, mode string, branch string, policyText string) (stdOut string, stdErr string, err error){
+func (cli *testConjurCLI) DryRunPolicy(t *testing.T, mode string, branch string, policyText string) (stdOut string, stdErr string, err error) {
 	return cli.RunWithStdin(
 		bytes.NewReader([]byte(policyText)),
 		"policy", mode, "--dry-run", "-b", branch, "-f", "-",

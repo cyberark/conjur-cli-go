@@ -207,6 +207,42 @@ pipeline {
       }
     }
 
+    stage('Run Conjur Cloud tests') {
+      stages {
+        stage('Create a Tenant') {
+          steps {
+            script {
+              TENANT = getConjurCloudTenant()
+            }
+          }
+        }
+        stage('Run tests against Tenant') {
+          environment {
+            INFRAPOOL_CONJUR_APPLIANCE_URL="${TENANT.conjur_cloud_url}"
+            INFRAPOOL_IDENTITY_USERNAME_CLOUD="${TENANT.login_name}"
+          }
+          steps {
+            script {
+              INFRAPOOL_EXECUTORV2_AGENT_0.agentDir('ci') {
+                try {
+                  INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'summon -f ./secrets.yml -e ci ./test_integration_cloud'
+                } finally {
+                  INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts artifacts: 'cloud_cleanup.log'
+                }
+              }
+            }
+          }
+        }
+      }
+      post {
+        always {
+          script {
+            deleteConjurCloudTenant("${TENANT.id}")
+          }
+        }
+      }
+    }
+
     stage('Integration test while scanning') {
       environment {
         INFRAPOOL_REGISTRY_URL = "${REGISTRY_URL}"
