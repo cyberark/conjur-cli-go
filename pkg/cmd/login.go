@@ -16,6 +16,7 @@ type loginCmdFuncs struct {
 	LoginWithPromptFallback     func(client clients.ConjurClient, username string, password string) (*authn.LoginPair, error)
 	OidcLogin                   func(conjurClient clients.ConjurClient, username string, password string) (clients.ConjurClient, error)
 	JWTAuthenticate             func(conjurClient clients.ConjurClient) error
+	CloudLogin                  func(conjurClient clients.ConjurClient, username string, password string) (clients.ConjurClient, error)
 }
 
 var defaultLoginCmdFuncs = loginCmdFuncs{
@@ -23,6 +24,7 @@ var defaultLoginCmdFuncs = loginCmdFuncs{
 	LoginWithPromptFallback:     clients.LoginWithPromptFallback,
 	OidcLogin:                   clients.OidcLogin,
 	JWTAuthenticate:             clients.JWTAuthenticate,
+	CloudLogin:                  clients.CloudLogin,
 }
 
 type loginCmdFlagValues struct {
@@ -122,6 +124,13 @@ Examples:
 				err = funcs.JWTAuthenticate(conjurClient)
 				if err != nil {
 					err = fmt.Errorf("Unable to authenticate with Conjur using the provided JWT file: %s", err)
+				}
+			} else if config.AuthnType == "cloud" {
+				// If the user is using the cloud authn type, we need to
+				// authenticate with the cloud login method.
+				_, err := funcs.CloudLogin(conjurClient, cmdFlagVals.identity, cmdFlagVals.password)
+				if err != nil {
+					return fmt.Errorf("Unable to authenticate with Conjur Cloud: %s", err)
 				}
 			} else {
 				return fmt.Errorf("unsupported authentication type: %s", config.AuthnType)

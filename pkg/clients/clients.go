@@ -125,13 +125,16 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		}
 		decorateConjurClient(client)
 
-		if config.AuthnType == "" || config.AuthnType == "authn" || config.AuthnType == "ldap" {
+		switch config.AuthnType {
+		case "", "authn", "ldap":
 			client, err = Login(client)
-		} else if config.AuthnType == "oidc" {
+		case "oidc":
 			client, err = OidcLogin(client, "", "")
-		} else if config.AuthnType == "jwt" {
+		case "cloud":
+			client, err = CloudLogin(client, "", "")
+		case "jwt":
 			// Will use the token in the config
-		} else {
+		default:
 			return nil, fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
 		}
 

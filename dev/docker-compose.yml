@@ -51,6 +51,7 @@ services:
       - go-modules:/go/pkg/mod # Put modules cache into a separate volume
   keycloak:
     image: registry.tld/jboss/keycloak:4.3.0.Final
+    platform: linux/amd64
     environment:
       - KEYCLOAK_USER=admin
       - KEYCLOAK_PASSWORD=admin
