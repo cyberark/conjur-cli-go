@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
-	"encoding/json"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -131,12 +131,12 @@ var variableCmdTestCases = []struct {
 				"meow": "moo\nwith newline",
 				"woof": "quack\nanother newline",
 			}
-	
+
 			// Unmarshal the JSON from stdout
 			var result map[string]string
 			err = json.Unmarshal([]byte(stdout), &result)
 			assert.NoError(t, err, "Output should be valid JSON")
-	
+
 			// Check that the result matches the expected map
 			assert.Equal(t, expectedMap, result, "The JSON output should match the expected key-value pairs")
 		},

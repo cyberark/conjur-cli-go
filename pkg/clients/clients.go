@@ -48,6 +48,7 @@ type ConjurClient interface {
 	DeleteToken(token string) error
 	CreateHost(id string, token string) (conjurapi.HostFactoryHostResponse, error)
 	PublicKeys(kind string, identifier string) ([]byte, error)
+	CreateIssuer(issuer conjurapi.Issuer) (created conjurapi.Issuer, err error)
 }
 
 // LoadAndValidateConjurConfig loads and validate Conjur configuration

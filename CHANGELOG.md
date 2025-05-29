@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [8.1.2] - 2025-04-09
 
+### Added
+- New `issuer create` command used for adding a dynamic secrets issuer to Conjur CNJR-9167
+
 ### Changed
 - Updated Go to 1.24 (CNJR-8641)
 

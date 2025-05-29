@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
-	"encoding/json"
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/spf13/cobra"
@@ -69,12 +69,12 @@ func variableSetClientFactory(cmd *cobra.Command) (variableSetClient, error) {
 func printMultilineResults(cmd *cobra.Command, secrets map[string][]byte) error {
 	// Create a new map to store the transformed data
 	formattedSecrets := make(map[string]string)
-	
+
 	for fullID, value := range secrets {
 		id := strings.Split(string(fullID), ":")
 		formattedSecrets[id[len(id)-1]] = string(value)
 	}
-	
+
 	if len(formattedSecrets) > 1 {
 		// Marshal the map to JSON
 		jsonData, err := json.MarshalIndent(formattedSecrets, "", "    ")
@@ -88,7 +88,7 @@ func printMultilineResults(cmd *cobra.Command, secrets map[string][]byte) error 
 			cmd.Println(string(v))
 		}
 	}
-	
+
 	return nil
 }
 
