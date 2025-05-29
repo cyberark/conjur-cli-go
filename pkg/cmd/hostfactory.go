@@ -110,7 +110,7 @@ Valid time units for the --duration flag are "s", "m", "h".
 
 Examples:
 - conjur hostfactory tokens create --duration 5m -i factory
-- conjur hostfactory tokens create -i cucumber:host_factory:factory
+- conjur hostfactory tokens create -i dev:host_factory:factory
 `,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
