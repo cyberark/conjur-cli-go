@@ -83,20 +83,27 @@ func redactBody(rc *io.ReadCloser, contentLen *int64, rx *regexp.Regexp) (restor
 func (d *dumpTransport) dumpRequest(req *http.Request) []byte {
 	restoreAuthz := redactAuthz(req)
 	defer restoreAuthz()
-	// This regex matches requests to create an issuer which include an AWS secret access key.
-	rx := `"secret_access_key":\w?"[A-Za-z0-9\/+]{40}"`
+
+	rx := ""
 
 	// We redact any request for authorization
 	if strings.Contains(req.URL.Path, "/authn") {
 		rx = ".*"
 	}
 
-	restoreBody := redactBody(
-		&req.Body,
-		&req.ContentLength,
-		regexp.MustCompile(rx),
-	)
-	defer restoreBody()
+	// We redact any issuers request with a data key
+	if strings.Contains(req.URL.Path, "/issuers") {
+		rx = `"data":`
+	}
+
+	if rx != "" {
+		restoreBody := redactBody(
+			&req.Body,
+			&req.ContentLength,
+			regexp.MustCompile(rx),
+		)
+		defer restoreBody()
+	}
 
 	dump, _ := httputil.DumpRequestOut(req, true)
 	return dump

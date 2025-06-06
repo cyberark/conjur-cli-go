@@ -11,18 +11,29 @@ import (
 
 type mockIssuerClient struct {
 	createIssuer func(api.Issuer) (api.Issuer, error)
+	deleteIssuer func(issuerID string, keepSecrets bool) (err error)
+	issuer       func(issuerID string) (issuer api.Issuer, err error)
+	issuers      func() (issuer []api.Issuer, err error)
 }
 
 func (m *mockIssuerClient) CreateIssuer(issuer api.Issuer) (api.Issuer, error) {
 	return m.createIssuer(issuer)
 }
 
+func (m *mockIssuerClient) DeleteIssuer(issuerID string, keepSecrets bool) (err error) {
+	return m.deleteIssuer(issuerID, keepSecrets)
+}
+func (m *mockIssuerClient) Issuers() (issuers []api.Issuer, err error) {
+	return m.issuers()
+}
+func (m *mockIssuerClient) Issuer(issuerID string) (issuer api.Issuer, err error) {
+	return m.issuer(issuerID)
+}
+
 var createCmdTestCases = []struct {
 	name               string
 	args               []string
-	access_key         string
-	secret_key         string
-	issuerFactoryError error
+	clientFactoryError error
 	createIssuerError  error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
 }{
@@ -85,7 +96,7 @@ var createCmdTestCases = []struct {
 	{
 		name:               "clientFactory returns an error",
 		args:               []string{"create", "--id", "test-issuer", "--type", "aws", "--max-ttl", "3000", "--data", `{"key":"value"}`},
-		issuerFactoryError: errors.New("mock issuerFactory error"),
+		clientFactoryError: errors.New("mock issuerFactory error"),
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Error(t, err)
 			assert.Contains(t, err.Error(), "mock issuerFactory error")
@@ -119,7 +130,235 @@ func TestCreateIssuerCmd(t *testing.T) {
 						createIssuer: func(issuer api.Issuer) (api.Issuer, error) {
 							return issuer, tc.createIssuerError
 						},
-					}, tc.issuerFactoryError
+					}, tc.clientFactoryError
+				},
+			)
+
+			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
+			tc.assert(t, stdout, stderr, err)
+		})
+	}
+}
+
+var deleteCmdTestCases = []struct {
+	name               string
+	args               []string
+	clientFactoryError error
+	deleteIssuerError  error
+	assert             func(t *testing.T, stdout string, stderr string, err error)
+}{
+	{
+		name: "without subcommand",
+		args: []string{},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
+		name: "with help flag",
+		args: []string{"--help"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
+		name: "missing --id flag",
+		args: []string{"delete"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "required flag(s) \"id\" not set")
+		},
+	},
+	{
+		name:               "clientFactory returns an error",
+		args:               []string{"delete", "--id", "test-issuer"},
+		clientFactoryError: errors.New("mock issuerFactory error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock issuerFactory error")
+		},
+	},
+	{
+		name:              "DeleteIssuer function returns an error",
+		args:              []string{"delete", "--id", "test-issuer"},
+		deleteIssuerError: errors.New("mock DeleteIssuer error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock DeleteIssuer error")
+		},
+	},
+	{
+		name: "issuer is deleted",
+		args: []string{"delete", "--id", "test-issuer"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			output := "The issuer 'test-issuer' was deleted"
+			assert.Contains(t, stdout, output)
+		},
+	},
+}
+
+func TestDeleteIssuerCmd(t *testing.T) {
+	for _, tc := range deleteCmdTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := newDeleteIssuerCmd(
+				func(cmd *cobra.Command) (issuerClient, error) {
+					return &mockIssuerClient{
+						deleteIssuer: func(issuerID string, keepSecrets bool) (err error) {
+							return tc.deleteIssuerError
+						},
+					}, tc.clientFactoryError
+				},
+			)
+
+			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
+			tc.assert(t, stdout, stderr, err)
+		})
+	}
+}
+
+var listIssuerCmdTestCases = []struct {
+	name               string
+	args               []string
+	clientFactoryError error
+	issurs             []api.Issuer
+	ListIssuerError    error
+	assert             func(t *testing.T, stdout string, stderr string, err error)
+}{
+	{
+		name: "without subcommand",
+		args: []string{},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
+		name: "with help flag",
+		args: []string{"--help"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
+		name:               "clientFactory returns an error",
+		args:               []string{"list"},
+		clientFactoryError: errors.New("mock issuerFactory error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock issuerFactory error")
+		},
+	},
+	{
+		name:            "List Issuer function returns an error",
+		args:            []string{"list"},
+		ListIssuerError: errors.New("mock ListIssuer error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock ListIssuer error")
+		},
+	},
+	{
+		name: "issuer are listed",
+		args: []string{"list"},
+		issurs: []api.Issuer{
+			{
+				ID: "test-issuer",
+			},
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			output := "[\n  {\n    \"id\": \"test-issuer\",\n    \"type\": \"\",\n    \"max_ttl\": 0,\n    \"data\": null\n  }\n]\n"
+			assert.Contains(t, stdout, output)
+		},
+	},
+}
+
+func TestListIssuerCmd(t *testing.T) {
+	for _, tc := range listIssuerCmdTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := newListIssuersCmd(
+				func(cmd *cobra.Command) (issuerClient, error) {
+					return &mockIssuerClient{
+						issuers: func() (issuers []api.Issuer, err error) {
+							return tc.issurs, tc.ListIssuerError
+						},
+					}, tc.clientFactoryError
+				},
+			)
+
+			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
+			tc.assert(t, stdout, stderr, err)
+		})
+	}
+}
+
+var getIssuerCmdTestCases = []struct {
+	name               string
+	args               []string
+	clientFactoryError error
+	issuer             api.Issuer
+	GetIssuerError     error
+	assert             func(t *testing.T, stdout string, stderr string, err error)
+}{
+	{
+		name: "without subcommand",
+		args: []string{},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
+		name: "with help flag",
+		args: []string{"--help"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
+		name: "missing --id flag",
+		args: []string{"get"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "required flag(s) \"id\" not set")
+		},
+	},
+	{
+		name:               "clientFactory returns an error",
+		args:               []string{"get", "--id", "test-issuer"},
+		clientFactoryError: errors.New("mock issuerFactory error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock issuerFactory error")
+		},
+	},
+	{
+		name:           "Get Issuer function returns an error",
+		args:           []string{"get", "--id", "test-issuer"},
+		GetIssuerError: errors.New("mock ListIssuer error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock ListIssuer error")
+		},
+	},
+	{
+		name: "issuer retreived",
+		args: []string{"get", "--id", "test-issuer"},
+		issuer: api.Issuer{
+			ID: "test-issuer",
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			output := "{\n  \"id\": \"test-issuer\",\n  \"type\": \"\",\n  \"max_ttl\": 0,\n  \"data\": null\n}\n"
+			assert.Contains(t, stdout, output)
+		},
+	},
+}
+
+func TestGetIssuerCmd(t *testing.T) {
+	for _, tc := range getIssuerCmdTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := newGetIssuerCmd(
+				func(cmd *cobra.Command) (issuerClient, error) {
+					return &mockIssuerClient{
+						issuer: func(issuerID string) (issuer api.Issuer, err error) {
+							return tc.issuer, tc.GetIssuerError
+						},
+					}, tc.clientFactoryError
 				},
 			)
 

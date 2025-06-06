@@ -48,6 +48,10 @@ type ConjurClient interface {
 	DeleteToken(token string) error
 	CreateHost(id string, token string) (conjurapi.HostFactoryHostResponse, error)
 	PublicKeys(kind string, identifier string) ([]byte, error)
+
+	Issuer(issuerID string) (issuer conjurapi.Issuer, err error)
+	Issuers() (issuers []conjurapi.Issuer, err error)
+	DeleteIssuer(issuerID string, keepSecrets bool) error
 	CreateIssuer(issuer conjurapi.Issuer) (created conjurapi.Issuer, err error)
 }
 

@@ -46,6 +46,27 @@ func TestDumpTransport(t *testing.T) {
 			},
 		},
 		{
+			description: "Request body is redacted on issuer request with the data key",
+			path:        "/issuers/create",
+			body:        `{ "data": { "secret_access_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" } }`,
+			assert: func(t *testing.T, req *http.Request, dump string) {
+				assert.Contains(t, dump, redactedString)
+				assert.NotContains(t, dump, `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY`)
+
+				reqBody, err := io.ReadAll(req.Body)
+				assert.Nil(t, err)
+				assert.Equal(t, string(reqBody),  `{ "data": { "secret_access_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" } }`)
+			},
+		},
+		{
+			description: "Request body is maintained  on issuer requests without the data key",
+			path:        "/issuers/list",
+			body:        `{ "id": test-id"}`,
+			assert: func(t *testing.T, req *http.Request, dump string) {
+				assert.Contains(t, dump, `{ "id": test-id"}`)
+			},
+		},
+		{
 			description: "Request body is maintained on other requests",
 			body:        "some-body",
 			assert: func(t *testing.T, req *http.Request, dump string) {

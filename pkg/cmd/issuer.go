@@ -12,6 +12,9 @@ import (
 
 type issuerClient interface {
 	CreateIssuer(issuer api.Issuer) (created api.Issuer, err error)
+	DeleteIssuer(issuerID string, keepSecrets bool) (err error)
+	Issuer(issuerID string) (issuer api.Issuer, err error)
+	Issuers() (issuers []api.Issuer, err error)
 }
 
 type issuerClientFactoryFunc func(*cobra.Command) (issuerClient, error)
@@ -135,10 +138,146 @@ Examples:
 	return createIssuerCommand
 }
 
+func newDeleteIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
+	deleteIssuerCommand := &cobra.Command{
+		Use:   "delete",
+		Short: "Delete an issuer",
+		Long: `Delete an issuer
+Examples:
+ - conjur issuer delete --id my-issuer`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, err := cmd.Flags().GetString("id")
+			if err != nil {
+				return err
+			}
+
+			keepSecrets, err := cmd.Flags().GetBool("keep-secrets")
+			if err != nil {
+				return err
+			}
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			err = client.DeleteIssuer(id, keepSecrets)
+			if err != nil {
+				return err
+			}
+
+			cmd.Printf("The issuer '%s' was deleted\n", id)
+
+			return nil
+		},
+	}
+
+	deleteIssuerCommand.Flags().StringP(
+		"id",
+		"i",
+		"",
+		"Provide the issuer's identifier (ID)",
+	)
+	deleteIssuerCommand.MarkFlagRequired("id")
+
+	deleteIssuerCommand.Flags().BoolP(
+		"keep-secrets",
+		"k",
+		false,
+		"If set, dynamic secrets associated with this issuer aren't deleted when "+
+			"the issuer is deleted",
+	)
+
+	return deleteIssuerCommand
+}
+
+func newGetIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
+	getIssuerCommand := &cobra.Command{
+		Use:   "get",
+		Short: "Retrieve information about an issuer",
+		Long: `Retrieve information about an issuer
+Examples:
+ - conjur issuer get --id my-issuer`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, err := cmd.Flags().GetString("id")
+			if err != nil {
+				return err
+			}
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			result, err := client.Issuer(id)
+			if err != nil {
+				return err
+			}
+
+			prettyResult, err := utils.PrettyPrintToJSON(result)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(prettyResult)
+
+			return nil
+		},
+	}
+
+	getIssuerCommand.Flags().StringP(
+		"id",
+		"i",
+		"",
+		"Provide the issuer's identifier (ID)",
+	)
+	getIssuerCommand.MarkFlagRequired("id")
+
+	return getIssuerCommand
+}
+
+func newListIssuersCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
+	listIssuersCommand := &cobra.Command{
+		Use:   "list",
+		Short: "List all the issuers",
+		Long: `List all the issuers
+Examples:
+ - conjur issuer list`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			result, err := client.Issuers()
+			if err != nil {
+				return err
+			}
+
+			prettyResult, err := utils.PrettyPrintToJSON(result)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(prettyResult)
+
+			return nil
+		},
+	}
+
+	return listIssuersCommand
+}
+
 func init() {
 	rootCmd.AddCommand(issuerCmd)
 
+	deleteIssuerCmd := newDeleteIssuerCmd(issuerClientFactory)
+	getIssuerCmd := newGetIssuerCmd(issuerClientFactory)
+	listIssuersCmd := newListIssuersCmd(issuerClientFactory)
 	createIssuerCmd := newCreateIssuerCmd(issuerClientFactory)
 
 	issuerCmd.AddCommand(createIssuerCmd)
+	issuerCmd.AddCommand(deleteIssuerCmd)
+	issuerCmd.AddCommand(getIssuerCmd)
+	issuerCmd.AddCommand(listIssuersCmd)
 }
