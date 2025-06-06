@@ -15,11 +15,12 @@ services:
       LDAP_URI: ldap://ldap-server:389
       LDAP_BASE: dc=conjur,dc=net
       LDAP_BINDDN: cn=admin,dc=conjur,dc=net
+      CONJUR_FEATURE_DYNAMIC_SECRETS_ENABLED: true
       LDAP_BINDPW: ldapsecret
       LDAP_FILTER: (uid=%s)
     volumes:
-    # The files add the endpoint /dev to Conjur. This endpoint allows us to carry out typical development tasks such as fetching
-    # any role's API key via an unauthenticated HTTP request to Conjur.
+      # The files add the endpoint /dev to Conjur. This endpoint allows us to carry out typical development tasks such as fetching
+      # any role's API key via an unauthenticated HTTP request to Conjur.
       - ./conjur-hacks/dev_initializer.rb:/opt/conjur-server/config/initializers/dev_initializer.rb
       - ./conjur-hacks/dev_controller.rb:/opt/conjur-server/app/controllers/dev_controller.rb
       - ./keycloak:/oauth/keycloak/scripts
@@ -28,12 +29,12 @@ services:
       - ldap-server
 
   proxy:
-    image: nginx:1.13.6-alpine
+    image: nginx:1.13.6
     volumes:
       - ./conf/:/etc/nginx/conf.d/:ro
       - ./conf/tls/:/etc/nginx/tls/:ro
     depends_on:
-    - conjur
+      - conjur
     restart: on-failure
 
   # TODO: integration tests should be carried out against release asset binary (not the one created by make install)!

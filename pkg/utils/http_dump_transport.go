@@ -84,11 +84,23 @@ func (d *dumpTransport) dumpRequest(req *http.Request) []byte {
 	restoreAuthz := redactAuthz(req)
 	defer restoreAuthz()
 
+	rx := ""
+
+	// We redact any request for authorization
 	if strings.Contains(req.URL.Path, "/authn") {
+		rx = ".*"
+	}
+
+	// We redact any issuers request with a data key
+	if strings.Contains(req.URL.Path, "/issuers") {
+		rx = `"data":`
+	}
+
+	if rx != "" {
 		restoreBody := redactBody(
 			&req.Body,
 			&req.ContentLength,
-			regexp.MustCompile(".*"),
+			regexp.MustCompile(rx),
 		)
 		defer restoreBody()
 	}

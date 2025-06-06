@@ -16,6 +16,7 @@ services:
       LDAP_BINDDN: cn=admin,dc=conjur,dc=net
       LDAP_BINDPW: ldapsecret
       LDAP_FILTER: (uid=%s)
+      CONJUR_FEATURE_DYNAMIC_SECRETS_ENABLED: true
     volumes:
     # The files add the endpoint /dev to Conjur. This endpoint allows us to carry out typical development tasks such as fetching
     # any role's API key via an unauthenticated HTTP request to Conjur.
