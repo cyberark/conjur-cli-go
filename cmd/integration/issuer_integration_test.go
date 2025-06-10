@@ -48,7 +48,6 @@ func TestIssuerIntegration(t *testing.T) {
 			"--max-ttl", "3000",
 			"--type", "aws",
 			"--data", data,
-			"--debug",
 		)
 
 		assert.Contains(t, stdErr, "invalid 'id' parameter. Only the following characters are supported: A-Z, a-z, 0-9, +, -, and _.")
@@ -77,6 +76,18 @@ func TestIssuerIntegration(t *testing.T) {
 		assert.Contains(t, stdOut, `"max_ttl": 3000`)
 		assert.Contains(t, stdOut, `"access_key_id": "AKIAIOSFODNN7EXAMPLE"`)
 		assert.Contains(t, stdOut, `"secret_access_key": "*****"`)
+	})
+
+	t.Run("Update Issuer", func(t *testing.T) {
+
+		stdOut, _, _ := cli.Run(
+			"issuer", "update",
+			"--id", "test-id",
+			"--max-ttl", "3001",
+		)
+
+		assert.Contains(t, stdOut, `"id": "test-id"`)
+		assert.Contains(t, stdOut, `"max_ttl": 3001`)
 	})
 
 	t.Run("Attempt to retrieve non-existent issuer", func(t *testing.T) {

@@ -11,6 +11,7 @@ import (
 
 type mockIssuerClient struct {
 	createIssuer func(api.Issuer) (api.Issuer, error)
+	updateIssuer func(issuerID string, issuerUpdate api.IssuerUpdate) (updated api.Issuer, err error)
 	deleteIssuer func(issuerID string, keepSecrets bool) (err error)
 	issuer       func(issuerID string) (issuer api.Issuer, err error)
 	issuers      func() (issuer []api.Issuer, err error)
@@ -28,6 +29,10 @@ func (m *mockIssuerClient) Issuers() (issuers []api.Issuer, err error) {
 }
 func (m *mockIssuerClient) Issuer(issuerID string) (issuer api.Issuer, err error) {
 	return m.issuer(issuerID)
+}
+
+func (m *mockIssuerClient) UpdateIssuer(issuerID string, issuerUpdate api.IssuerUpdate) (updated api.Issuer, err error) {
+	return m.updateIssuer(issuerID, issuerUpdate)
 }
 
 var createCmdTestCases = []struct {
@@ -129,6 +134,104 @@ func TestCreateIssuerCmd(t *testing.T) {
 					return &mockIssuerClient{
 						createIssuer: func(issuer api.Issuer) (api.Issuer, error) {
 							return issuer, tc.createIssuerError
+						},
+					}, tc.clientFactoryError
+				},
+			)
+
+			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
+			tc.assert(t, stdout, stderr, err)
+		})
+	}
+}
+
+var updateCmdTestCases = []struct {
+	name               string
+	args               []string
+	clientFactoryError error
+	updateIssuerError  error
+	issuer             api.Issuer
+	assert             func(t *testing.T, stdout string, stderr string, err error)
+}{
+	{
+		name: "without subcommand",
+		args: []string{},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
+		name: "with help flag",
+		args: []string{"--help"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
+		name: "missing --id flag",
+		args: []string{"update", "--max-ttl", "3000", "--data", `{"key":"value"}`},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "required flag(s) \"id\" not set")
+		},
+	},
+	{
+		name: "invalid --max-ttl type",
+		args: []string{"update", "--id", "test-issuer", "--max-ttl", "invalid", "--data", `{"key":"value"}`},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "invalid argument \"invalid\" for \"-m, --max-ttl\" flag")
+		},
+	},
+	{
+		name: "invalid --data type",
+		args: []string{"update", "--id", "test-issuer", "--max-ttl", "3000", "--data", "invalid-json"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Failed to parse 'data' flag JSON:")
+		},
+	},
+	{
+		name:               "clientFactory returns an error",
+		args:               []string{"update", "--id", "test-issuer", "--max-ttl", "3000", "--data", `{"key":"value"}`},
+		clientFactoryError: errors.New("mock issuerFactory error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock issuerFactory error")
+		},
+	},
+	{
+		name:              "UpdateIssuer function returns an error",
+		args:              []string{"update", "--id", "test-issuer", "--max-ttl", "3000", "--data", `{"key":"value"}`},
+		updateIssuerError: errors.New("mock UpdateIssuer error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock UpdateIssuer error")
+		},
+	},
+	{
+		name: "issuer is updated",
+		args: []string{"update", "--id", "test-issuer", "--max-ttl", "3000", "--data", `{"key":"value"}`},
+		issuer: api.Issuer{
+			ID:     "test-issuer",
+			Type:   "aws",
+			MaxTTL: 3000,
+			Data: map[string]interface{}{
+				"key": "value",
+			},
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			output := "{\n  \"id\": \"test-issuer\",\n  \"type\": \"aws\",\n  \"max_ttl\": 3000,\n  \"data\": {\n    \"key\": \"value\"\n  }\n}\n"
+			assert.Contains(t, stdout, output)
+		},
+	},
+}
+
+func TestUpdateIssuerCmd(t *testing.T) {
+	for _, tc := range updateCmdTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := newUpdateIssuerCmd(
+				func(cmd *cobra.Command) (issuerClient, error) {
+					return &mockIssuerClient{
+						updateIssuer: func(issuerID string, issuerUpdate api.IssuerUpdate) (updated api.Issuer, err error) {
+							return tc.issuer, tc.updateIssuerError
 						},
 					}, tc.clientFactoryError
 				},
