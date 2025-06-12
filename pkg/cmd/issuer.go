@@ -15,6 +15,7 @@ type issuerClient interface {
 	DeleteIssuer(issuerID string, keepSecrets bool) (err error)
 	Issuer(issuerID string) (issuer api.Issuer, err error)
 	Issuers() (issuers []api.Issuer, err error)
+	UpdateIssuer(issuerID string, issuerUpdate api.IssuerUpdate) (updated api.Issuer, err error)
 }
 
 type issuerClientFactoryFunc func(*cobra.Command) (issuerClient, error)
@@ -22,6 +23,10 @@ type issuerClientFactoryFunc func(*cobra.Command) (issuerClient, error)
 func issuerClientFactory(cmd *cobra.Command) (issuerClient, error) {
 	return clients.AuthenticatedConjurClientForCommand(cmd)
 }
+
+var getBoolFlagFunc = getBoolFlag
+var getIntFlagFunc = getIntFlag
+var getStringFlagFunc = getStringFlag
 
 var issuerCmd = &cobra.Command{
 	Use:   "issuer",
@@ -48,22 +53,22 @@ func newCreateIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 Examples:
  - conjur issuer create --id my-issuer --max-ttl 3000 --type aws --data '{"access_key_id": "my_key_id", "secret_access_key": "my_key_secret"}'`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := cmd.Flags().GetString("id")
+			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
 				return err
 			}
 
-			issuerType, err := cmd.Flags().GetString("type")
+			issuerType, err := getStringFlagFunc(cmd, "type")
 			if err != nil {
 				return err
 			}
 
-			maxTTL, err := cmd.Flags().GetInt("max-ttl")
+			maxTTL, err := getIntFlagFunc(cmd, "max-ttl")
 			if err != nil {
 				return err
 			}
 
-			dataJSON, err := cmd.Flags().GetString("data")
+			dataJSON, err := getStringFlagFunc(cmd, "data")
 			if err != nil {
 				return err
 			}
@@ -146,12 +151,12 @@ func newDeleteIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 Examples:
  - conjur issuer delete --id my-issuer`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := cmd.Flags().GetString("id")
+			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
 				return err
 			}
 
-			keepSecrets, err := cmd.Flags().GetBool("keep-secrets")
+			keepSecrets, err := getBoolFlagFunc(cmd, "keep-secrets")
 			if err != nil {
 				return err
 			}
@@ -199,7 +204,7 @@ func newGetIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 Examples:
  - conjur issuer get --id my-issuer`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := cmd.Flags().GetString("id")
+			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
 				return err
 			}
@@ -268,15 +273,116 @@ Examples:
 	return listIssuersCommand
 }
 
+func newUpdateIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
+	updateIssuerCommand := &cobra.Command{
+		Use:   "update",
+		Short: "Update an issuer",
+		Long: `Update an issuer.
+You can update the issuer's maximum validity (max-ttl) and/or the data argument's JSON object.
+Examples:
+ - conjur issuer update --id my-issuer --data '{"access_key_id": "new_key_id", "secret_access_key": "new_key_secret"}'
+ - conjur issuer update --id my-issuer --max-ttl 5000`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, err := getStringFlagFunc(cmd, "id")
+			if err != nil {
+				return err
+			}
+
+			issuerUpdate := api.IssuerUpdate{}
+
+			maxTTL, err := getIntFlagFunc(cmd, "max-ttl")
+			if err != nil {
+				return err
+			}
+
+			if maxTTL > 0 {
+				issuerUpdate.MaxTTL = &maxTTL
+			}
+
+			dataJSON, err := getStringFlagFunc(cmd, "data")
+			if err != nil {
+				return err
+			}
+
+			if dataJSON != "" {
+				data := make(map[string]interface{})
+				err = json.Unmarshal([]byte(dataJSON), &data)
+				if err != nil {
+					return fmt.Errorf("Failed to parse 'data' flag JSON: %w", err)
+				}
+
+				issuerUpdate.Data = data
+			}
+
+			client, err := clientFactory(cmd)
+			if err != nil {
+				return err
+			}
+
+			result, err := client.UpdateIssuer(id, issuerUpdate)
+			if err != nil {
+				return err
+			}
+
+			prettyResult, err := utils.PrettyPrintToJSON(result)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println(prettyResult)
+
+			return nil
+		},
+	}
+
+	updateIssuerCommand.Flags().StringP(
+		"id",
+		"i",
+		"",
+		"Provide the issuer's identifier (ID)",
+	)
+	updateIssuerCommand.MarkFlagRequired("id")
+
+	updateIssuerCommand.Flags().IntP(
+		"max-ttl",
+		"m",
+		0,
+		"Provide the maximum validity (time-to-live) for the issuer. The new "+
+			"value must be greater than the current value. Maximum: 5000",
+	)
+
+	updateIssuerCommand.Flags().String(
+		"data",
+		"",
+		"Update the JSON object",
+	)
+
+	return updateIssuerCommand
+}
+
+func getBoolFlag(cmd *cobra.Command, key string) (bool, error) {
+	return cmd.Flags().GetBool(key)
+}
+
+func getIntFlag(cmd *cobra.Command, key string) (int, error) {
+	return cmd.Flags().GetInt(key)
+}
+
+func getStringFlag(cmd *cobra.Command, key string) (string, error) {
+	return cmd.Flags().GetString(key)
+}
+
 func init() {
 	rootCmd.AddCommand(issuerCmd)
 
+	createIssuerCmd := newCreateIssuerCmd(issuerClientFactory)
+	updateIssuerCmd := newUpdateIssuerCmd(issuerClientFactory)
 	deleteIssuerCmd := newDeleteIssuerCmd(issuerClientFactory)
 	getIssuerCmd := newGetIssuerCmd(issuerClientFactory)
 	listIssuersCmd := newListIssuersCmd(issuerClientFactory)
-	createIssuerCmd := newCreateIssuerCmd(issuerClientFactory)
 
 	issuerCmd.AddCommand(createIssuerCmd)
+	issuerCmd.AddCommand(updateIssuerCmd)
 	issuerCmd.AddCommand(deleteIssuerCmd)
 	issuerCmd.AddCommand(getIssuerCmd)
 	issuerCmd.AddCommand(listIssuersCmd)

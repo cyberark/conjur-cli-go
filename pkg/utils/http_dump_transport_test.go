@@ -55,15 +55,15 @@ func TestDumpTransport(t *testing.T) {
 
 				reqBody, err := io.ReadAll(req.Body)
 				assert.Nil(t, err)
-				assert.Equal(t, string(reqBody),  `{ "data": { "secret_access_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" } }`)
+				assert.Equal(t, string(reqBody), `{ "data": { "secret_access_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" } }`)
 			},
 		},
 		{
 			description: "Request body is maintained  on issuer requests without the data key",
-			path:        "/issuers/list",
-			body:        `{ "id": test-id"}`,
+			path:        "/issuers/update",
+			body:        `{ "id": test-id", "max_ttl": 3001}`,
 			assert: func(t *testing.T, req *http.Request, dump string) {
-				assert.Contains(t, dump, `{ "id": test-id"}`)
+				assert.Contains(t, dump, `{ "id": test-id", "max_ttl": 3001}`)
 			},
 		},
 		{

@@ -53,6 +53,7 @@ type ConjurClient interface {
 	Issuers() (issuers []conjurapi.Issuer, err error)
 	DeleteIssuer(issuerID string, keepSecrets bool) error
 	CreateIssuer(issuer conjurapi.Issuer) (created conjurapi.Issuer, err error)
+	UpdateIssuer(issuerID string, issuerUpdate conjurapi.IssuerUpdate) (updated conjurapi.Issuer, err error)
 }
 
 // LoadAndValidateConjurConfig loads and validate Conjur configuration
