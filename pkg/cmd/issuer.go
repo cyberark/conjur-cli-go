@@ -24,6 +24,10 @@ func issuerClientFactory(cmd *cobra.Command) (issuerClient, error) {
 	return clients.AuthenticatedConjurClientForCommand(cmd)
 }
 
+var getBoolFlagFunc = getBoolFlag
+var getIntFlagFunc = getIntFlag
+var getStringFlagFunc = getStringFlag
+
 var issuerCmd = &cobra.Command{
 	Use:   "issuer",
 	Short: "Manage dynamic secret issuers in Conjur",
@@ -49,22 +53,22 @@ func newCreateIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 Examples:
  - conjur issuer create --id my-issuer --max-ttl 3000 --type aws --data '{"access_key_id": "my_key_id", "secret_access_key": "my_key_secret"}'`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := cmd.Flags().GetString("id")
+			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
 				return err
 			}
 
-			issuerType, err := cmd.Flags().GetString("type")
+			issuerType, err := getStringFlagFunc(cmd, "type")
 			if err != nil {
 				return err
 			}
 
-			maxTTL, err := cmd.Flags().GetInt("max-ttl")
+			maxTTL, err := getIntFlagFunc(cmd, "max-ttl")
 			if err != nil {
 				return err
 			}
 
-			dataJSON, err := cmd.Flags().GetString("data")
+			dataJSON, err := getStringFlagFunc(cmd, "data")
 			if err != nil {
 				return err
 			}
@@ -147,12 +151,12 @@ func newDeleteIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 Examples:
  - conjur issuer delete --id my-issuer`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := cmd.Flags().GetString("id")
+			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
 				return err
 			}
 
-			keepSecrets, err := cmd.Flags().GetBool("keep-secrets")
+			keepSecrets, err := getBoolFlagFunc(cmd, "keep-secrets")
 			if err != nil {
 				return err
 			}
@@ -200,7 +204,7 @@ func newGetIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 Examples:
  - conjur issuer get --id my-issuer`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := cmd.Flags().GetString("id")
+			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
 				return err
 			}
@@ -279,14 +283,14 @@ Examples:
  - conjur issuer update --id my-issuer --data '{"access_key_id": "new_key_id", "secret_access_key": "new_key_secret"}'
  - conjur issuer update --id my-issuer --max-ttl 5000`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, err := cmd.Flags().GetString("id")
+			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
 				return err
 			}
 
 			issuerUpdate := api.IssuerUpdate{}
 
-			maxTTL, err := cmd.Flags().GetInt("max-ttl")
+			maxTTL, err := getIntFlagFunc(cmd, "max-ttl")
 			if err != nil {
 				return err
 			}
@@ -295,7 +299,7 @@ Examples:
 				issuerUpdate.MaxTTL = &maxTTL
 			}
 
-			dataJSON, err := cmd.Flags().GetString("data")
+			dataJSON, err := getStringFlagFunc(cmd, "data")
 			if err != nil {
 				return err
 			}
@@ -356,14 +360,26 @@ Examples:
 	return updateIssuerCommand
 }
 
+func getBoolFlag(cmd *cobra.Command, key string) (bool, error) {
+	return cmd.Flags().GetBool(key)
+}
+
+func getIntFlag(cmd *cobra.Command, key string) (int, error) {
+	return cmd.Flags().GetInt(key)
+}
+
+func getStringFlag(cmd *cobra.Command, key string) (string, error) {
+	return cmd.Flags().GetString(key)
+}
+
 func init() {
 	rootCmd.AddCommand(issuerCmd)
 
+	createIssuerCmd := newCreateIssuerCmd(issuerClientFactory)
+	updateIssuerCmd := newUpdateIssuerCmd(issuerClientFactory)
 	deleteIssuerCmd := newDeleteIssuerCmd(issuerClientFactory)
 	getIssuerCmd := newGetIssuerCmd(issuerClientFactory)
 	listIssuersCmd := newListIssuersCmd(issuerClientFactory)
-	createIssuerCmd := newCreateIssuerCmd(issuerClientFactory)
-	updateIssuerCmd := newUpdateIssuerCmd(issuerClientFactory)
 
 	issuerCmd.AddCommand(createIssuerCmd)
 	issuerCmd.AddCommand(updateIssuerCmd)

@@ -37,6 +37,8 @@ func (m *mockIssuerClient) UpdateIssuer(issuerID string, issuerUpdate api.Issuer
 
 var createCmdTestCases = []struct {
 	name               string
+	getStringErr       map[string]interface{}
+	getIntErr          error
 	args               []string
 	clientFactoryError error
 	createIssuerError  error
@@ -117,6 +119,42 @@ var createCmdTestCases = []struct {
 		},
 	},
 	{
+		name:         "getStringFlagFunc retunrs an error for id key",
+		args:         []string{"create", "--id", "test-issuer", "--type", "aws", "--max-ttl", "3000", "--data", `{"key":"value"}`},
+		getStringErr: map[string]interface{}{"error": errors.New("mock getString error"), "key": "id"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock getString error")
+		},
+	},
+	{
+		name:         "getStringFlagFunc an error for type key",
+		args:         []string{"create", "--id", "test-issuer", "--type", "aws", "--max-ttl", "3000", "--data", `{"key":"value"}`},
+		getStringErr: map[string]interface{}{"error": errors.New("mock getString error"), "key": "type"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock getString error")
+		},
+	},
+	{
+		name:         "getStringFlagFunc returns an error for data key",
+		args:         []string{"create", "--id", "test-issuer", "--type", "aws", "--max-ttl", "3000", "--data", `{"key":"value"}`},
+		getStringErr: map[string]interface{}{"error": errors.New("mock getString error"), "key": "data"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock getString error")
+		},
+	},
+	{
+		name:      "getIntFlagFunc an error",
+		args:      []string{"create", "--id", "test-issuer", "--type", "aws", "--max-ttl", "3000", "--data", `{"key":"value"}`},
+		getIntErr: errors.New("mock getInt error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock getInt error")
+		},
+	},
+	{
 		name: "issuer is created",
 		args: []string{"create", "--id", "test-issuer", "--type", "aws", "--max-ttl", "3000", "--data", `{"key":"value"}`},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
@@ -128,6 +166,29 @@ var createCmdTestCases = []struct {
 
 func TestCreateIssuerCmd(t *testing.T) {
 	for _, tc := range createCmdTestCases {
+		// Mock dependencies
+		oldIntFunc := getIntFlagFunc
+		oldStringFunc := getStringFlagFunc
+
+		getIntFlagFunc = func(cmd *cobra.Command, key string) (int, error) {
+			if tc.getIntErr != nil {
+				return 0, tc.getIntErr
+			}
+
+			return cmd.Flags().GetInt(key)
+		}
+		getStringFlagFunc = func(cmd *cobra.Command, key string) (string, error) {
+			if tc.getStringErr != nil && key == tc.getStringErr["key"] {
+				return "", tc.getStringErr["error"].(error)
+			}
+
+			return cmd.Flags().GetString(key)
+		}
+		defer func() {
+			getIntFlagFunc = oldIntFunc
+			getStringFlagFunc = oldStringFunc
+		}()
+
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := newCreateIssuerCmd(
 				func(cmd *cobra.Command) (issuerClient, error) {
@@ -147,6 +208,8 @@ func TestCreateIssuerCmd(t *testing.T) {
 
 var updateCmdTestCases = []struct {
 	name               string
+	getStringErr       map[string]interface{}
+	getIntErr          error
 	args               []string
 	clientFactoryError error
 	updateIssuerError  error
@@ -207,6 +270,33 @@ var updateCmdTestCases = []struct {
 		},
 	},
 	{
+		name:         "getStringFlagFunc returns an error for id key",
+		args:         []string{"update", "--id", "test-issuer", "--max-ttl", "3000", "--data", `{"key":"value"}`},
+		getStringErr: map[string]interface{}{"error": errors.New("mock getString error"), "key": "id"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock getString error")
+		},
+	},
+	{
+		name:         "getStringFlagFunc returns an error for data key",
+		args:         []string{"update", "--id", "test-issuer", "--max-ttl", "3000", "--data", `{"key":"value"}`},
+		getStringErr: map[string]interface{}{"error": errors.New("mock getString error"), "key": "data"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock getString error")
+		},
+	},
+	{
+		name:      "getIntFlagFunc returns an error",
+		args:      []string{"update", "--id", "test-issuer", "--max-ttl", "3000", "--data", `{"key":"value"}`},
+		getIntErr: errors.New("mock getInt error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock getInt error")
+		},
+	},
+	{
 		name: "issuer is updated",
 		args: []string{"update", "--id", "test-issuer", "--max-ttl", "3000", "--data", `{"key":"value"}`},
 		issuer: api.Issuer{
@@ -226,6 +316,30 @@ var updateCmdTestCases = []struct {
 
 func TestUpdateIssuerCmd(t *testing.T) {
 	for _, tc := range updateCmdTestCases {
+		// Mock dependencies
+
+		oldIntFunc := getIntFlagFunc
+		oldStringFunc := getStringFlagFunc
+
+		getIntFlagFunc = func(cmd *cobra.Command, key string) (int, error) {
+			if tc.getIntErr != nil {
+				return 0, tc.getIntErr
+			}
+
+			return cmd.Flags().GetInt(key)
+		}
+		getStringFlagFunc = func(cmd *cobra.Command, key string) (string, error) {
+			if tc.getStringErr != nil && key == tc.getStringErr["key"] {
+				return "", tc.getStringErr["error"].(error)
+			}
+
+			return cmd.Flags().GetString(key)
+		}
+
+		defer func() {
+			getIntFlagFunc = oldIntFunc
+			getStringFlagFunc = oldStringFunc
+		}()
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := newUpdateIssuerCmd(
 				func(cmd *cobra.Command) (issuerClient, error) {
@@ -245,6 +359,8 @@ func TestUpdateIssuerCmd(t *testing.T) {
 
 var deleteCmdTestCases = []struct {
 	name               string
+	getBoolErr         error
+	getStringErr       error
 	args               []string
 	clientFactoryError error
 	deleteIssuerError  error
@@ -281,6 +397,24 @@ var deleteCmdTestCases = []struct {
 		},
 	},
 	{
+		name:         "getStringFlagFunc an error",
+		args:         []string{"delete", "--id", "test-issuer"},
+		getStringErr: errors.New("mock getString error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock getString error")
+		},
+	},
+	{
+		name:       "getBoolFunc an error",
+		args:       []string{"delete", "--id", "test-issuer"},
+		getBoolErr: errors.New("mock getBool error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock getBool error")
+		},
+	},
+	{
 		name:              "DeleteIssuer function returns an error",
 		args:              []string{"delete", "--id", "test-issuer"},
 		deleteIssuerError: errors.New("mock DeleteIssuer error"),
@@ -301,6 +435,30 @@ var deleteCmdTestCases = []struct {
 
 func TestDeleteIssuerCmd(t *testing.T) {
 	for _, tc := range deleteCmdTestCases {
+
+		// Mock dependencies
+		oldBoolFunc := getBoolFlagFunc
+		oldStringFunc := getStringFlagFunc
+
+		getBoolFlagFunc = func(cmd *cobra.Command, key string) (bool, error) {
+			if tc.getBoolErr != nil {
+				return false, tc.getBoolErr
+			}
+
+			return cmd.Flags().GetBool(key)
+		}
+		getStringFlagFunc = func(cmd *cobra.Command, key string) (string, error) {
+			if tc.getStringErr != nil {
+				return "", tc.getStringErr
+			}
+
+			return cmd.Flags().GetString(key)
+		}
+		defer func() {
+			getBoolFlagFunc = oldBoolFunc
+			getStringFlagFunc = oldStringFunc
+		}()
+
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := newDeleteIssuerCmd(
 				func(cmd *cobra.Command) (issuerClient, error) {
@@ -321,6 +479,7 @@ func TestDeleteIssuerCmd(t *testing.T) {
 var listIssuerCmdTestCases = []struct {
 	name               string
 	args               []string
+	getStringErr       error
 	clientFactoryError error
 	issurs             []api.Issuer
 	ListIssuerError    error
@@ -375,6 +534,7 @@ var listIssuerCmdTestCases = []struct {
 
 func TestListIssuerCmd(t *testing.T) {
 	for _, tc := range listIssuerCmdTestCases {
+
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := newListIssuersCmd(
 				func(cmd *cobra.Command) (issuerClient, error) {
@@ -396,6 +556,7 @@ var getIssuerCmdTestCases = []struct {
 	name               string
 	args               []string
 	clientFactoryError error
+	getStringErr       error
 	issuer             api.Issuer
 	GetIssuerError     error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
@@ -419,6 +580,15 @@ var getIssuerCmdTestCases = []struct {
 		args: []string{"get"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stderr, "required flag(s) \"id\" not set")
+		},
+	},
+	{
+		name:         "getStringFlagFunc an error",
+		args:         []string{"get", "--id", "test-issuer"},
+		getStringErr: errors.New("mock getString error"),
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "mock getString error")
 		},
 	},
 	{
@@ -454,6 +624,19 @@ var getIssuerCmdTestCases = []struct {
 
 func TestGetIssuerCmd(t *testing.T) {
 	for _, tc := range getIssuerCmdTestCases {
+		// Mock dependencies
+		oldStringFunc := getStringFlagFunc
+
+		getStringFlagFunc = func(cmd *cobra.Command, key string) (string, error) {
+			if tc.getStringErr != nil {
+				return "", tc.getStringErr
+			}
+
+			return cmd.Flags().GetString(key)
+		}
+		defer func() {
+			getStringFlagFunc = oldStringFunc
+		}()
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := newGetIssuerCmd(
 				func(cmd *cobra.Command) (issuerClient, error) {
