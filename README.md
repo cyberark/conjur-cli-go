@@ -37,7 +37,6 @@ See the [transition guide](docs/UPGRADE_from_docker_based.md)
 
 ## FIPS Compatibility
 
-The `amd64` binaries are built using RedHat's patched Go compiler and with
-`GOEXPERIMENT=boringcrypto`. When run on a FIPS-enabled system, the binary will
-use the OpenSSL FIPS module provided by the system. On non-FIPS systems, the
-binary will fall back to BoringCrypto.
+The `amd64` binaries are built using Microsoft's FIPS-enabled Go image and with
+`GOEXPERIMENT=systemcrypto`. When run on a FIPS-enabled system, the binary will
+use the OpenSSL FIPS module provided by the system.
