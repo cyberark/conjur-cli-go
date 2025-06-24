@@ -86,14 +86,22 @@ func (d *dumpTransport) dumpRequest(req *http.Request) []byte {
 
 	rx := ""
 
-	// We redact any request for authorization
-	if strings.Contains(req.URL.Path, "/authn") {
-		rx = ".*"
-	}
+	// IMPORTANT:
+	// Setting the regex to redact the request body most proceed from the most
+	// specific regex to the most generic one.
+	//
+	// This is to ensure the regex can't become more specific in a later
+	// condition, potentially cancelling a redaction determined by an earlier
+	// condition.
 
 	// We redact any issuers request with a data key
 	if strings.Contains(req.URL.Path, "/issuers") {
 		rx = `"data":`
+	}
+
+	// We redact any request for authorization, regardless of the body content
+	if strings.Contains(req.URL.Path, "/authn") {
+		rx = ".*"
 	}
 
 	if rx != "" {
