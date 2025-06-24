@@ -34,7 +34,9 @@ func TestDumpTransport(t *testing.T) {
 		},
 		{
 			description: "Request body is redacted on authentication requests",
-			path:        "/authn-xyz/account/login",
+			// Specifically, ensure that if the request also contains "issuer/", it is
+			// still redacted.
+			path:        "/authn-xyz/account/login/host/issuers/authenticate",
 			body:        "some-body",
 			assert: func(t *testing.T, req *http.Request, dump string) {
 				assert.Contains(t, dump, redactedString)
