@@ -97,7 +97,7 @@ func TestIssuerIntegration(t *testing.T) {
 			"--id", "test-id2",
 		)
 
-		assert.Contains(t, stdErr, `Error: 404 Not Found. Issuer not found.`)
+		assert.Contains(t, stdErr, `404 Not Found. Issuer not found.`)
 	})
 
 	t.Run("Delete Issuer", func(t *testing.T) {
@@ -117,6 +117,6 @@ func TestIssuerIntegration(t *testing.T) {
 			"--id", "test-id",
 		)
 
-		assert.Contains(t, stdErr, `Error: 404 Not Found. Issuer not found.`)
+		assert.Contains(t, stdErr, `404 Not Found. Issuer not found.`)
 	})
 }

@@ -108,21 +108,21 @@ func TestPolicyIntegrationCloud(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("policy", "load", "--dry-run", "--help")
 		assert.Error(t, err)
 		assert.Contains(t, stdOut, "")
-		assert.Contains(t, stdErr, "Error: unknown flag: --dry-run")
+		assert.Contains(t, stdErr, "unknown flag: --dry-run")
 	})
 
 	t.Run("replace policy from stdin", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("policy", "replace", "--dry-run", "--help")
 		assert.Error(t, err)
 		assert.Contains(t, stdOut, "")
-		assert.Contains(t, stdErr, "Error: unknown flag: --dry-run")
+		assert.Contains(t, stdErr, "unknown flag: --dry-run")
 	})
 
 	t.Run("update policy from stdin", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("policy", "update", "--dry-run", "--help")
 		assert.Error(t, err)
 		assert.Contains(t, stdOut, "")
-		assert.Contains(t, stdErr, "Error: unknown flag: --dry-run")
+		assert.Contains(t, stdErr, "unknown flag: --dry-run")
 	})
 
 }

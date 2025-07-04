@@ -51,7 +51,7 @@ func TestPolicyValidationIntegration(t *testing.T) {
 			bytes.NewReader([]byte(policyText)),
 			"policy", "load", "-b", "branch2", "--dry-run", "-f", "-",
 		)
-		require.Contains(t, stdErr, "Error: 404 Not Found.")
+		require.Contains(t, stdErr, "404 Not Found.")
 		assert.Contains(t, stdOut, "")
 	})
 
@@ -64,7 +64,7 @@ func TestPolicyValidationIntegration(t *testing.T) {
 			bytes.NewReader([]byte(policyText)),
 			"policy", "update", "-b", "branch2", "--dry-run", "-f", "-",
 		)
-		require.Contains(t, stdErr, "Error: 404 Not Found.")
+		require.Contains(t, stdErr, "404 Not Found.")
 		assert.Contains(t, stdOut, "")
 	})
 
@@ -103,7 +103,7 @@ func TestPolicyValidationIntegration(t *testing.T) {
 		// The policyResponse is sensitive to the newlines in the policyText so
 		// use caution if you refactor the declaration.
 		policyText :=
-`- !user alice
+			`- !user alice
 - !user bob
 - !policy
   id: test
@@ -154,7 +154,7 @@ func TestPolicyValidationIntegration(t *testing.T) {
 		// Load test policy as baseline
 		cli.LoadPolicy(t, testPolicy)
 
-		// Replace policy 
+		// Replace policy
 		stdOut, stdErr, err := cli.DryRunPolicy(t, "replace", "root", emptyPolicy)
 		require.NoError(t, err)
 		assert.Contains(t, stdErr, "Dry run policy 'root'")

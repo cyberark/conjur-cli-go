@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/cmd/style"
+	"github.com/cyberark/conjur-cli-go/pkg/version"
 	"os"
 	"time"
 
-	"github.com/cyberark/conjur-cli-go/pkg/version"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +40,7 @@ func newRootCommand() *cobra.Command {
 func Execute() {
 	rootCmd.SetOut(os.Stdout)
 	rootCmd.SetErr(os.Stderr)
-	err := rootCmd.Execute()
+	err := style.Execute(rootCmd)
 	if errors.Is(err, context.DeadlineExceeded) {
 		rootCmd.PrintErrln(
 			"Your request has timed out. If your operation is expected to be long-running, please consider increasing the HTTP timeout. For details, please refer to the command help.")

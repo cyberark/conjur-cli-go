@@ -1,0 +1,451 @@
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+> conjur init --help | cat
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+> conjur init --help | cat
+Select the environment you want to use:
+1. cloud
+2. enterprise
+3. oss
+Enter a number between 1 and 3:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+> conjur init --help | cat
+Select the environment you want to use:
+1. cloud
+2. enterprise
+3. oss
+Enter a number between 1 and 3:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+> conjur init --help | cat
+Select the environment you want to use:
+1. cloud
+2. enterprise
+3. oss
+Enter a number between 1 and 3: 2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+> conjur init --help | cat
+Select the environment you want to use:
+1. cloud
+2. enterprise
+3. oss
+Enter a number between 1 and 3: 2
+
+
+  Initialize the Conjur CLI with a Conjur server.
+
+
+
+  The init command creates a configuration file (.conjurrc) that contains the details for connec
+ting to Conjur. This
+  file is located under the user's root directory.
+
+
+  USAGE
+
+    conjur init enterprise [--flags]
+
+  FLAGS
+
+    -a --account      Conjur organization account name
+    -t --authn-type   Authentication type to use (e.g. LDAP, OIDC, JWT)
+    -c --ca-cert      Conjur SSL certificate (will be obtained from host unless provided by this
+ option)
+    --cert-file       File to write the server's certificate to (/root/conjur-server.pem)
+    -f --file         File to write the configuration to. You must set the CONJURRC environment
+variable to the same value for this file to be used for further commands. (/root/.conjurrc)
+────────────────────────────────────────────────────────────────────────────────
+> conjur init --help | cat
+Select the environment you want to use:
+1. cloud
+2. enterprise
+3. oss
+Enter a number between 1 and 3: 2
+
+
+  Initialize the Conjur CLI with a Conjur server.
+
+
+
+  The init command creates a configuration file (.conjurrc) that contains the details for connec
+ting to Conjur. This
+  file is located under the user's root directory.
+
+
+  USAGE
+
+    conjur init enterprise [--flags]
+
+  FLAGS
+
+    -a --account      Conjur organization account name
+    -t --authn-type   Authentication type to use (e.g. LDAP, OIDC, JWT)
+    -c --ca-cert      Conjur SSL certificate (will be obtained from host unless provided by this
+ option)
+    --cert-file       File to write the server's certificate to (/root/conjur-server.pem)
+    -f --file         File to write the configuration to. You must set the CONJURRC environment
+variable to the same value for this file to be used for further commands. (/root/.conjurrc)
+────────────────────────────────────────────────────────────────────────────────

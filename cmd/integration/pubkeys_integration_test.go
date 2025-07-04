@@ -29,6 +29,6 @@ func TestPubkeysIntegrationCloud(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("pubkeys", "alice")
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
-		assert.Equal(t, "Error: unknown command \"pubkeys\" for \"conjur\"\nRun 'conjur --help' for usage.\n", stdErr)
+		assert.Contains(t, stdErr, "unknown command \"pubkeys\" for \"conjur\"\n")
 	})
 }

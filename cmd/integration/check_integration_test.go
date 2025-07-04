@@ -36,6 +36,6 @@ func TestCheckIntegrationCloud(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("check")
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
-		assert.Equal(t, "Error: unknown command \"check\" for \"conjur\"\nRun 'conjur --help' for usage.\n", stdErr)
+		assert.Contains(t, stdErr, "unknown command \"check\" for \"conjur\"\n")
 	})
 }

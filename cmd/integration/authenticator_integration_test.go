@@ -32,7 +32,7 @@ func TestAuthenticatorIntegration(t *testing.T) {
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
 		assert.NotEmpty(t, stdErr)
-		assert.Equal(t, "Error: invalid authenticator ID format: invalid-authenticator-id, expected format is 'authenticator_type/service_id'\n", stdErr)
+		assert.Contains(t, stdErr, "invalid authenticator ID format: invalid-authenticator-id, expected format is 'authenticator_type/service_id'\n")
 	})
 
 	t.Run("disable an authenticator with invalid ID", func(t *testing.T) {
@@ -40,7 +40,7 @@ func TestAuthenticatorIntegration(t *testing.T) {
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
 		assert.NotEmpty(t, stdErr)
-		assert.Equal(t, "Error: invalid authenticator ID format: invalid-authenticator-id, expected format is 'authenticator_type/service_id'\n", stdErr)
+		assert.Contains(t, stdErr, "invalid authenticator ID format: invalid-authenticator-id, expected format is 'authenticator_type/service_id'\n")
 	})
 
 	t.Run("enable an non-existent authenticator", func(t *testing.T) {
@@ -48,7 +48,7 @@ func TestAuthenticatorIntegration(t *testing.T) {
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
 		assert.NotEmpty(t, stdErr)
-		assert.Contains(t, stdErr, "Error: 401 Unauthorized")
+		assert.Contains(t, stdErr, "401 Unauthorized")
 	})
 
 	t.Run("disable an non-existent authenticator", func(t *testing.T) {
@@ -56,6 +56,6 @@ func TestAuthenticatorIntegration(t *testing.T) {
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
 		assert.NotEmpty(t, stdErr)
-		assert.Contains(t, stdErr, "Error: 401 Unauthorized")
+		assert.Contains(t, stdErr, "401 Unauthorized")
 	})
 }

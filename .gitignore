@@ -24,3 +24,5 @@ VERSION
 
 ci/conf/tls/*.crt
 ci/conf/tls/*.key
+
+vhs/output

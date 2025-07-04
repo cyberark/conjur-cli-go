@@ -194,6 +194,18 @@ pipeline {
             }
           }
         }
+
+        stage('Run integration tests for huh in TTY') {
+          steps {
+            script {
+              try {
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './ci/test_vhs'
+              } finally {
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts artifacts: 'vhs/output/*'
+              }
+            }
+          }
+        }
       }
     }
 

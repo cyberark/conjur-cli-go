@@ -153,22 +153,10 @@ var userChangePasswordCmdTestCases = []struct {
 		},
 	},
 	{
-		name: "change password using prompt",
+		name: "change password using prompt - raises error in non TTY environment",
 		args: []string{"user", "change-password"},
-		promptResponses: []promptResponse{
-			{
-				prompt:   "Please enter a new password (it will not be echoed)",
-				response: "SUp3r$3cr3t!!",
-			},
-		},
-		changeCurrentUserPassword: func(t *testing.T, newPassword string) ([]byte, error) {
-			// Assert on arguments
-			assert.Equal(t, "SUp3r$3cr3t!!", newPassword)
-
-			return []byte(""), nil
-		},
 		assert: func(t *testing.T, stdout string, err error) {
-			assert.Contains(t, stdout, "Password changed")
+			assert.Contains(t, stdout, "Error: user password cannot be requested in non-interactive mode")
 		},
 	},
 	{

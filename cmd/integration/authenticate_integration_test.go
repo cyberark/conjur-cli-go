@@ -34,6 +34,6 @@ func TestAuthenticateIntegrationCloud(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("authenticate")
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
-		assert.Equal(t, "Error: unknown command \"authenticate\" for \"conjur\"\n\nDid you mean this?\n\tauthenticator\n\nRun 'conjur --help' for usage.\n", stdErr)
+		assert.Contains(t, stdErr, "unknown command \"authenticate\" for \"conjur\"\n\nDid you mean this?\n\tauthenticator\n")
 	})
 }
