@@ -14,6 +14,7 @@ import (
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients/qr"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
+	"github.com/cyberark/conjur-cli-go/pkg/version"
 )
 
 const (
@@ -382,9 +383,13 @@ func (ia *IdentityAuthenticator) invokeEndpoint(method, url string, payload []by
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-IDAP-NATIVE-CLIENT", "true")
 	req.Header.Set("OobIdPAuth", "true")
-	req.Header.Set("User-Agent", "conjur-cli-go")
+	req.Header.Set("User-Agent", "conjur-cli-go "+version.Version)
 
-	resp, err := http.DefaultClient.Do(req)
+	client := http.DefaultClient
+	if ia.client != nil && ia.client.GetHttpClient() != nil {
+		client = ia.client.GetHttpClient()
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send HTTP request: %w", err)
 	}

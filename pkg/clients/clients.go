@@ -95,21 +95,18 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		return nil, err
 	}
 
-	// Debug flag is not supported in Secrets Manager SaaS
-	if config.IsSelfHosted() || config.IsConjurOSS() {
-		debug, err = cmd.Flags().GetBool("debug")
-		if err != nil {
-			return nil, err
-		}
-		timeout, err := GetTimeout(cmd)
-		if err != nil {
-			return nil, err
-		}
-		// Overwrite config with the timeout value
-		config, err = LoadAndValidateConjurConfig(timeout)
-		if err != nil {
-			return nil, err
-		}
+	debug, err = cmd.Flags().GetBool("debug")
+	if err != nil {
+		return nil, err
+	}
+	timeout, err := GetTimeout(cmd)
+	if err != nil {
+		return nil, err
+	}
+	// Overwrite config with the timeout value
+	config, err = LoadAndValidateConjurConfig(timeout)
+	if err != nil {
+		return nil, err
 	}
 
 	// TODO: This is called multiple time because each operation potentially uses a new HTTP client bound to the

@@ -28,10 +28,8 @@ func newRootCommand() *cobra.Command {
 		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: disableCompletion},
 	}
 
-	if config.IsSelfHosted() || config.IsConjurOSS() {
-		rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug logging enabled")
-		rootCmd.PersistentFlags().Duration("timeout", time.Minute, "HTTP timeout duration, between 1s and 10m")
-	}
+	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug logging enabled")
+	rootCmd.PersistentFlags().Duration("timeout", time.Minute, "HTTP timeout duration, between 1s and 10m")
 	rootCmd.SetVersionTemplate("Secrets Manager CLI version {{.Version}}\n")
 	return rootCmd
 }
