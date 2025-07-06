@@ -9,7 +9,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -42,17 +41,13 @@ func (cli *testConjurCLI) InitAndLoginAsAdmin(t *testing.T) {
 }
 
 func (cli *testConjurCLI) Init(t *testing.T) {
-	stdOut, _, err := cli.RunWithYes("init", string(conjurapi.EnvironmentCC), "-u", os.Getenv("CONJUR_APPLIANCE_URL"), "--force-netrc", "--force")
+	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentCC), "-u", os.Getenv("CONJUR_APPLIANCE_URL"), "--force-netrc", "--force")
 	assertInitCmd(t, err, stdOut, cli.homeDir)
 }
 
 func (cli *testConjurCLI) LoginAsAdmin(t *testing.T) {
 	stdOut, stdErr, err := cli.Run("login", "-i", os.Getenv("IDENTITY_USERNAME_CLOUD"), "-p", os.Getenv("IDENTITY_PASSWORD_CLOUD"))
 	assertLoginCmd(t, err, stdOut, stdErr)
-}
-
-func (cli *testConjurCLI) RunWithYes(args ...string) (stdOut string, stdErr string, err error) {
-	return cli.RunWithStdin(strings.NewReader("yes\n"), args...)
 }
 
 func (cli *testConjurCLI) RunWithStdin(stdIn io.Reader, args ...string) (stdOut string, stdErr string, err error) {
@@ -75,7 +70,6 @@ func (cli *testConjurCLI) Run(args ...string) (stdOut string, stdErr string, err
 
 func assertInitCmd(t *testing.T, err error, stdOut string, homeDir string) {
 	assert.NoError(t, err)
-	assert.Contains(t, stdOut, "Wrote certificate to "+homeDir+"/conjur-server.pem")
 	assert.Contains(t, stdOut, "Wrote configuration to "+homeDir+"/.conjurrc")
 }
 

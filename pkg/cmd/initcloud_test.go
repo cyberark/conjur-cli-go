@@ -168,33 +168,10 @@ environment: cloud
 		},
 	},
 	{
-		name: "writes certificate",
+		name: "writes configuration",
 		args: []string{"init", "cloud", "-u=https://scauap.integration-cyberark.cloud"},
-		promptResponses: []promptResponse{
-			{
-				prompt:   "Trust this certificate?",
-				response: "y",
-			},
-		},
-		pipe: true,
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			assertCertWritten(t, conjurrcInTmpDir, stdout)
-		},
-	},
-	{
-		name: "prompts to trust certificate, reject",
-		args: []string{"init", "cloud", "-u=https://scauap.integration-cyberark.cloud"},
-		promptResponses: []promptResponse{
-			{
-				prompt:   "Trust this certificate?",
-				response: "N",
-			},
-		},
-		pipe: true,
-		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			fmt.Println(stdout)
-			assert.Contains(t, stdout, "You decided not to trust the certificate")
-			assertFetchCertFailed(t, conjurrcInTmpDir)
+			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
 		},
 	},
 	{

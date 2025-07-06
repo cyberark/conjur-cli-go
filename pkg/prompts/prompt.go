@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cyberark/conjur-cli-go/pkg/utils"
 	"net/url"
 	"os"
 	"strings"
@@ -138,10 +139,25 @@ func AskToOverwriteFile(filePath string) error {
 }
 
 // AskToTrustCert presents a prompt to get confirmation from a user to trust a certificate
-func AskToTrustCert(fingerprint string) error {
-	warning := fmt.Sprintf("\nThe server's certificate Sha256 fingerprint is %s.\n", fingerprint) +
+func AskToTrustCert(cert utils.ServerCert) error {
+	var warning string
+	if cert.SelfSigned {
+		warning += "\nWARNING: This is a self-signed certificate. " +
+			"Please verify that this is the correct certificate before trusting it.\n"
+	}
+	if cert.UntrustedCA {
+		warning += "\nWARNING: This certificate is signed by an untrusted CA. " +
+			"Please verify that this is the correct certificate before trusting it.\n"
+	}
+
+	warning += fmt.Sprintf("\nThe server's certificate Sha256 fingerprint is %s.\n", cert.Fingerprint) +
 		"Please verify this certificate on the appliance using command:\n" +
-		"openssl x509 -fingerprint -sha256 -noout -in ~conjur/etc/ssl/conjur.pem\n\n"
+		"openssl x509 -fingerprint -sha256 -noout -in ~conjur/etc/ssl/conjur.pem\n\n" +
+		fmt.Sprintf("Certificate issuer organization: %s\n", strings.Join(cert.Issuer.Organization, ",")) +
+		fmt.Sprintf("Certificate issuer common name: %s\n", cert.Issuer.CommonName) +
+		fmt.Sprintf("Certificate creation date: %s\n", cert.CreationDate) +
+		fmt.Sprintf("Certificate expiration date: %s\n", cert.ExpirationDate)
+
 	ok, err := confirm("Trust this certificate?", warning)
 	if !ok {
 		return errors.New("you decided not to trust the certificate")

@@ -7,6 +7,7 @@ import (
 	"github.com/cyberark/conjur-cli-go/pkg/cmd/style"
 	"github.com/cyberark/conjur-cli-go/pkg/version"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -41,11 +42,16 @@ func Execute() {
 	rootCmd.SetOut(os.Stdout)
 	rootCmd.SetErr(os.Stderr)
 	err := style.Execute(rootCmd)
-	if errors.Is(err, context.DeadlineExceeded) {
-		rootCmd.PrintErrln(
-			"Your request has timed out. If your operation is expected to be long-running, please consider increasing the HTTP timeout. For details, please refer to the command help.")
-	}
 	if err != nil {
+		// check if error is about x509 certificate
+		if strings.Contains(err.Error(), "x509:") {
+			rootCmd.PrintErrln(
+				"Your Conjur server's certificate is not trusted. Consider running 'conjur init' to initialize the CLI with your Conjur server's certificate.")
+		}
+		if errors.Is(err, context.DeadlineExceeded) {
+			rootCmd.PrintErrln(
+				"Your request has timed out. If your operation is expected to be long-running, please consider increasing the HTTP timeout. For details, please refer to the command help.")
+		}
 		os.Exit(1)
 	}
 }

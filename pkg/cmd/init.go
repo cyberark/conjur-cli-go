@@ -120,32 +120,73 @@ func fetchCertIfNeeded(config *conjurapi.Config, insecure, selfSigned, forceFile
 		return fmt.Errorf("Cannot fetch certificate from non-HTTPS URL %s", url)
 	}
 
-	cert, err := utils.GetServerCert(url.Host, selfSigned)
+	cert, err := utils.GetServerCert(url.Host)
 	if err != nil {
 		errStr := fmt.Sprintf("Unable to retrieve and validate certificate from %s: %s", url.Host, err)
-		if !selfSigned {
-			errStr += "\nIf you're attempting to use a self-signed certificate, re-run the init command with the `--self-signed` flag\n"
-		}
 		return errors.New(errStr)
 	}
 
-	// Prompt user to accept certificate
-	err = prompts.AskToTrustCert(cert.Fingerprint)
-	if err != nil {
-		return fmt.Errorf("You decided not to trust the certificate")
+	var persistCert bool
+	// Prompt user to trust the certificate if it is self-signed and --self-signed flag is not set
+	if cert.SelfSigned || cert.UntrustedCA {
+		persistCert = true
+		if !selfSigned {
+			err = prompts.AskToTrustCert(cert)
+			if err != nil {
+				return fmt.Errorf("You decided not to trust the certificate")
+			}
+		}
 	}
 
-	certPath := certFilePath
+	// Initialize combined certificate content
+	combinedCert := cert.Cert
+	// Check if the host contains ".secretsmgr" which indicates CC and fetch certificate from the identity host
+	if strings.Contains(url.Host, ".secretsmgr") {
+		combinedCert, err = appendConjurCloudCert(url, selfSigned, combinedCert)
+		if err != nil {
+			return err
+		}
+	}
 
-	err = writeFile(certPath, []byte(cert.Cert), forceFileOverwrite)
+	if persistCert {
+		err = persistCertInConfig(config, certFilePath, combinedCert, forceFileOverwrite)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func persistCertInConfig(config *conjurapi.Config, certFilePath string, combinedCert string, forceFileOverwrite bool) error {
+	err := writeFile(certFilePath, []byte(combinedCert), forceFileOverwrite)
 	if err != nil {
 		return err
 	}
 
-	config.SSLCert = cert.Cert
-	config.SSLCertPath = certPath
-
+	config.SSLCert = combinedCert
+	config.SSLCertPath = certFilePath
 	return nil
+}
+
+func appendConjurCloudCert(url *url.URL, selfSigned bool, combinedCert string) (string, error) {
+	identityHost := strings.Replace(url.Host, ".secretsmgr", "", 1)
+	identityCert, err := utils.GetServerCert(identityHost)
+	if err != nil {
+		return "", fmt.Errorf("Unable to retrieve and validate certificate from %s: %s", identityHost, err)
+	}
+
+	// Prompt user to trust the identity certificate if it is self-signed and --self-signed flag is not set
+	if (identityCert.SelfSigned || identityCert.UntrustedCA) && !selfSigned {
+		err = prompts.AskToTrustCert(identityCert)
+		if err != nil {
+			return "", fmt.Errorf("You decided not to trust the certificate from %s", identityHost)
+		}
+	}
+
+	// Append the identity certificate to the combined content
+	combinedCert += "\n" + identityCert.Cert
+	return combinedCert, nil
 }
 
 func init() {

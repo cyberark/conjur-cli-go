@@ -1,14 +1,23 @@
 package cmd
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
 	"github.com/cyberark/conjur-api-go/conjurapi"
+	"math/big"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/stretchr/testify/assert"
@@ -223,22 +232,11 @@ environment: enterprise
 		},
 	},
 	{
-		name: "writes certificate",
-		args: []string{"init", "enterprise", "-u=https://example.com", "-a=test-account"},
-		promptResponses: []promptResponse{
-			{
-				prompt:   "Trust this certificate?",
-				response: "y",
-			},
+		name: "prompts to trust self-signed certificate, reject",
+		args: []string{"init", "enterprise", "-u=https://localhost:8080", "-a=test-account"},
+		beforeTest: func(t *testing.T, conjurrcInTmpDir string) func() {
+			return startSelfSignedServer(t, 8080)
 		},
-		pipe: true,
-		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			assertCertWritten(t, conjurrcInTmpDir, stdout)
-		},
-	},
-	{
-		name: "prompts to trust certificate, reject",
-		args: []string{"init", "enterprise", "-u=https://example.com", "-a=test-account"},
 		promptResponses: []promptResponse{
 			{
 				prompt:   "Trust this certificate?",
@@ -247,7 +245,6 @@ environment: enterprise
 		},
 		pipe: true,
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			fmt.Println(stdout)
 			assert.Contains(t, stdout, "You decided not to trust the certificate")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
@@ -261,21 +258,19 @@ environment: enterprise
 		},
 	},
 	{
-		name: "fails for self-signed certificate",
-		args: []string{"init", "enterprise", "-u=https://localhost:8080", "-a=test-account"},
+		name: "succeeds for self-signed certificate with --self-signed flag",
+		args: []string{"init", "enterprise", "-u=https://localhost:8080", "-a=test-account", "--self-signed"},
 		beforeTest: func(t *testing.T, conjurrcInTmpDir string) func() {
 			return startSelfSignedServer(t, 8080)
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			assert.Contains(t, stdout, "Unable to retrieve and validate certificate")
-			assert.Contains(t, stdout, "x509")
-			assert.Contains(t, stdout, "If you're attempting to use a self-signed certificate, re-run the init command with the `--self-signed` flag")
-			assertFetchCertFailed(t, conjurrcInTmpDir)
+			assert.Contains(t, stdout, "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data")
+			assertCertWritten(t, conjurrcInTmpDir, stdout)
 		},
 	},
 	{
-		name: "succeeds for self-signed certificate with --self-signed flag",
-		args: []string{"init", "enterprise", "-u=https://localhost:8080", "-a=test-account", "--self-signed"},
+		name: "succeeds for self-signed certificate without --self-signed flag",
+		args: []string{"init", "enterprise", "-u=https://localhost:8080", "-a=test-account"},
 		promptResponses: []promptResponse{
 			{
 				prompt:   "Trust this certificate?",
@@ -287,7 +282,7 @@ environment: enterprise
 			return startSelfSignedServer(t, 8080)
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			assert.Contains(t, stdout, "Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data")
+			assert.Contains(t, stdout, "Trust this certificate? [y/N]")
 			assertCertWritten(t, conjurrcInTmpDir, stdout)
 		},
 	},
@@ -470,18 +465,89 @@ func assertCertWritten(t *testing.T, conjurrcInTmpDir string, stdout string) {
 }
 
 func startSelfSignedServer(t *testing.T, port int) func() {
+	err := generateSelfSignedCert()
+	assert.NoError(t, err, "failed to generate self-signed certificate")
+	// Load your custom cert and key
+	cert, err := tls.LoadX509KeyPair("localhost.crt", "localhost.key")
+	assert.NoError(t, err, "failed to load cert/key")
+
 	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Hello, client")
 	}))
 	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
-	if err != nil {
-		assert.NoError(t, err, "unabled to start test server")
+	assert.NoError(t, err, "unable to start test server")
+
+	// Set custom TLS config
+	server.TLS = &tls.Config{
+		Certificates: []tls.Certificate{cert},
 	}
 
 	server.Listener = l
 	server.StartTLS()
 
 	return func() { server.Close() }
+}
+
+func generateSelfSignedCert() error {
+	// Generate a private key
+	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return err
+	}
+
+	// Create a certificate template
+	template := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject: pkix.Name{
+			Organization: []string{"Localhost"},
+		},
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(365 * 24 * time.Hour), // Valid for 1 year
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+
+	// Add localhost to the SAN
+	template.IPAddresses = []net.IP{net.ParseIP("127.0.0.1")}
+	template.DNSNames = []string{"localhost"}
+
+	// Create the certificate
+	certBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
+	if err != nil {
+		return err
+	}
+
+	// Save the certificate to a file
+	certFile, err := os.Create("localhost.crt")
+	if err != nil {
+		return err
+	}
+	defer certFile.Close()
+
+	err = pem.Encode(certFile, &pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
+	if err != nil {
+		return err
+	}
+
+	// Save the private key to a file
+	keyFile, err := os.Create("localhost.key")
+	if err != nil {
+		return err
+	}
+	defer keyFile.Close()
+
+	privBytes, err := x509.MarshalECPrivateKey(priv)
+	if err != nil {
+		return err
+	}
+
+	err = pem.Encode(keyFile, &pem.Block{Type: "EC PRIVATE KEY", Bytes: privBytes})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func Test_env(t *testing.T) {

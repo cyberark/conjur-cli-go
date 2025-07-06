@@ -30,13 +30,12 @@ func TestInitIntegration(t *testing.T) {
 	t.Run("init with self-signed cert", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("init", string(conjurapi.EnvironmentCE), "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force")
 		assert.Error(t, err)
-		assert.Equal(t, "", stdOut)
-		assert.Contains(t, stdErr, "Unable to retrieve and validate certificate")
-		assert.Contains(t, stdErr, "re-run the init command with the `--self-signed` flag")
+		assert.Contains(t, stdOut, "Trust this certificate? [y/N]")
 
 		stdOut, stdErr, err = cli.Run("init", string(conjurapi.EnvironmentCE), "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force", "--self-signed")
 		assert.NotContains(t, stdErr, "Unable to retrieve and validate certificate")
-		assert.Contains(t, stdOut, "Trust this certificate? [y/N]")
+		assert.NotContains(t, stdOut, "Trust this certificate? [y/N]")
+		assert.Contains(t, stdOut, "Wrote certificate to ")
 		assert.Contains(t, stdErr, selfSignedWarning)
 	})
 
