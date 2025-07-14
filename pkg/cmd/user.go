@@ -124,7 +124,7 @@ Examples:
 }
 
 func init() {
-	config, _ := clients.LoadAndValidateConjurConfig(0)
+	config := clients.LoadConfigOrDefault()
 	if config.IsConjurCE() || config.IsConjurOSS() {
 		userCmd := newUserCmd(userClientFactory)
 		rootCmd.AddCommand(userCmd)

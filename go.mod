@@ -12,14 +12,14 @@ require (
 	github.com/charmbracelet/huh v0.7.1-0.20250603124601-31a1db2cbc39
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.3.0.20250917201909-41ff0bf215ea
-	github.com/cyberark/conjur-api-go v0.12.14 // Run "go get github.com/cyberark/conjur-api-go@main" to update
+	github.com/cyberark/conjur-api-go v0.13.2 // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
-	golang.org/x/term v0.30.0
+	golang.org/x/term v0.33.0
 )
 
 require (
@@ -74,7 +74,6 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
-	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/zalando/go-keyring v0.2.6 // indirect
 	golang.org/x/sync v0.17.0 // indirect

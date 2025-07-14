@@ -76,6 +76,14 @@ func LoadAndValidateConjurConfig(timeout time.Duration) (conjurapi.Config, error
 	return config, err
 }
 
+// LoadConfigOrDefault loads the Conjur configuration or returns a default configuration
+// in case the configuration is not found or invalid, this method is needed for initialization
+// of commands which depends on the environment
+func LoadConfigOrDefault() conjurapi.Config {
+	config, _ := conjurapi.LoadConfig()
+	return config
+}
+
 // AuthenticatedConjurClientForCommand attempts to get an authenticated Conjur client by iterating through
 // configuration, environment variables and then ultimately falling back on prompting the user for credentials.
 func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, error) {

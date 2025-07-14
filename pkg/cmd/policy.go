@@ -21,7 +21,7 @@ func loadPolicyCommandRunner(
 		var dryrun bool
 		var err error
 
-		config, _ := clients.LoadAndValidateConjurConfig(0)
+		config := clients.LoadConfigOrDefault()
 		if config.IsConjurCE() || config.IsConjurOSS() {
 			dryrun, err = cmd.Flags().GetBool("dry-run")
 		}
@@ -232,7 +232,7 @@ func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 	policyCmd.PersistentFlags().StringP("branch", "b", "", "(Required) The parent policy branch")
 	policyCmd.MarkPersistentFlagRequired("branch")
 
-	config, _ := clients.LoadAndValidateConjurConfig(0)
+	config := clients.LoadConfigOrDefault()
 
 	if config.IsConjurCE() || config.IsConjurOSS() {
 		policyCmd.AddCommand(newPolicyFetchCommand(clientFactory))

@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -35,7 +36,7 @@ func writeFile(filePath string, fileContents []byte, forceFileOverwrite bool) er
 		}
 	}
 
-	return os.WriteFile(filePath, fileContents, 0644)
+	return os.WriteFile(filePath, fileContents, 0600)
 }
 
 func newInitCommand() *cobra.Command {
@@ -187,6 +188,14 @@ func appendConjurCloudCert(url *url.URL, selfSigned bool, combinedCert string) (
 	// Append the identity certificate to the combined content
 	combinedCert += "\n" + identityCert.Cert
 	return combinedCert, nil
+}
+
+func defaultConjurRC(homeDir string) string {
+	defaultConjurRC := filepath.Join(homeDir, ".conjurrc")
+	if conjurRC, ok := os.LookupEnv("CONJURRC"); ok {
+		defaultConjurRC = conjurRC
+	}
+	return defaultConjurRC
 }
 
 func init() {

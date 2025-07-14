@@ -15,7 +15,7 @@ import (
 
 func newRootCommand() *cobra.Command {
 	disableCompletion := false
-	config, _ := clients.LoadAndValidateConjurConfig(0)
+	config := clients.LoadConfigOrDefault()
 	if config.IsConjurCloud() {
 		disableCompletion = true
 	}
