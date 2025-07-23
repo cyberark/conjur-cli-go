@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [8.1.3] - 2025-07-22
+
+### Changed
+- Update Go dependencies to reflect conjur-api-go v0.13.2
+- Improve error handling for missing .netrc file. ([cyberark/summon-conjur#83](https://github.com/cyberark/summon-conjur/issues/83), CNJR-10190)
+
 ## [8.1.2] - 2025-04-09
 
 ### Added

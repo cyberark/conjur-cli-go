@@ -9,7 +9,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7 // Run "go get github.com/AlecAivazis/survey/v2@debug-windows" to update (Until https://github.com/go-survey/survey/pull/474 is merged)
 	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2
 	github.com/creack/pty v1.1.24
-	github.com/cyberark/conjur-api-go v0.12.14 // Run "go get github.com/cyberark/conjur-api-go@main" to update
+	github.com/cyberark/conjur-api-go v0.13.2 // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/hinshun/vt10x v0.0.0-20220301184237-5011da428d02
 	github.com/mattn/go-isatty v0.0.20
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -18,10 +18,11 @@ require (
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 )
 
+require github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
+
 require (
 	al.essio.dev/pkg/shellescape v1.6.0 // indirect
-	github.com/Masterminds/semver/v3 v3.3.1 // indirect
-	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
+	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
@@ -34,7 +35,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/zalando/go-keyring v0.2.6 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.30.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
