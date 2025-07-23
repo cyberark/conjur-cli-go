@@ -128,7 +128,7 @@ Examples:
 		"m",
 		0,
 		"Provide the maximum validity (max allowed time-to-live) of secrets "+
-			"created by this issuer, in seconds. Minimum: 900; Maximum: 5000",
+			"created by this issuer, in seconds.",
 	)
 	createIssuerCommand.MarkFlagRequired("max-ttl")
 
@@ -348,7 +348,7 @@ Examples:
 		"m",
 		0,
 		"Provide the maximum validity (time-to-live) for the issuer. The new "+
-			"value must be greater than the current value. Maximum: 5000",
+			"value must be greater than the current value.",
 	)
 
 	updateIssuerCommand.Flags().String(
