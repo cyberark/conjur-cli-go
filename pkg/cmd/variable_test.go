@@ -3,6 +3,8 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -37,6 +39,7 @@ var variableCmdTestCases = []struct {
 	getWithVersion     func(t *testing.T, path string, version int) ([]byte, error)
 	getBatch           func(t *testing.T, paths []string) (map[string][]byte, error)
 	set                func(t *testing.T, path string, value string) error
+	beforeTest         func(t *testing.T, pathToTmpfile string)
 	clientFactoryError error
 	assert             func(t *testing.T, stdout string, stderr string, err error)
 }{
@@ -188,9 +191,23 @@ var variableCmdTestCases = []struct {
 	},
 	{
 		name: "set subcommand missing required flags",
+		args: []string{"variable", "set", "-i", "meow"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: must specify exactly one of --value or --file")
+		},
+	},
+	{
+		name: "set subcommand missing id flag",
 		args: []string{"variable", "set"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
-			assert.Contains(t, stderr, "Error: required flag(s) \"id\", \"value\" not set\n")
+			assert.Contains(t, stderr, "Error: required flag(s) \"id\" not set")
+		},
+	},
+	{
+		name: "set subcommand with both value and file flags",
+		args: []string{"variable", "set", "-i", "meow", "-v", "value", "-f", "file.txt"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: must specify exactly one of --value or --file")
 		},
 	},
 	{
@@ -201,6 +218,68 @@ var variableCmdTestCases = []struct {
 			assert.Contains(t, stderr, "Error: client factory error\n")
 		},
 	},
+	{
+		name: "set subcommand from file - file not found",
+		args: []string{"variable", "set", "-i", "meow", "-f", "/non/existent/file"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: failed to read file /non/existent/file")
+		},
+	},
+	{
+		name: "set subcommand from file - with content",
+		args: []string{"variable", "set", "-i", "test-secret", "-f", "$TMPFILE"},
+		beforeTest: func(t *testing.T, pathToTmpfile string) {
+			err := os.WriteFile(pathToTmpfile, []byte("secret content\nwith newlines"), 0644)
+			assert.NoError(t, err)
+		},
+		set: func(t *testing.T, path, value string) error {
+			assert.Equal(t, "test-secret", path)
+			assert.Equal(t, "secret content\nwith newlines", value)
+			return nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Contains(t, stdout, "Value added")
+		},
+	},
+	{
+		name: "set subcommand from file - with empty file",
+		args: []string{"variable", "set", "-i", "test-secret", "-f", "$TMPFILE"},
+		beforeTest: func(t *testing.T, pathToTmpfile string) {
+			err := os.WriteFile(pathToTmpfile, []byte(""), 0644)
+			assert.NoError(t, err)
+		},
+		set: func(t *testing.T, path, value string) error {
+			assert.Equal(t, "test-secret", path)
+			assert.Equal(t, "", value)
+			return nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Contains(t, stdout, "Value added")
+		},
+	},
+	{
+		name: "set subcommand from file - with large file",
+		args: []string{"variable", "set", "-i", "test-secret", "-f", "$TMPFILE"},
+		beforeTest: func(t *testing.T, pathToTmpfile string) {
+			largeContent := make([]byte, 1024*1024) // 1MB
+			for i := range largeContent {
+				largeContent[i] = 'A'
+			}
+			err := os.WriteFile(pathToTmpfile, largeContent, 0644)
+			assert.NoError(t, err)
+		},
+		set: func(t *testing.T, path, value string) error {
+			assert.Equal(t, "test-secret", path)
+			assert.Equal(t, 1024*1024, len(value))
+			return nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Contains(t, stdout, "Value added")
+		},
+	},
 }
 
 func TestVariableCmd(t *testing.T) {
@@ -208,6 +287,12 @@ func TestVariableCmd(t *testing.T) {
 
 	for _, tc := range variableCmdTestCases {
 		t.Run(tc.name, func(t *testing.T) {
+			pathToTmpDir := t.TempDir()
+			pathToTmpfile := pathToTmpDir + "/file"
+			if tc.beforeTest != nil {
+				tc.beforeTest(t, pathToTmpfile)
+			}
+
 			mockClient := mockVariableClient{
 				t: t, set: tc.set, get: tc.get, getWithVersion: tc.getWithVersion, getBatch: tc.getBatch,
 			}
@@ -221,7 +306,12 @@ func TestVariableCmd(t *testing.T) {
 				},
 			)
 
-			stdout, stderr, err := executeCommandForTest(t, cmd, tc.args...)
+			// $TMPFILE is a placeholder text that gets replaced with the actual temp file path
+			args := make([]string, len(tc.args))
+			for i, v := range tc.args {
+				args[i] = strings.Replace(v, "$TMPFILE", pathToTmpfile, 1)
+			}
+			stdout, stderr, err := executeCommandForTest(t, cmd, args...)
 			tc.assert(t, stdout, stderr, err)
 		})
 	}

@@ -10,7 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.1.3] - 2025-07-22
+## [8.1.3] - 2025-07-28
+
+### Added
+- Add `-f/--file` flag to `variable set` command to read secret values from files. (CNJR-6876)
 
 ### Changed
 - Update Go dependencies to reflect conjur-api-go v0.13.2
