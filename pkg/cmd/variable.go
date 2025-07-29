@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -40,8 +41,8 @@ func newVariableCmd(
 
 	variableSetCmd.Flags().StringP("id", "i", "", "(Required) Provide variable identifier")
 	variableSetCmd.MarkFlagRequired("id")
-	variableSetCmd.Flags().StringP("value", "v", "", "(Required) Set the value of the specified variable")
-	variableSetCmd.MarkFlagRequired("value")
+	variableSetCmd.Flags().StringP("value", "v", "", "Set the value of the specified variable")
+	variableSetCmd.Flags().StringP("file", "f", "", "Set the value of the specified variable based on file contents")
 
 	return variableCmd
 }
@@ -164,6 +165,7 @@ func newVariableSetCmd(clientFactory variableSetClientFactoryFunc) *cobra.Comman
 
 Examples:
 - conjur variable set -i secret -v value
+- conjur variable set -i secret -f file.txt
 		`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -175,6 +177,24 @@ Examples:
 			value, err := cmd.Flags().GetString("value")
 			if err != nil {
 				return err
+			}
+
+			file, err := cmd.Flags().GetString("file")
+			if err != nil {
+				return err
+			}
+
+			// Validate that exactly one of --value or --file is provided
+			if (value == "" && file == "") || (value != "" && file != "") {
+				return fmt.Errorf("must specify exactly one of --value or --file")
+			}
+
+			if file != "" {
+				valueBytes, err := os.ReadFile(file)
+				if err != nil {
+					return fmt.Errorf("failed to read file %s: %w", file, err)
+				}
+				value = string(valueBytes)
 			}
 
 			client, err := clientFactory(cmd)
