@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "Result": {
+    "State": "Success",
+    "TokenLifetime": 900,
+    "Token": "valid-token"
+  },
+  "Message": null,
+  "MessageID": null,
+  "Exception": null,
+  "ErrorID": null,
+  "ErrorCode": null,
+  "IsSoftError": false,
+  "InnerExceptions": null
+}

@@ -7,7 +7,6 @@ import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 	"io"
-	"net/http"
 	"regexp"
 	"strings"
 )
@@ -56,7 +55,7 @@ func cloudIdentityLogin(client ConjurClient, username, password string) (ConjurC
 }
 
 func tokenFromIdentity(client ConjurClient, url string, username string, password string) (string, error) {
-	ia := NewIdentityAuthenticator(client, url, http.DefaultClient)
+	ia := NewIdentityAuthenticator(client, url)
 	return ia.GetToken(username, password)
 }
 

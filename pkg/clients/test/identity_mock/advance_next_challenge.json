@@ -1,0 +1,13 @@
+{
+  "success": true,
+  "Result": {
+    "Summary": "StartNextChallenge"
+  },
+  "Message": null,
+  "MessageID": null,
+  "Exception": null,
+  "ErrorID": null,
+  "ErrorCode": null,
+  "IsSoftError": false,
+  "InnerExceptions": null
+}

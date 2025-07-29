@@ -4,366 +4,276 @@ import (
 	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"io"
+	"github.com/wiremock/go-wiremock"
 	"net/http"
-	"strings"
+	"os"
 	"testing"
+	"time"
 )
 
-type MockedHTTPClient struct {
-	StartAuthFunc     func() (*http.Response, error)
-	AdvancedAuthFunc  func() (*http.Response, error)
-	OOBAuthStatusFunc func() (*http.Response, error)
+const (
+	wiremockURL = "http://wiremock:8080"
+	username    = "user@example.com"
+	password    = "password"
+)
+
+func mockResponse(wiremockClient *wiremock.Client, path, response string, status int64) {
+	_ = wiremockClient.StubFor(wiremock.Post(wiremock.URLPathEqualTo(path)).
+		WillReturnResponse(
+			wiremock.NewResponse().WithBody(response).
+				WithHeader("Content-Type", "application/json").
+				WithStatus(status),
+		).
+		AtPriority(1))
 }
 
-func URLEndsWith(req *http.Request, suffix string) bool {
-	return strings.HasSuffix(req.URL.String(), suffix)
-}
-
-func (m *MockedHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	switch {
-	case URLEndsWith(req, "/Security/StartAuthentication"):
-		return m.StartAuthFunc()
-	case URLEndsWith(req, "/Security/AdvanceAuthentication"):
-		return m.AdvancedAuthFunc()
-	case URLEndsWith(req, "/Security/OobAuthenticationStatus"):
-		return m.OOBAuthStatusFunc()
-	default:
-		return nil, fmt.Errorf("unexpected URL: %s", req.URL.String())
-	}
+func mockResponseWithRequestBody(wiremockClient *wiremock.Client, path, requestBody, response string, status int64) {
+	_ = wiremockClient.StubFor(wiremock.Post(wiremock.URLPathEqualTo(path)).
+		WithBodyPattern(wiremock.EqualToJson(requestBody)).
+		WillReturnResponse(
+			wiremock.NewResponse().WithBody(response).
+				WithHeader("Content-Type", "application/json").
+				WithStatus(status),
+		).
+		AtPriority(1))
 }
 
 func TestIdentityAuthenticator_GetToken(t *testing.T) {
+	wiremockClient := wiremock.NewClient(wiremockURL)
+
 	testCases := []struct {
-		name              string
-		username          string
-		password          string
-		expectedToken     string
-		expectedError     error
-		startAuthFunc     func() (*http.Response, error)
-		advancedAuthFunc  func() (*http.Response, error)
-		oobAuthStatusFunc func() (*http.Response, error)
+		name          string
+		expectedToken string
+		expectedError error
+		timeout       time.Duration
+		beforeTest    func()
 	}{
 		{
 			name:          "Successful authentication (UP challenge)",
-			username:      "user@example.com",
-			password:      "password",
 			expectedToken: "valid-token",
-			startAuthFunc: func() (*http.Response, error) {
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body: io.NopCloser(strings.NewReader(`{	
-	"success":true,
-    "Result":{
-      "ClientHints":{
-        "PersistDefault":false,
-        "AllowPersist":false,
-        "AllowForgotPassword":false,
-        "EndpointAuthenticationEnabled":false
-      },
-      "Version":"1.0",
-      "SessionId":"8vwknPnxZ0ywsj95Y6-uK1kIr6XbtufC310N6qiE8Lc1",
-      "EventDescription":null,
-      "RetryWaitingTime":0,
-      "SecurityImageName":null,
-      "AllowLoginMfaCache":false,
-      "Challenges":[
-        {
-          "Mechanisms":[
-            {
-              "AnswerType":"Text",
-              "Name":"UP",
-              "PromptMechChosen":"Enter Password",
-              "PromptSelectMech":"Password",
-              "MechanismId":"Vu71O06uC0K9uyAZjOlT5B50H63ftBR6vZPPHd5R80U1",
-              "Enrolled":true
-            }
-          ]
-        }
-      ],
-      "Summary":"NewPackage",
-      "TenantId":"ABC1234"
-    },
-    "Message":null,
-    "MessageID":null,
-    "Exception":null,
-    "ErrorID":null,
-    "ErrorCode":null,
-    "IsSoftError":false,
-    "InnerExceptions":null}`)),
-				}, nil
-			},
-			advancedAuthFunc: func() (*http.Response, error) {
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body: io.NopCloser(strings.NewReader(`{
-	"success":true,
-    "Result":{
-      "AuthLevel":"Normal",
-      "DisplayName":"User",
-      "Token":"valid-token",
-      "Auth":"valid-auth-token",
-      "UserId":"some-user-id",
-      "EmailAddress":"user@example.com",
-      "UserDirectory":"CDS",
-      "PodFqdn":"abc1234.id.integration-cyberark.cloud",
-      "User":"user@example.cloud.371805",
-      "CustomerID":"ABC1234",
-      "SystemID":"ABC1234",
-      "SourceDsType":"CDS",
-      "Summary":"LoginSuccess"
-    },
-    "Message":null,
-    "MessageID":null,
-    "Exception":null,
-    "ErrorID":null,
-    "ErrorCode":null,
-    "IsSoftError":false,
-    "InnerExceptions":null}`)),
-				}, nil
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_pass_only.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_auth_pass_only.json")
+				mockResponse(wiremockClient, "/Security/AdvanceAuthentication", string(advanceAuthResponse), http.StatusOK)
 			},
 		},
 		{
 			name:          "Start authentication request error",
-			username:      "user@example.com",
-			expectedError: errors.New("failed to send HTTP request: 500 Internal Server Error"),
-			startAuthFunc: func() (*http.Response, error) {
-				return &http.Response{StatusCode: http.StatusInternalServerError}, errors.New("500 Internal Server Error")
+			expectedError: errors.New("received non-200 response: 500"),
+			beforeTest: func() {
+				mockResponse(wiremockClient, "/Security/StartAuthentication", "500 Internal Server Error", http.StatusInternalServerError)
 			},
 		},
 		{
 			name:          "Start authentication error - failed authentication",
-			username:      "user@example.com",
 			expectedError: errors.New("authentication failed: some error"),
-			startAuthFunc: func() (*http.Response, error) {
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body: io.NopCloser(strings.NewReader(`{	
-	"success":false,
-    "Message":"some error",
-    "MessageID":null,
-    "Exception":null,
-    "ErrorID":null,
-    "ErrorCode":null,
-    "IsSoftError":false,
-    "InnerExceptions":null}`)),
-				}, nil
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_failure.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
 			},
 		},
 		{
 			name:          "Start authentication error - JSON parsing failed",
-			username:      "user@example.com",
 			expectedError: errors.New("failed to parse response: invalid character 'o' in literal null (expecting 'u')"),
-			startAuthFunc: func() (*http.Response, error) {
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body:       io.NopCloser(strings.NewReader(`not a JSON response`)),
-				}, nil
+			beforeTest: func() {
+				mockResponse(wiremockClient, "/Security/StartAuthentication", "not a JSON response", http.StatusOK)
 			},
 		},
 		{
 			name:          "Start authentication error - no challenges available",
-			username:      "user@example.com",
 			expectedError: errors.New("no challenges available for authentication"),
-			startAuthFunc: func() (*http.Response, error) {
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body: io.NopCloser(strings.NewReader(`{	
-	"success":true,
-    "Result":{
-      "ClientHints":{
-        "PersistDefault":false,
-        "AllowPersist":false,
-        "AllowForgotPassword":false,
-        "EndpointAuthenticationEnabled":false
-      },
-      "Version":"1.0",
-      "SessionId":"8vwknPnxZ0ywsj95Y6-uK1kIr6XbtufC310N6qiE8Lc1",
-      "EventDescription":null,
-      "RetryWaitingTime":0,
-      "SecurityImageName":null,
-      "AllowLoginMfaCache":false,
-      "Challenges":[],
-      "Summary":"NewPackage",
-      "TenantId":"ABC1234"
-    },
-    "Message":null,
-    "MessageID":null,
-    "Exception":null,
-    "ErrorID":null,
-    "ErrorCode":null,
-    "IsSoftError":false,
-    "InnerExceptions":null}`)),
-				}, nil
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_no_challenges.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
 			},
 		},
 		{
 			name:          "Start authentication error - no mechanism available",
-			username:      "user@example.com",
 			expectedError: errors.New("no mechanisms available for authentication"),
-			startAuthFunc: func() (*http.Response, error) {
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body: io.NopCloser(strings.NewReader(`{	
-	"success":true,
-    "Result":{
-      "ClientHints":{
-        "PersistDefault":false,
-        "AllowPersist":false,
-        "AllowForgotPassword":false,
-        "EndpointAuthenticationEnabled":false
-      },
-      "Version":"1.0",
-      "SessionId":"8vwknPnxZ0ywsj95Y6-uK1kIr6XbtufC310N6qiE8Lc1",
-      "EventDescription":null,
-      "RetryWaitingTime":0,
-      "SecurityImageName":null,
-      "AllowLoginMfaCache":false,
-      "Challenges":[
-        {
-          "Mechanisms":[]
-        }
-      ],
-      "Summary":"NewPackage",
-      "TenantId":"ABC1234"
-    },
-    "Message":null,
-    "MessageID":null,
-    "Exception":null,
-    "ErrorID":null,
-    "ErrorCode":null,
-    "IsSoftError":false,
-    "InnerExceptions":null}`)),
-				}, nil
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_no_mechanism.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
 			},
 		},
 		{
 			name:          "Advanced authentication request error (UP challenge)",
-			username:      "user@example.com",
-			password:      "password",
-			expectedError: errors.New("failed to send HTTP request: 500 Internal Server Error"),
-			startAuthFunc: func() (*http.Response, error) {
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body: io.NopCloser(strings.NewReader(`{	
-	"success":true,
-    "Result":{
-      "ClientHints":{
-        "PersistDefault":false,
-        "AllowPersist":false,
-        "AllowForgotPassword":false,
-        "EndpointAuthenticationEnabled":false
-      },
-      "Version":"1.0",
-      "SessionId":"8vwknPnxZ0ywsj95Y6-uK1kIr6XbtufC310N6qiE8Lc1",
-      "EventDescription":null,
-      "RetryWaitingTime":0,
-      "SecurityImageName":null,
-      "AllowLoginMfaCache":false,
-      "Challenges":[
-        {
-          "Mechanisms":[
-            {
-              "AnswerType":"Text",
-              "Name":"UP",
-              "PromptMechChosen":"Enter Password",
-              "PromptSelectMech":"Password",
-              "MechanismId":"Vu71O06uC0K9uyAZjOlT5B50H63ftBR6vZPPHd5R80U1",
-              "Enrolled":true
-            }
-          ]
-        }
-      ],
-      "Summary":"NewPackage",
-      "TenantId":"ABC1234"
-    },
-    "Message":null,
-    "MessageID":null,
-    "Exception":null,
-    "ErrorID":null,
-    "ErrorCode":null,
-    "IsSoftError":false,
-    "InnerExceptions":null}`)),
-				}, nil
-			},
-			advancedAuthFunc: func() (*http.Response, error) {
-				return &http.Response{StatusCode: http.StatusInternalServerError}, errors.New("500 Internal Server Error")
+			expectedError: errors.New("received non-200 response: 500"),
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_pass_only.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				mockResponse(wiremockClient, "/Security/AdvanceAuthentication", "500 Internal Server Error", http.StatusInternalServerError)
 			},
 		},
 		{
 			name:          "Advanced authentication error (UP challenge) - JSON parsing failed",
-			username:      "user@example.com",
-			password:      "password",
 			expectedError: errors.New("failed to parse response: invalid character 'o' in literal null (expecting 'u')"),
-			startAuthFunc: func() (*http.Response, error) {
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body: io.NopCloser(strings.NewReader(`{	
-	"success":true,
-    "Result":{
-      "ClientHints":{
-        "PersistDefault":false,
-        "AllowPersist":false,
-        "AllowForgotPassword":false,
-        "EndpointAuthenticationEnabled":false
-      },
-      "Version":"1.0",
-      "SessionId":"8vwknPnxZ0ywsj95Y6-uK1kIr6XbtufC310N6qiE8Lc1",
-      "EventDescription":null,
-      "RetryWaitingTime":0,
-      "SecurityImageName":null,
-      "AllowLoginMfaCache":false,
-      "Challenges":[
-        {
-          "Mechanisms":[
-            {
-              "AnswerType":"Text",
-              "Name":"UP",
-              "PromptMechChosen":"Enter Password",
-              "PromptSelectMech":"Password",
-              "MechanismId":"Vu71O06uC0K9uyAZjOlT5B50H63ftBR6vZPPHd5R80U1",
-              "Enrolled":true
-            }
-          ]
-        }
-      ],
-      "Summary":"NewPackage",
-      "TenantId":"ABC1234"
-    },
-    "Message":null,
-    "MessageID":null,
-    "Exception":null,
-    "ErrorID":null,
-    "ErrorCode":null,
-    "IsSoftError":false,
-    "InnerExceptions":null}`)),
-				}, nil
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_pass_only.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				mockResponse(wiremockClient, "/Security/AdvanceAuthentication", "not a JSON response", http.StatusOK)
 			},
-			advancedAuthFunc: func() (*http.Response, error) {
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body:       io.NopCloser(strings.NewReader(`not a JSON response`)),
-				}, nil
+		},
+		{
+			name:          "Successful authentication (SMS/Email MFA)",
+			expectedToken: "valid-token",
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_mfa.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
+				startOOBRequest := `{"Action":"StartOOB","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				startOOBResponse, _ := os.ReadFile("test/identity_mock/advance_start_oob.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", startOOBRequest, string(startOOBResponse), http.StatusOK)
+				OOBSuccessRequest := `{"Action":"Answer","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				OOBSuccessResponse, _ := os.ReadFile("test/identity_mock/advance_oob_success.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", OOBSuccessRequest, string(OOBSuccessResponse), http.StatusOK)
+				pollRequest := `{"Action":"Poll","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				pollResponse, _ := os.ReadFile("test/identity_mock/advance_oob_success.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", pollRequest, string(pollResponse), http.StatusOK)
+			},
+		},
+		{
+			name:          "Successful authentication (QR MFA)",
+			expectedToken: "valid-token",
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_qr.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
+				startPollResponse, _ := os.ReadFile("test/identity_mock/advance_oob_success.json")
+				mockResponse(wiremockClient, "/Security/AdvanceAuthentication", string(startPollResponse), http.StatusOK)
+			},
+		},
+		{
+			name:          "Successful authentication (External Action MFA)",
+			expectedToken: "valid-token",
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_idp.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				OOBSuccessResponse, _ := os.ReadFile("test/identity_mock/oob_status_success.json")
+				mockResponse(wiremockClient, "/Security/OobAuthStatus", string(OOBSuccessResponse), http.StatusOK)
+			},
+		},
+		{
+			name:          "MFA Authentication - Unsupported mechanism",
+			expectedError: errors.New("unsupported authentication mechanism: UNSUPPORTED"),
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_unsupported_mfa.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
+			},
+		},
+		{
+			name:          "MFA Authentication - Start OOB request error",
+			expectedError: errors.New("received non-200 response: 500"),
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_mfa.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
+				advanceRequest := `{"Action":"Answer","Answer":"password","MechanismId":"password_mechanism_id","SessionId":"session_id"}`
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", advanceRequest, "500 Internal Server Error", http.StatusInternalServerError)
+			},
+		},
+		{
+			name:          "MFA Authentication - advance authentication request error",
+			expectedError: errors.New("failed to poll authentication status: received non-200 response: 500"),
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_mfa.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
+				startOOBRequest := `{"Action":"StartOOB","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				startOOBResponse, _ := os.ReadFile("test/identity_mock/advance_start_oob.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", startOOBRequest, string(startOOBResponse), http.StatusOK)
+				OOBFailureRequest := `{"Action":"Poll","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", OOBFailureRequest, "500 Internal Server Error", http.StatusInternalServerError)
+			},
+		},
+		{
+			name:          "MFA Authentication - advance authentication error",
+			timeout:       1 * time.Second,
+			expectedError: errors.New("Timed out waiting for out-of-band authentication"),
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_mfa.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
+				startOOBRequest := `{"Action":"StartOOB","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				startOOBResponse, _ := os.ReadFile("test/identity_mock/advance_start_oob.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", startOOBRequest, string(startOOBResponse), http.StatusOK)
+				OOBFailureRequest := `{"Action":"Poll","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				OOBFailureResponse, _ := os.ReadFile("test/identity_mock/advance_failure.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", OOBFailureRequest, string(OOBFailureResponse), http.StatusOK)
+			},
+		},
+		{
+			name:          "External action MFA - request error",
+			expectedError: errors.New("received non-200 response: 500"),
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_idp.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				mockResponse(wiremockClient, "/Security/OobAuthStatus", "500 internal server error", http.StatusInternalServerError)
+			},
+		},
+		{
+			name:          "External action MFA - authentication failure",
+			expectedError: errors.New("authentication failed"),
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_idp.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				OOBFailureResponse, _ := os.ReadFile("test/identity_mock/oob_status_failure.json")
+				mockResponse(wiremockClient, "/Security/OobAuthStatus", string(OOBFailureResponse), http.StatusOK)
+			},
+		},
+		{
+			name:          "External action MFA - JSON parsing failed",
+			expectedError: errors.New("failed to parse response: invalid character 'o' in literal null (expecting 'u')"),
+			beforeTest: func() {
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_idp.json")
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				mockResponse(wiremockClient, "/Security/OobAuthStatus", "not a JSON response", http.StatusOK)
 			},
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockedClient := &MockedHTTPClient{
-				StartAuthFunc:     tc.startAuthFunc,
-				AdvancedAuthFunc:  tc.advancedAuthFunc,
-				OOBAuthStatusFunc: tc.oobAuthStatusFunc,
+			timeout := tc.timeout
+			if timeout == 0 {
+				timeout = defaultTimeout
 			}
 
 			authenticator := &IdentityAuthenticator{
-				httpClient: mockedClient,
+				identityURL: wiremockURL,
+				timeout:     timeout,
 			}
 
-			token, err := authenticator.GetToken(tc.username, tc.password)
+			// Set up the test case
+			if tc.beforeTest != nil {
+				tc.beforeTest()
+			}
+
+			// Call the method under test
+			token, err := authenticator.GetToken(username, password)
+
+			// Assert the results
 			if tc.expectedError != nil {
 				assert.Equal(t, tc.expectedError.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
 			}
 			assert.Equal(t, tc.expectedToken, token)
+
+			// Clear stubs on wiremock client
+			_ = wiremockClient.Clear()
 		})
 	}
 }

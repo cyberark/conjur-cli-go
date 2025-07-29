@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -21,6 +22,7 @@ type initCloudCmdFlagValues struct {
 	forceFileOverwrite bool
 	selfSigned         bool
 	forceNetrc         bool
+	ccTimeout          time.Duration
 }
 
 func getInitCloudCmdFlagValues(cmd *cobra.Command) (initCloudCmdFlagValues, error) {
@@ -60,6 +62,10 @@ func getInitCloudCmdFlagValues(cmd *cobra.Command) (initCloudCmdFlagValues, erro
 	if err != nil {
 		return initCloudCmdFlagValues{}, err
 	}
+	ccTimeout, err := cmd.Flags().GetDuration("cc-timeout")
+	if err != nil {
+		return initCloudCmdFlagValues{}, err
+	}
 
 	return initCloudCmdFlagValues{
 		cloudURL:           cloudURL,
@@ -70,6 +76,7 @@ func getInitCloudCmdFlagValues(cmd *cobra.Command) (initCloudCmdFlagValues, erro
 		forceFileOverwrite: forceFileOverwrite,
 		selfSigned:         selfSigned,
 		forceNetrc:         forceNetrc,
+		ccTimeout:          ccTimeout,
 	}, nil
 }
 
@@ -133,6 +140,10 @@ func runInitCloudCommand(cmd *cobra.Command) error {
 			return err
 		}
 		config.SSLCertPath = path
+	}
+
+	if cmdFlagVals.ccTimeout > 0 {
+		config.ConjurCloudTimeout = int(cmdFlagVals.ccTimeout)
 	}
 
 	err = config.Validate()
@@ -209,6 +220,7 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 	// cmd.Flags().BoolP("insecure", "i", false, "Allow non-HTTPS connections (insecure)")
 	cmd.Flags().Bool("force-netrc", false, "Use a file-based credential storage rather than OS-native keystore (for compatibility with Summon)")
 	cmd.Flags().Bool("force", false, "Force overwrite of existing configuration file")
+	cmd.Flags().Duration("cc-timeout", 5*time.Minute, "Timeout for authentication operations and requests to the Identity server")
 
 	return cmd
 }

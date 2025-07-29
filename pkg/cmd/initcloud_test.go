@@ -43,6 +43,7 @@ cert_file: ` + pwd + `/conjur-server.pem
 authn_type: cloud
 service_id: cyberark
 environment: cloud
+cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))
 			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
@@ -66,6 +67,7 @@ cert_file: ` + pwd + `/conjur-server.pem
 authn_type: cloud
 service_id: cyberark
 environment: cloud
+cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))
 		},
@@ -112,6 +114,7 @@ cert_file: ` + pwd + `/conjur-server.pem
 authn_type: cloud
 service_id: cyberark
 environment: cloud
+cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))
 		},
@@ -129,6 +132,7 @@ authn_type: cloud
 service_id: cyberark
 credential_storage: file
 environment: cloud
+cc_timeout: 300000000000
 `
 
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -152,6 +156,7 @@ cert_file: ` + pwd + `/conjur-server.pem
 authn_type: cloud
 service_id: cyberark
 environment: cloud
+cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))
 
@@ -218,6 +223,7 @@ cert_file: ` + pwd + `/custom.pem
 authn_type: cloud
 service_id: cyberark
 environment: cloud
+cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))
 		},
@@ -233,6 +239,7 @@ cert_file: ` + pwd + `/conjur-server.pem
 authn_type: cloud
 service_id: cyberark
 environment: cloud
+cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))
 		},

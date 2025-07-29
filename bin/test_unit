@@ -16,12 +16,29 @@ function build_docker_ut_image() {
   docker build -f Dockerfile.test -t conjur-cli-go-test-runner:latest .
 }
 
+function cleanup() {
+  docker container stop wiremock || true
+  docker container rm wiremock || true
+  docker network rm ip6net
+  docker network rm ip4net
+}
+
+trap 'cleanup' EXIT
+
 function run_unit_tests() {
   echo "Creating ipv6 network..."
   docker network create --ipv6 --subnet 2001:0DB8::/112 ip6net
+  docker network create ip4net
+  echo "Starting WireMock container..."
+  docker run -d \
+             --name wiremock \
+             --network ip4net \
+             -p 8080:8080 \
+             wiremock/wiremock
   echo "Running unit tests..."
   docker run --rm \
             --network ip6net \
+            --network ip4net \
              --volume "$PWD"/:/conjur-cli-go/test/ \
              conjur-cli-go-test-runner:latest \
              -coverprofile="./test/c.out.tmp" \
@@ -29,7 +46,6 @@ function run_unit_tests() {
              | tee -a "$junit_output_file" && \
              cat c.out.tmp | grep -v "_dev.go" > c.out && \
              rm -f c.out.tmp
-  docker network rm ip6net
   echo "Unit test exit status: $?"
 }
 

@@ -1,0 +1,16 @@
+{
+  "success": true,
+  "Result": {
+    "DisplayName": "Conjur user",
+    "Token": "valid-token",
+    "Auth": "Auth",
+    "Summary": "LoginSuccess"
+  },
+  "Message": null,
+  "MessageID": null,
+  "Exception": null,
+  "ErrorID": null,
+  "ErrorCode": null,
+  "IsSoftError": false,
+  "InnerExceptions": null
+}

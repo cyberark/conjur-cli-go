@@ -80,25 +80,26 @@ type authAdvanceResp struct {
 	Token              string `json:"Token"`
 }
 
-type HTTPClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
 // IdentityAuthenticator struct
 type IdentityAuthenticator struct {
 	identityURL     string
 	customTenantURL string
 	client          ConjurClient
 	sessionID       string
-	httpClient      HTTPClient
+	timeout         time.Duration
 }
 
 // NewIdentityAuthenticator creates a new instance of IdentityAuthenticator
-func NewIdentityAuthenticator(client ConjurClient, identityURL string, httpClient *http.Client) *IdentityAuthenticator {
+func NewIdentityAuthenticator(client ConjurClient, identityURL string) *IdentityAuthenticator {
+	timeout := time.Duration(client.GetConfig().ConjurCloudTimeout)
+	if timeout == 0 {
+		timeout = defaultTimeout
+	}
+
 	return &IdentityAuthenticator{
 		identityURL: identityURL,
 		client:      client,
-		httpClient:  httpClient,
+		timeout:     timeout,
 	}
 }
 
@@ -190,7 +191,7 @@ func chooseMechanism(mechanisms []mechanismResp) (*mechanismResp, error) {
 }
 
 func (ia *IdentityAuthenticator) answer(ctx context.Context, mechanism *mechanismResp) (*identityResp[authAdvanceResp], error) {
-	answer, err := prompts.AskForPrompt(ctx, mechanism.PromptMechChosen, defaultTimeout)
+	answer, err := prompts.AskForPrompt(ctx, mechanism.PromptMechChosen, ia.timeout)
 	// if answer is empty, it means the input was canceled
 	if err != nil || len(answer) == 0 {
 		return nil, err
@@ -212,13 +213,16 @@ func answerable(mechanismName string) bool {
 func (ia *IdentityAuthenticator) startPoll(mechanismID string) (advanceResp *identityResp[authAdvanceResp], err error) {
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
-	timeout := time.After(defaultTimeout)
+	timeout := time.After(ia.timeout)
 	for {
 		select {
 		case <-timeout:
 			return nil, errors.New("Timed out waiting for out-of-band authentication")
 		case <-ticker.C:
-			advanceResp, _ = ia.advanceAuthentication(mechanismID, "Poll", "")
+			advanceResp, err = ia.advanceAuthentication(mechanismID, "Poll", "")
+			if err != nil {
+				return nil, fmt.Errorf("failed to poll authentication status: %w", err)
+			}
 			if advanceResp.Result.Summary == "LoginSuccess" || advanceResp.Result.Summary == "StartNextChallenge" {
 				return
 			}
@@ -248,13 +252,16 @@ func (ia *IdentityAuthenticator) waitForExternalAction(idpURL, idpSessionID stri
 	_ = openBrowser(idpURL) // this may fail on headless systems, but we don't want to block the authentication process
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
-	timeout := time.After(defaultTimeout)
+	timeout := time.After(ia.timeout)
 	for {
 		select {
 		case <-timeout:
 			return "", errors.New("Timed out waiting for external authentication.")
 		case <-ticker.C:
-			token, _ := ia.getAuthStatusToken(idpSessionID)
+			token, err := ia.getAuthStatusToken(idpSessionID)
+			if err != nil {
+				return "", err
+			}
 			if len(token) > 0 {
 				return token, nil
 			}
@@ -328,7 +335,7 @@ func (ia *IdentityAuthenticator) getAuthStatusToken(sessionID string) (string, e
 		return "", fmt.Errorf("failed to parse response: %w", err)
 	}
 
-	switch authStatus.Result.State {
+	switch strings.ToLower(authStatus.Result.State) {
 	case "pending":
 		return "", nil
 	case "success":
@@ -346,7 +353,7 @@ func (ia *IdentityAuthenticator) invokeEndpoint(method, url string, payload []by
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-IDAP-NATIVE-CLIENT", "true")
 
-	resp, err := ia.httpClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send HTTP request: %w", err)
 	}

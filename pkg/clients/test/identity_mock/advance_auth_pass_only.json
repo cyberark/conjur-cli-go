@@ -1,0 +1,25 @@
+{
+  "success":true,
+  "Result":{
+    "AuthLevel":"Normal",
+    "DisplayName":"User",
+    "Token":"valid-token",
+    "Auth":"valid-auth-token",
+    "UserId":"some-user-id",
+    "EmailAddress":"user@example.com",
+    "UserDirectory":"CDS",
+    "PodFqdn":"abc1234.id.integration-cyberark.cloud",
+    "User":"user@example.cloud.371805",
+    "CustomerID":"ABC1234",
+    "SystemID":"ABC1234",
+    "SourceDsType":"CDS",
+    "Summary":"LoginSuccess"
+  },
+  "Message":null,
+  "MessageID":null,
+  "Exception":null,
+  "ErrorID":null,
+  "ErrorCode":null,
+  "IsSoftError":false,
+  "InnerExceptions":null
+}
