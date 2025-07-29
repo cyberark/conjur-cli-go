@@ -2,13 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 
 	"github.com/spf13/cobra"
 )
@@ -89,12 +91,11 @@ func validateCloudCmdFlags(cmdFlagVals initCloudCmdFlagValues, cmd *cobra.Comman
 		cmd.PrintErrln("Warning: Using self-signed certificates is not recommended and could lead to exposure of sensitive data")
 	}
 
-	for _, suf := range conjurapi.ConjurCloudSuffixes {
-		if strings.Contains(cmdFlagVals.cloudURL, suf) {
-			return nil
-		}
+	if _, err := clients.ParseCloudURL(cmdFlagVals.cloudURL); err != nil {
+		return err
 	}
-	return fmt.Errorf("invalid Secrets Manager SaaS URL: %s. Please provide valid URL", cmdFlagVals.cloudURL)
+
+	return nil
 }
 
 func runInitCloudCommand(cmd *cobra.Command) error {
@@ -207,17 +208,12 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 		os.Exit(1)
 	}
 
-	// cmd.Flags().StringP("account", "a", "", "Conjur organization account name")
 	cmd.Flags().StringP("url", "u", "", "URL of the Secrets Manager service. Will prompt if omitted.")
 	cmd.Flags().StringP("ca-cert", "c", "", "Secrets Manager SSL certificate (will be obtained from host unless provided by this option)")
 	cmd.Flags().StringP("file", "f", defaultConjurRC(userHomeDir), "File to write the configuration to. You must set the CONJURRC environment variable to the same value for this file to be used for further commands.")
 	cmd.Flags().String("cert-file", filepath.Join(userHomeDir, "conjur-server.pem"), "File to write the server's certificate to")
 	cmd.Flags().StringP("proxy", "p", "", "Proxy URL to use for connecting to Conjur")
-	// cmd.Flags().String("service-id", "", "Service ID if using alternative authentication type")
-	// cmd.Flags().String("jwt-file", "", "Path to the JWT file if using authn-jwt")
-	// cmd.Flags().String("jwt-host-id", "", "Host ID for authn-jwt (not required if JWT contains host ID)")
 	cmd.Flags().BoolP("self-signed", "s", false, "Allow self-signed certificates (insecure)")
-	// cmd.Flags().BoolP("insecure", "i", false, "Allow non-HTTPS connections (insecure)")
 	cmd.Flags().Bool("force-netrc", false, "Use a file-based credential storage rather than OS-native keystore (for compatibility with Summon)")
 	cmd.Flags().Bool("force", false, "Force overwrite of existing configuration file")
 	cmd.Flags().Duration("cc-timeout", 5*time.Minute, "Timeout for authentication operations and requests to the Identity server")

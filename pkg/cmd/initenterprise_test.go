@@ -9,7 +9,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"github.com/cyberark/conjur-api-go/conjurapi"
 	"math/big"
 	"net"
 	"net/http"
@@ -18,6 +17,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/cyberark/conjur-api-go/conjurapi"
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/stretchr/testify/assert"
@@ -246,13 +247,13 @@ environment: self-hosted
 		},
 		promptResponses: []promptResponse{
 			{
-				prompt:   "Trust this certificate?",
+				prompt:   "Do you want to trust this certificate?",
 				response: "N",
 			},
 		},
 		pipe: true,
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			assert.Contains(t, stdout, "You decided not to trust the certificate")
+			assert.Contains(t, stdout, "Based on your selection, this certificate will not be trusted")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
@@ -280,7 +281,7 @@ environment: self-hosted
 		args: []string{"init", "enterprise", "-u=https://localhost:8080", "-a=test-account"},
 		promptResponses: []promptResponse{
 			{
-				prompt:   "Trust this certificate?",
+				prompt:   "Do you want to trust this certificate?",
 				response: "y",
 			},
 		},
@@ -289,7 +290,7 @@ environment: self-hosted
 			return startSelfSignedServer(t, 8080)
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			assert.Contains(t, stdout, "Trust this certificate? [y/N]")
+			assert.Contains(t, stdout, "Do you want to trust this certificate? [y/N]")
 			assertCertWritten(t, conjurrcInTmpDir, stdout)
 		},
 	},

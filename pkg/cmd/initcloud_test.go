@@ -174,14 +174,14 @@ cc_timeout: 300000000000
 	},
 	{
 		name: "writes configuration",
-		args: []string{"init", "cloud", "-u=https://scauap.integration-cyberark.cloud"},
+		args: []string{"init", "cloud", "-u=https://tenant.secretsmgr.cyberark.cloud", "--ca-cert=conjur-server.pem"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
 		},
 	},
 	{
 		name: "fails if can't retrieve server certificate",
-		args: []string{"init", "cloud", "-u=https://nonexisting.integration-cyberark.cloud"},
+		args: []string{"init", "cloud", "-u=https://nonexisting-secretsmanager.integration-cyberark.cloud"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			assert.Contains(t, stdout, "Unable to retrieve and validate certificate")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
@@ -207,7 +207,7 @@ cc_timeout: 300000000000
 		name: "fails for invalid urls",
 		args: []string{"init", "cloud", "-u=https://invalid:url:test"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			assert.Contains(t, stdout, "Error: invalid Secrets Manager SaaS URL: https://invalid:url:test/api")
+			assert.Contains(t, stdout, "Error: invalid Secrets Manager SaaS URL: expected format https://<tenant>.secretsmgr.cyberark.cloud/api")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},

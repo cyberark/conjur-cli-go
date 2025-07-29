@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"context"
+	"crypto/x509"
 	"errors"
+	"os"
+	"time"
+
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/cyberark/conjur-cli-go/pkg/cmd/style"
 	"github.com/cyberark/conjur-cli-go/pkg/version"
-	"os"
-	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -41,10 +42,14 @@ func Execute() {
 	rootCmd.SetErr(os.Stderr)
 	err := style.Execute(rootCmd)
 	if err != nil {
-		// check if error is about x509 certificate
-		if strings.Contains(err.Error(), "x509:") {
+		// check if error is about x509 unknown certificate signing authority
+		if errors.As(err, &x509.UnknownAuthorityError{}) {
 			rootCmd.PrintErrln(
-				"Your Secrets Manager server's certificate is not trusted. Consider running 'conjur init' to initialize the CLI with your Secrets Manager server's certificate.")
+				"WARNING: The server’s TLS certificate has changed.\n\n" +
+					"This means one of the following:\n\n" +
+					"    The server's certificate has been rotated\n" +
+					"    The server or your device may have been compromised\n\n" +
+					"If needed, verify the change with your administrator before reinitializing the CLI and accepting the new certificate.")
 		}
 		if errors.Is(err, context.DeadlineExceeded) {
 			rootCmd.PrintErrln(

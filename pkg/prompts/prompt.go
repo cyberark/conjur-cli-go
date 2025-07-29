@@ -132,10 +132,13 @@ func MaybeAskToOverwriteFile(filePath string) error {
 // AskToOverwriteFile presents a prompt to get confirmation from a user to overwrite a file
 func AskToOverwriteFile(filePath string) error {
 	ok, err := confirm(fmt.Sprintf("File %s exists. Overwrite?", filePath), "")
+	if err != nil {
+		return err
+	}
 	if !ok {
 		return fmt.Errorf("not overwriting %s", filePath)
 	}
-	return err
+	return nil
 }
 
 // AskToTrustCert presents a prompt to get confirmation from a user to trust a certificate
@@ -158,9 +161,9 @@ func AskToTrustCert(cert utils.ServerCert) error {
 		fmt.Sprintf("Certificate creation date: %s\n", cert.CreationDate) +
 		fmt.Sprintf("Certificate expiration date: %s\n", cert.ExpirationDate)
 
-	ok, err := confirm("Trust this certificate?", warning)
+	ok, err := confirm("Do you want to trust this certificate?", warning)
 	if !ok {
-		return errors.New("you decided not to trust the certificate")
+		return errors.New("Based on your selection, this certificate will not be trusted")
 	}
 	return err
 }

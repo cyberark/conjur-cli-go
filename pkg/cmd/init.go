@@ -134,7 +134,7 @@ func fetchCertIfNeeded(config *conjurapi.Config, insecure, selfSigned, forceFile
 		if !selfSigned {
 			err = prompts.AskToTrustCert(cert)
 			if err != nil {
-				return fmt.Errorf("You decided not to trust the certificate")
+				return fmt.Errorf("Based on your selection, this certificate will not be trusted")
 			}
 		}
 	}
@@ -181,7 +181,7 @@ func appendConjurCloudCert(url *url.URL, selfSigned bool, combinedCert string) (
 	if (identityCert.SelfSigned || identityCert.UntrustedCA) && !selfSigned {
 		err = prompts.AskToTrustCert(identityCert)
 		if err != nil {
-			return "", fmt.Errorf("You decided not to trust the certificate from %s", identityHost)
+			return "", fmt.Errorf("Based on your selection, this certificate will not be trusted from %s", identityHost)
 		}
 	}
 

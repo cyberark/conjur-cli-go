@@ -4,9 +4,10 @@
 package main
 
 import (
-	"github.com/cyberark/conjur-api-go/conjurapi"
 	"os/exec"
 	"testing"
+
+	"github.com/cyberark/conjur-api-go/conjurapi"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -30,11 +31,11 @@ func TestInitIntegration(t *testing.T) {
 	t.Run("init with self-signed cert", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("init", string(conjurapi.EnvironmentSH), "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force")
 		assert.Error(t, err)
-		assert.Contains(t, stdOut, "Trust this certificate? [y/N]")
+		assert.Contains(t, stdOut, "Do you want to trust this certificate? [y/N]")
 
 		stdOut, stdErr, err = cli.Run("init", string(conjurapi.EnvironmentSH), "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force", "--self-signed")
 		assert.NotContains(t, stdErr, "Unable to retrieve and validate certificate")
-		assert.NotContains(t, stdOut, "Trust this certificate? [y/N]")
+		assert.NotContains(t, stdOut, "Do you want to trust this certificate? [y/N]")
 		assert.Contains(t, stdOut, "Wrote certificate to ")
 		assert.Contains(t, stdErr, selfSignedWarning)
 	})
