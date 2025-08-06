@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5 as conjur-cli-go
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.6 as conjur-cli-go
 LABEL org.opencontainers.image.authors="CyberArk Software Ltd."
 
 ENTRYPOINT [ "/usr/local/bin/conjur" ]
