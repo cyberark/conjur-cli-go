@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Update Go dependencies to reflect conjur-api-go v0.13.2
 - Improve error handling for missing .netrc file. ([cyberark/summon-conjur#83](https://github.com/cyberark/summon-conjur/issues/83), CNJR-10190)
+- Remove `-go` suffix from CLI binaries. (CNJR-3725)
 
 ### Security
 - Change base image to `ubi9/ubi-minimal:9.6` (CNJR-10624)

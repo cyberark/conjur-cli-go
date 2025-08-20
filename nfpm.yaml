@@ -1,4 +1,4 @@
-name: conjur-cli-go
+name: conjur-cli
 version: ${VERSION}
 
 platform: linux
@@ -11,7 +11,7 @@ vendor: CyberArk
 maintainer: CyberArk Maintainers <conj_maintainers@cyberark.com>
 
 contents:
-  - src: ./dist/goreleaser/conjur-cli-go_linux_${GOARCH}*/conjur
+  - src: ./dist/goreleaser/conjur-cli_linux_${GOARCH}*/conjur
     dst: /usr/bin/
     expand: true
     file_info:
