@@ -68,7 +68,7 @@ function build_packages() {
 
     for packager in "${PACKAGERS[@]}"; do
       for arch in "${ARCHITECTURES[@]}"; do
-        target_file="conjur-cli-go_${VERSION}_${arch}.${packager}"
+        target_file="conjur-cli_${VERSION}_${arch}.${packager}"
 
         docker run --rm \
           --env VERSION="${VERSION}" \

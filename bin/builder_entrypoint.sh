@@ -13,7 +13,7 @@ function main() {
   go mod tidy
 
   rm -rf "$OUTPUT_DIR"
-  mkdir -p "$OUTPUT_DIR/conjur-cli-go_linux_amd64_v1"
+  mkdir -p "$OUTPUT_DIR/conjur-cli_linux_amd64_v1"
 
   CGO_ENABLED=1 \
   GOOS=linux \
@@ -23,11 +23,11 @@ function main() {
     -ldflags "-w \
       -X github.com/cyberark/conjur-cli-go/pkg/version.Tag=$SHORT_COMMIT_HASH \
       -X github.com/cyberark/conjur-cli-go/pkg/version.Version=$VERSION" \
-    -o "$OUTPUT_DIR/conjur-cli-go_linux_amd64_v1/conjur" \
+    -o "$OUTPUT_DIR/conjur-cli_linux_amd64_v1/conjur" \
     ./cmd/conjur/main.go
   
   # Ensure the binary is compiled with FIPS enabled
-  if ! go tool nm "$OUTPUT_DIR/conjur-cli-go_linux_amd64_v1/conjur" | grep 'openssl_FIPS_mode' >/dev/null; then
+  if ! go tool nm "$OUTPUT_DIR/conjur-cli_linux_amd64_v1/conjur" | grep 'openssl_FIPS_mode' >/dev/null; then
     echo "FIPS mode not enabled in the binary"
     exit 1
   fi

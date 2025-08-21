@@ -1,6 +1,6 @@
 version: 2
 
-project_name: conjur-cli-go
+project_name: conjur-cli
 
 before:
   hooks:
@@ -53,7 +53,7 @@ builds:
         - cp "{{ .Path }}" "{{ dir .Path }}/../binaries/conjur_{{ .Target }}{{ .Ext }}"
 
 archives:
-  - id: conjur-cli-go-archive
+  - id: conjur-cli-archive
     files:
       - CHANGELOG.md
       - LICENSE
@@ -71,7 +71,7 @@ brews:
   - name: conjur-cli
     description: CyberArk Conjur command line interface
     homepage: https://conjur.org
-    url_template: https://github.com/cyberark/conjur-cli-go/releases/download/v{{.Env.VERSION}}/conjur-cli-go_{{.Env.VERSION}}_{{.Os}}_{{.Arch}}.tar.gz
+    url_template: https://github.com/cyberark/conjur-cli-go/releases/download/v{{.Env.VERSION}}/conjur-cli_{{.Env.VERSION}}_{{.Os}}_{{.Arch}}.tar.gz
     install: |
       bin.install "conjur"
     test: |
