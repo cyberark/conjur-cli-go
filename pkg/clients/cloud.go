@@ -76,6 +76,9 @@ func identityURL(client ConjurClient) (string, error) {
 	if len(matches) == 0 {
 		return "", fmt.Errorf("invalid Secrets Manager SaaS URL: %s", tenantURL)
 	}
+	if !strings.Contains(tenantURL, "-secretsmanager") && !strings.Contains(tenantURL, ".secretsmgr") {
+		return "", fmt.Errorf("invalid Secrets Manager SaaS URL: must contain '-secretsmanager' or '.secretsmgr' suffix")
+	}
 	tenant := strings.TrimSuffix(matches[1], "-secretsmanager")
 	rest := strings.TrimPrefix(matches[2], ".secretsmgr")
 	endpoint := fmt.Sprintf("https://%s%s/shell/api/endpoint/%s", tenant, rest, tenant)
