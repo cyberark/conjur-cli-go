@@ -54,7 +54,7 @@ Examples:
 
 func init() {
 	config := clients.LoadConfigOrDefault()
-	if config.IsConjurCE() || config.IsConjurOSS() {
+	if config.IsSelfHosted() || config.IsConjurOSS() {
 		pubKeysCmd := newPubKeysCommand(pubKeysClientFactory)
 		rootCmd.AddCommand(pubKeysCmd)
 	}

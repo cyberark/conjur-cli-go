@@ -219,7 +219,7 @@ pipeline {
       }
     }
 
-    stage('Run Conjur Cloud tests') {
+    stage('Run Secrets Manager SaaS tests') {
       stages {
         stage('Create a Tenant') {
           steps {

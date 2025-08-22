@@ -1,4 +1,57 @@
->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+
 
 
 
@@ -344,32 +397,8 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ────────────────────────────────────────────────────────────────────────────────
->
+> conjur check --hel
 
 
 
@@ -429,59 +458,30 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur check --help
 
+  Check a role's privilege on a resource
 
+  This command requires a [resource-id] and a [privilege].
 
+  By default, this command checks if the currently authenticated
+  user has privilege over the resource. When the optional [-r|--role]
+  flag is provided, the command checks if the specified role has
+  privilege over the resource.
 
+  Examples:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> conjur check --help
-
-  Check a role's privilege on a resource
-
-  This command requires a [resource-id] and a [privilege].
-
-  By default, this command checks if the currently authenticated
-  user has privilege over the resource. When the optional [-r|--role]
-  flag is provided, the command checks if the specified role has
-  privilege over the resource.
-
-  Examples:
-
-  - conjur check dev:host:somehost write
-  - conjur check -r user:someuser dev:variable:somevariable read
-  - conjur check -r dev:user:someuser dev:variable:somevariable read
+  - conjur check dev:host:somehost write
+  - conjur check -r user:someuser dev:variable:somevariable read
+  - conjur check -r dev:user:someuser dev:variable:somevariable read
 
   USAGE
 
-    conjur check <resource-id> <privilege> [--flags]
+    conjur check <resource-id> <privilege> [--flags]
 
   FLAGS
 
-    -d --debug  Debug logging enabled
-    -h --help   Help for check
-    -r --role   Partially- or fully-qualified role ID to check privilege for
-    --timeout   Http timeout duration, between 1s and 10m (1m0s)
+    -d --debug  Debug logging enabled
+    -h --help   Help for check
+    -r --role   Partially- or fully-qualified role ID to check privilege for
+    --timeout   Http timeout duration, between 1s and 10m (1m0s)
 
 ────────────────────────────────────────────────────────────────────────────────

@@ -16,23 +16,23 @@ import (
 func newRootCommand() *cobra.Command {
 	disableCompletion := false
 	config := clients.LoadConfigOrDefault()
-	if config.IsConjurCloud() {
+	if config.IsSaaS() {
 		disableCompletion = true
 	}
 
 	rootCmd := &cobra.Command{
 		Use:               "conjur",
-		Short:             "Conjur CLI",
-		Long:              "Command-line toolkit for managing Conjur resources and performing common tasks.",
+		Short:             "Secrets Manager CLI",
+		Long:              "Command-line toolkit for managing Secrets Manager resources and performing common tasks.",
 		Version:           version.FullVersionName,
 		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: disableCompletion},
 	}
 
-	if config.IsConjurCE() || config.IsConjurOSS() {
+	if config.IsSelfHosted() || config.IsConjurOSS() {
 		rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug logging enabled")
 		rootCmd.PersistentFlags().Duration("timeout", time.Minute, "HTTP timeout duration, between 1s and 10m")
 	}
-	rootCmd.SetVersionTemplate("Conjur CLI version {{.Version}}\n")
+	rootCmd.SetVersionTemplate("Secrets Manager CLI version {{.Version}}\n")
 	return rootCmd
 }
 
@@ -46,7 +46,7 @@ func Execute() {
 		// check if error is about x509 certificate
 		if strings.Contains(err.Error(), "x509:") {
 			rootCmd.PrintErrln(
-				"Your Conjur server's certificate is not trusted. Consider running 'conjur init' to initialize the CLI with your Conjur server's certificate.")
+				"Your Secrets Manager server's certificate is not trusted. Consider running 'conjur init' to initialize the CLI with your Secrets Manager server's certificate.")
 		}
 		if errors.Is(err, context.DeadlineExceeded) {
 			rootCmd.PrintErrln(

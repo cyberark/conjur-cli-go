@@ -50,12 +50,12 @@ function main() {
 
   echo
   echo 'Receiving INFRAPOOL image registry: ' $INFRAPOOL_REGISTRY_URL
-  echo 'Using image registry for Conjur: ' $REGISTRY_URL
+  echo 'Using image registry for Secrets Manager: ' $REGISTRY_URL
 
   echo
-  echo 'Setting up Conjur...'
+  echo 'Setting up Secrets Manager...'
   docker compose exec -T conjur bundle exec rake "account:create_with_password[${conjur_account},${admin_initial_password}]"
-  echo 'Finished setting up Conjur'
+  echo 'Finished setting up Secrets Manager'
 
   echo
   echo 'Setting up Keycloak'

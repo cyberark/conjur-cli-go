@@ -4,7 +4,7 @@ version: ${VERSION}
 platform: linux
 arch: ${GOARCH}
 
-description: CyberArk Conjur command line interface (Golang)
+description: Secrets Manager command line interface (Golang)
 homepage: https://conjur.org
 license: Apache 2.0
 vendor: CyberArk

@@ -210,7 +210,7 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> conjur
+> conju
 
 
 
@@ -353,40 +353,41 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur
 
-  Command-line toolkit for managing Conjur resources and performing common tasks.
+  Command-line toolkit for managing Secrets Manager resources and performing common tasks.
 
   USAGE
 
-    conjur [command] [--flags]
+    conjur [command] [--flags]
 
   COMMANDS
 
-    authenticate [--flags]                     Obtain an access token for the currently logged-in user
-    authenticator [command] [--flags]          Manage Conjur authenticators
-    check <resource-id> <privilege> [--flags]  Check a role's privilege on a resource
-    completion [command]                       Generate the autocompletion script for the specified shell
-    help [command]                             Help about any command
-    host [command]                             Host commands (rotate-api-key)
-    hostfactory [command]                      Manage host factories
-    init [command] [--flags]                   Initialize the Conjur CLI with a Conjur server
-    issuer [command]                           Manage dynamic secret issuers in Conjur
-    list [--flags]                             List resources visible to the currently logged-in user
-    login [--flags]                            Authenticate with Conjur using the provided identity and password
-    logout                                     Log out the user and delete cached credentials.
-    policy [command] [--flags]                 Manage Conjur policies
-    pubkeys <username>                         Display the public keys associated with a user
-    resource [command]                         Manage resources
-    role [command]                             Manage roles
-    user [command]                             User commands (change-password, rotate-api-key)
-    variable [command]                         Manage Conjur variables
-    whoami                                     Display info about the logged in user
+    authenticate [--flags]                     Obtain an access token for the currently logged-in user
+    authenticator [command] [--flags]          Manage Secrets Manager authenticators
+    check <resource-id> <privilege> [--flags]  Check a role's privilege on a resource
+    completion [command]                       Generate the autocompletion script for the specified shell
+    help [command]                             Help about any command
+    host [command]                             Host commands (rotate-api-key)
+    hostfactory [command]                      Manage host factories
+    init [command] [--flags]                   Initialize the Secrets Manager CLI with a Secrets Manager server
+    issuer [command]                           Manage dynamic secret issuers in Secrets Manager
+    list [--flags]                             List resources visible to the currently logged-in user
+    login [--flags]                            Authenticate with Secrets Manager using the provided identity and p
+assword
+    logout                                     Log out the user and delete cached credentials.
+    policy [command] [--flags]                 Manage Secrets Manager policies
+    pubkeys <username>                         Display the public keys associated with a user
+    resource [command]                         Manage resources
+    role [command]                             Manage roles
+    user [command]                             User commands (change-password, rotate-api-key)
+    variable [command]                         Manage Secrets Manager variables
+    whoami                                     Display info about the logged in user
 
   FLAGS
 
-    -d --debug                                 Debug logging enabled
-    -h --help                                  Help for conjur
-    --timeout                                  Http timeout duration, between 1s and 10m (1m0s)
-    -v --version                               Version for conjur
+    -d --debug                                 Debug logging enabled
+    -h --help                                  Help for conjur
+    --timeout                                  Http timeout duration, between 1s and 10m (1m0s)
+    -v --version                               Version for conjur
 
 >
 
@@ -396,94 +397,46 @@
 
 
 
-
 ────────────────────────────────────────────────────────────────────────────────
 > conjur
 
-  Command-line toolkit for managing Conjur resources and performing common tasks.
+  Command-line toolkit for managing Secrets Manager resources and performing common tasks.
 
   USAGE
 
-    conjur [command] [--flags]
+    conjur [command] [--flags]
 
   COMMANDS
 
-    authenticate [--flags]                     Obtain an access token for the currently logged-in user
-    authenticator [command] [--flags]          Manage Conjur authenticators
-    check <resource-id> <privilege> [--flags]  Check a role's privilege on a resource
-    completion [command]                       Generate the autocompletion script for the specified shell
-    help [command]                             Help about any command
-    host [command]                             Host commands (rotate-api-key)
-    hostfactory [command]                      Manage host factories
-    init [command] [--flags]                   Initialize the Conjur CLI with a Conjur server
-    issuer [command]                           Manage dynamic secret issuers in Conjur
-    list [--flags]                             List resources visible to the currently logged-in user
-    login [--flags]                            Authenticate with Conjur using the provided identity and password
-    logout                                     Log out the user and delete cached credentials.
-    policy [command] [--flags]                 Manage Conjur policies
-    pubkeys <username>                         Display the public keys associated with a user
-    resource [command]                         Manage resources
-    role [command]                             Manage roles
-    user [command]                             User commands (change-password, rotate-api-key)
-    variable [command]                         Manage Conjur variables
-    whoami                                     Display info about the logged in user
+    authenticate [--flags]                     Obtain an access token for the currently logged-in user
+    authenticator [command] [--flags]          Manage Secrets Manager authenticators
+    check <resource-id> <privilege> [--flags]  Check a role's privilege on a resource
+    completion [command]                       Generate the autocompletion script for the specified shell
+    help [command]                             Help about any command
+    host [command]                             Host commands (rotate-api-key)
+    hostfactory [command]                      Manage host factories
+    init [command] [--flags]                   Initialize the Secrets Manager CLI with a Secrets Manager server
+    issuer [command]                           Manage dynamic secret issuers in Secrets Manager
+    list [--flags]                             List resources visible to the currently logged-in user
+    login [--flags]                            Authenticate with Secrets Manager using the provided identity and p
+assword
+    logout                                     Log out the user and delete cached credentials.
+    policy [command] [--flags]                 Manage Secrets Manager policies
+    pubkeys <username>                         Display the public keys associated with a user
+    resource [command]                         Manage resources
+    role [command]                             Manage roles
+    user [command]                             User commands (change-password, rotate-api-key)
+    variable [command]                         Manage Secrets Manager variables
+    whoami                                     Display info about the logged in user
 
   FLAGS
 
-    -d --debug                                 Debug logging enabled
-    -h --help                                  Help for conjur
-    --timeout                                  Http timeout duration, between 1s and 10m (1m0s)
-    -v --version                               Version for conjur
+    -d --debug                                 Debug logging enabled
+    -h --help                                  Help for conjur
+    --timeout                                  Http timeout duration, between 1s and 10m (1m0s)
+    -v --version                               Version for conjur
 
 > conjur --version
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> conjur
-
-  Command-line toolkit for managing Conjur resources and performing common tasks.
-
-  USAGE
-
-    conjur [command] [--flags]
-
-  COMMANDS
-
-    authenticate [--flags]                     Obtain an access token for the currently logged-in user
-    authenticator [command] [--flags]          Manage Conjur authenticators
-    check <resource-id> <privilege> [--flags]  Check a role's privilege on a resource
-    completion [command]                       Generate the autocompletion script for the specified shell
-    help [command]                             Help about any command
-    host [command]                             Host commands (rotate-api-key)
-    hostfactory [command]                      Manage host factories
-    init [command] [--flags]                   Initialize the Conjur CLI with a Conjur server
-    issuer [command]                           Manage dynamic secret issuers in Conjur
-    list [--flags]                             List resources visible to the currently logged-in user
-    login [--flags]                            Authenticate with Conjur using the provided identity and password
-    logout                                     Log out the user and delete cached credentials.
-    policy [command] [--flags]                 Manage Conjur policies
-    pubkeys <username>                         Display the public keys associated with a user
-    resource [command]                         Manage resources
-    role [command]                             Manage roles
-    user [command]                             User commands (change-password, rotate-api-key)
-    variable [command]                         Manage Conjur variables
-    whoami                                     Display info about the logged in user
-
-  FLAGS
-
-    -d --debug                                 Debug logging enabled
-    -h --help                                  Help for conjur
-    --timeout                                  Http timeout duration, between 1s and 10m (1m0s)
-    -v --version                               Version for conjur
-
-> conjur --version
-
 
 
 
@@ -494,43 +447,43 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur
 
-  Command-line toolkit for managing Conjur resources and performing common tasks.
+  Command-line toolkit for managing Secrets Manager resources and performing common tasks.
 
   USAGE
 
-    conjur [command] [--flags]
+    conjur [command] [--flags]
 
   COMMANDS
 
-    authenticate [--flags]                     Obtain an access token for the currently logged-in user
-    authenticator [command] [--flags]          Manage Conjur authenticators
-    check <resource-id> <privilege> [--flags]  Check a role's privilege on a resource
-    completion [command]                       Generate the autocompletion script for the specified shell
-    help [command]                             Help about any command
-    host [command]                             Host commands (rotate-api-key)
-    hostfactory [command]                      Manage host factories
-    init [command] [--flags]                   Initialize the Conjur CLI with a Conjur server
-    issuer [command]                           Manage dynamic secret issuers in Conjur
-    list [--flags]                             List resources visible to the currently logged-in user
-    login [--flags]                            Authenticate with Conjur using the provided identity and password
-    logout                                     Log out the user and delete cached credentials.
-    policy [command] [--flags]                 Manage Conjur policies
-    pubkeys <username>                         Display the public keys associated with a user
-    resource [command]                         Manage resources
-    role [command]                             Manage roles
-    user [command]                             User commands (change-password, rotate-api-key)
-    variable [command]                         Manage Conjur variables
-    whoami                                     Display info about the logged in user
+    authenticate [--flags]                     Obtain an access token for the currently logged-in user
+    authenticator [command] [--flags]          Manage Secrets Manager authenticators
+    check <resource-id> <privilege> [--flags]  Check a role's privilege on a resource
+    completion [command]                       Generate the autocompletion script for the specified shell
+    help [command]                             Help about any command
+    host [command]                             Host commands (rotate-api-key)
+    hostfactory [command]                      Manage host factories
+    init [command] [--flags]                   Initialize the Secrets Manager CLI with a Secrets Manager server
+    issuer [command]                           Manage dynamic secret issuers in Secrets Manager
+    list [--flags]                             List resources visible to the currently logged-in user
+    login [--flags]                            Authenticate with Secrets Manager using the provided identity and p
+assword
+    logout                                     Log out the user and delete cached credentials.
+    policy [command] [--flags]                 Manage Secrets Manager policies
+    pubkeys <username>                         Display the public keys associated with a user
+    resource [command]                         Manage resources
+    role [command]                             Manage roles
+    user [command]                             User commands (change-password, rotate-api-key)
+    variable [command]                         Manage Secrets Manager variables
+    whoami                                     Display info about the logged in user
 
   FLAGS
 
-    -d --debug                                 Debug logging enabled
-    -h --help                                  Help for conjur
-    --timeout                                  Http timeout duration, between 1s and 10m (1m0s)
-    -v --version                               Version for conjur
+    -d --debug                                 Debug logging enabled
+    -h --help                                  Help for conjur
+    --timeout                                  Http timeout duration, between 1s and 10m (1m0s)
+    -v --version                               Version for conjur
 
 > conjur --version
-
 
 
 
@@ -541,48 +494,95 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur
 
-  Command-line toolkit for managing Conjur resources and performing common tasks.
+  Command-line toolkit for managing Secrets Manager resources and performing common tasks.
 
   USAGE
 
-    conjur [command] [--flags]
+    conjur [command] [--flags]
 
   COMMANDS
 
-    authenticate [--flags]                     Obtain an access token for the currently logged-in user
-    authenticator [command] [--flags]          Manage Conjur authenticators
-    check <resource-id> <privilege> [--flags]  Check a role's privilege on a resource
-    completion [command]                       Generate the autocompletion script for the specified shell
-    help [command]                             Help about any command
-    host [command]                             Host commands (rotate-api-key)
-    hostfactory [command]                      Manage host factories
-    init [command] [--flags]                   Initialize the Conjur CLI with a Conjur server
-    issuer [command]                           Manage dynamic secret issuers in Conjur
-    list [--flags]                             List resources visible to the currently logged-in user
-    login [--flags]                            Authenticate with Conjur using the provided identity and password
-    logout                                     Log out the user and delete cached credentials.
-    policy [command] [--flags]                 Manage Conjur policies
-    pubkeys <username>                         Display the public keys associated with a user
-    resource [command]                         Manage resources
-    role [command]                             Manage roles
-    user [command]                             User commands (change-password, rotate-api-key)
-    variable [command]                         Manage Conjur variables
-    whoami                                     Display info about the logged in user
+    authenticate [--flags]                     Obtain an access token for the currently logged-in user
+    authenticator [command] [--flags]          Manage Secrets Manager authenticators
+    check <resource-id> <privilege> [--flags]  Check a role's privilege on a resource
+    completion [command]                       Generate the autocompletion script for the specified shell
+    help [command]                             Help about any command
+    host [command]                             Host commands (rotate-api-key)
+    hostfactory [command]                      Manage host factories
+    init [command] [--flags]                   Initialize the Secrets Manager CLI with a Secrets Manager server
+    issuer [command]                           Manage dynamic secret issuers in Secrets Manager
+    list [--flags]                             List resources visible to the currently logged-in user
+    login [--flags]                            Authenticate with Secrets Manager using the provided identity and p
+assword
+    logout                                     Log out the user and delete cached credentials.
+    policy [command] [--flags]                 Manage Secrets Manager policies
+    pubkeys <username>                         Display the public keys associated with a user
+    resource [command]                         Manage resources
+    role [command]                             Manage roles
+    user [command]                             User commands (change-password, rotate-api-key)
+    variable [command]                         Manage Secrets Manager variables
+    whoami                                     Display info about the logged in user
 
   FLAGS
 
-    -d --debug                                 Debug logging enabled
-    -h --help                                  Help for conjur
-    --timeout                                  Http timeout duration, between 1s and 10m (1m0s)
-    -v --version                               Version for conjur
+    -d --debug                                 Debug logging enabled
+    -h --help                                  Help for conjur
+    --timeout                                  Http timeout duration, between 1s and 10m (1m0s)
+    -v --version                               Version for conjur
 
 > conjur --version
-Conjur CLI version unset-unset
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+> conjur
+
+  Command-line toolkit for managing Secrets Manager resources and performing common tasks.
+
+  USAGE
+
+    conjur [command] [--flags]
+
+  COMMANDS
+
+    authenticate [--flags]                     Obtain an access token for the currently logged-in user
+    authenticator [command] [--flags]          Manage Secrets Manager authenticators
+    check <resource-id> <privilege> [--flags]  Check a role's privilege on a resource
+    completion [command]                       Generate the autocompletion script for the specified shell
+    help [command]                             Help about any command
+    host [command]                             Host commands (rotate-api-key)
+    hostfactory [command]                      Manage host factories
+    init [command] [--flags]                   Initialize the Secrets Manager CLI with a Secrets Manager server
+    issuer [command]                           Manage dynamic secret issuers in Secrets Manager
+    list [--flags]                             List resources visible to the currently logged-in user
+    login [--flags]                            Authenticate with Secrets Manager using the provided identity and p
+assword
+    logout                                     Log out the user and delete cached credentials.
+    policy [command] [--flags]                 Manage Secrets Manager policies
+    pubkeys <username>                         Display the public keys associated with a user
+    resource [command]                         Manage resources
+    role [command]                             Manage roles
+    user [command]                             User commands (change-password, rotate-api-key)
+    variable [command]                         Manage Secrets Manager variables
+    whoami                                     Display info about the logged in user
+
+  FLAGS
+
+    -d --debug                                 Debug logging enabled
+    -h --help                                  Help for conjur
+    --timeout                                  Http timeout duration, between 1s and 10m (1m0s)
+    -v --version                               Version for conjur
+
+> conjur --version
+Secrets Manager CLI version unset-unset
 
 Copyright (c) 2025 CyberArk Software Ltd. All rights reserved.
 <www.cyberark.com>
 >
-
 
 
 ────────────────────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -47,8 +48,13 @@ func cloudIdentityLogin(client ConjurClient, username, password string) (ConjurC
 
 	// Refreshes the access token and caches it locally
 	err = client.ForceRefreshToken()
+
 	if err != nil {
-		return nil, errors.New("Unable to authenticate with Conjur Cloud. Please check your credentials.")
+		// 401 Unauthorized might be returned when the user is not provisioned in Conjur Cloud, but only exists in Identity
+		if strings.Contains(err.Error(), "401 Unauthorized") {
+            return nil, errors.New("Please check your credentials. Consider adding Conjur Cloud Admin and Conjur Cloud User roles to your account")
+		}
+		return nil, errors.New("Unable to authenticate with Secrets Manager SaaS. Please check your credentials.")
 	}
 
 	return client, nil
@@ -68,7 +74,7 @@ func identityURL(client ConjurClient) (string, error) {
 	tenantURL := client.GetConfig().ApplianceURL
 	matches := regexp.MustCompile("^https://([^.]+)(.*)(/api)$").FindStringSubmatch(tenantURL)
 	if len(matches) == 0 {
-		return "", fmt.Errorf("invalid conjur cloud URL: %s", tenantURL)
+		return "", fmt.Errorf("invalid Secrets Manager SaaS URL: %s", tenantURL)
 	}
 	tenant := strings.TrimSuffix(matches[1], "-secretsmanager")
 	rest := strings.TrimPrefix(matches[2], ".secretsmgr")

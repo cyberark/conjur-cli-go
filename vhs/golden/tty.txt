@@ -1,4 +1,57 @@
->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+
 
 
 
@@ -344,61 +397,8 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ────────────────────────────────────────────────────────────────────────────────
->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> conjur init --help
+> conjur init --hel
 
 
 
@@ -458,10 +458,10 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur init --help
 ┃ Select the environment you want to use:
-┃ The environment you want to use. The default is enterprise.
-┃ > cloud
-┃   enterprise
-┃   oss
+┃ The environment you want to use.
+┃ > Secrets Manager SaaS
+┃   Secrets Manager Self-Hosted
+┃   Conjur Open Source
 
 ↑ up • ↓ down • / filter • enter submit
 

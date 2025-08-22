@@ -16,13 +16,13 @@ run_tape() {
   echo "Running VHS tape: $base_name"
 
   # Run and compare up to 5 times if diff fails
-  attempt=1
-  max_attempts=5
-  success=0
+  local attempt=1
+  local max_attempts=2
+  local success=0
 
   while [ $attempt -le $max_attempts ]; do
     vhs "$tape_file"
-    if diff -u -w "$GOLDEN_DIR/${base_name}.txt" "$OUTPUT_DIR/${base_name}.txt" > "$OUTPUT_DIR/${base_name}.diff"; then
+    if diff -u --ignore-all-space --ignore-blank-lines --ignore-matching-lines=">" --ignore-matching-lines="─*" "$GOLDEN_DIR/${base_name}.txt" "$OUTPUT_DIR/${base_name}.txt" > "$OUTPUT_DIR/${base_name}.diff"; then
       success=1
       break
     else

@@ -42,7 +42,7 @@ appliance_url: https://tenant.secretsmgr.cyberark.cloud/api
 cert_file: ` + pwd + `/conjur-server.pem
 authn_type: cloud
 service_id: cyberark
-environment: cloud
+environment: saas
 cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -54,7 +54,7 @@ cc_timeout: 300000000000
 		name: "prompts for URL",
 		args: []string{"init", "cloud", "--ca-cert=conjur-server.pem"},
 		promptResponses: []promptResponse{{
-			prompt:   "Enter the URL of your Conjur service:",
+			prompt:   "Enter the URL of your Secrets Manager service:",
 			response: "https://tenant.secretsmgr.cyberark.cloud",
 		}},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
@@ -66,7 +66,7 @@ appliance_url: https://tenant.secretsmgr.cyberark.cloud/api
 cert_file: ` + pwd + `/conjur-server.pem
 authn_type: cloud
 service_id: cyberark
-environment: cloud
+environment: saas
 cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -113,7 +113,7 @@ appliance_url: https://tenant.secretsmgr.cyberark.cloud/api
 cert_file: ` + pwd + `/conjur-server.pem
 authn_type: cloud
 service_id: cyberark
-environment: cloud
+environment: saas
 cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -131,7 +131,7 @@ cert_file: ` + pwd + `/conjur-server.pem
 authn_type: cloud
 service_id: cyberark
 credential_storage: file
-environment: cloud
+environment: saas
 cc_timeout: 300000000000
 `
 
@@ -155,7 +155,7 @@ appliance_url: https://tenant.secretsmgr.cyberark.cloud/api
 cert_file: ` + pwd + `/conjur-server.pem
 authn_type: cloud
 service_id: cyberark
-environment: cloud
+environment: saas
 cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -191,7 +191,7 @@ cc_timeout: 300000000000
 		name: "fails for http urls",
 		args: []string{"init", "cloud", "-u=http://example.com"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			assert.Contains(t, stdout, "Error: Conjur Cloud URL must use HTTPS")
+			assert.Contains(t, stdout, "Error: Secrets Manager SaaS URL must use HTTPS")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
@@ -199,7 +199,7 @@ cc_timeout: 300000000000
 		name: "fails urls without scheme",
 		args: []string{"init", "cloud", "-u=invalid-url"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			assert.Contains(t, stdout, "Error: Conjur Cloud URL must use HTTPS")
+			assert.Contains(t, stdout, "Error: Secrets Manager SaaS URL must use HTTPS")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
@@ -207,7 +207,7 @@ cc_timeout: 300000000000
 		name: "fails for invalid urls",
 		args: []string{"init", "cloud", "-u=https://invalid:url:test"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			assert.Contains(t, stdout, "Error: invalid Conjur Cloud URL: https://invalid:url:test/api")
+			assert.Contains(t, stdout, "Error: invalid Secrets Manager SaaS URL: https://invalid:url:test/api")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
@@ -222,7 +222,7 @@ appliance_url: https://tenant.secretsmgr.cyberark.cloud/api
 cert_file: ` + pwd + `/custom.pem
 authn_type: cloud
 service_id: cyberark
-environment: cloud
+environment: saas
 cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -238,7 +238,7 @@ appliance_url: https://tenant.secretsmgr.cyberark.cloud/api
 cert_file: ` + pwd + `/conjur-server.pem
 authn_type: cloud
 service_id: cyberark
-environment: cloud
+environment: saas
 cc_timeout: 300000000000
 `
 			assert.Equal(t, expectedConjurrc, string(data))

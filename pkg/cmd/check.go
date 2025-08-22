@@ -79,7 +79,7 @@ Examples:
 
 func init() {
 	config := clients.LoadConfigOrDefault()
-	if config.IsConjurCE() || config.IsConjurOSS() {
+	if config.IsSelfHosted() || config.IsConjurOSS() {
 		checkCmd := newCheckCmd(checkClientFactory)
 		rootCmd.AddCommand(checkCmd)
 	}

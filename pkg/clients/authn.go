@@ -38,7 +38,7 @@ func LoginWithPromptFallback(
 
 	data, err := client.Login(username, password)
 	if err != nil {
-		return nil, errors.New("Unable to authenticate with Conjur. Please check your credentials.")
+		return nil, errors.New("Unable to authenticate with Secrets Manager. Please check your credentials.")
 	}
 
 	authenticatePair := &authn.LoginPair{Login: username, APIKey: string(data)}

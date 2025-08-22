@@ -86,17 +86,17 @@ func (cli *testConjurCLI) InitAndLoginAsAdmin(t *testing.T) {
 }
 
 func (cli *testConjurCLI) Init(t *testing.T) {
-	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentCE), "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
+	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentSH), "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
 	assertInitCmd(t, err, stdOut, cli.homeDir)
 }
 
 func (cli *testConjurCLI) InitCloud(t *testing.T) {
-	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentCC), "-u", "https://tenant.secretsmgr.cyberark.cloud", "--ca-cert", "conjur-server.pem", "--force")
+	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentSaaS), "-u", "https://tenant.secretsmgr.cyberark.cloud", "--ca-cert", "conjur-server.pem", "--force")
 	assertInitCmd(t, err, stdOut, cli.homeDir)
 }
 
 func (cli *testConjurCLI) InitWithTrailingSlash(t *testing.T) {
-	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentCE), "-a", cli.account, "-u", "http://conjur/", "-i", "--force-netrc", "--force")
+	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentSH), "-a", cli.account, "-u", "http://conjur/", "-i", "--force-netrc", "--force")
 	assertInitCmd(t, err, stdOut, cli.homeDir)
 }
 

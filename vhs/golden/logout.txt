@@ -1,4 +1,57 @@
->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+
 
 
 
@@ -344,32 +397,8 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ────────────────────────────────────────────────────────────────────────────────
->
+> conjur logout --hel
 
 
 
@@ -429,47 +458,18 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur logout --help
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> conjur logout --help
-
-  Log out the user and delete the credentials cached in the operating system user's credential
-  storage or .netrc file.
+  Log out the user and delete the credentials cached in the operating system user's credential
+  storage or .netrc file.
 
   USAGE
 
-    conjur logout [--flags]
+    conjur logout [--flags]
 
   FLAGS
 
-    -d --debug  Debug logging enabled
-    -h --help   Help for logout
-    --timeout   Http timeout duration, between 1s and 10m (1m0s)
+    -d --debug  Debug logging enabled
+    -h --help   Help for logout
+    --timeout   Http timeout duration, between 1s and 10m (1m0s)
 
 >
 

@@ -457,40 +457,11 @@
 
 ────────────────────────────────────────────────────────────────────────────────
 > conjur init
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> conjur init
 ┃ Select the environment you want to use:
-┃ The environment you want to use. The default is enterprise.
-┃ > cloud
-┃   enterprise
-┃   oss
+┃ The environment you want to use.
+┃ > Secrets Manager SaaS
+┃   Secrets Manager Self-Hosted
+┃   Conjur Open Source
 
 ↑ up • ↓ down • / filter • enter submit
 
@@ -516,10 +487,10 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur init
 ┃ Select the environment you want to use:
-┃ The environment you want to use. The default is enterprise.
-┃   cloud
-┃ > enterprise
-┃   oss
+┃ The environment you want to use.
+┃ > Secrets Manager SaaS
+┃   Secrets Manager Self-Hosted
+┃   Conjur Open Source
 
 ↑ up • ↓ down • / filter • enter submit
 
@@ -545,10 +516,10 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur init
 ┃ Select the environment you want to use:
-┃ The environment you want to use. The default is enterprise.
-┃   cloud
-┃ > enterprise
-┃   oss
+┃ The environment you want to use.
+┃   Secrets Manager SaaS
+┃ > Secrets Manager Self-Hosted
+┃   Conjur Open Source
 
 ↑ up • ↓ down • / filter • enter submit
 
@@ -573,7 +544,36 @@
 
 ────────────────────────────────────────────────────────────────────────────────
 > conjur init
-┃ Enter the URL of your Conjur service:
+┃ Select the environment you want to use:
+┃ The environment you want to use.
+┃   Secrets Manager SaaS
+┃ > Secrets Manager Self-Hosted
+┃   Conjur Open Source
+
+↑ up • ↓ down • / filter • enter submit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+> conjur init
+┃ Enter the URL of your Secrets Manager service:
 ┃ >
 
 enter submit
@@ -602,7 +602,7 @@ enter submit
 
 ────────────────────────────────────────────────────────────────────────────────
 > conjur init
-┃ Enter the URL of your Conjur service:
+┃ Enter the URL of your Secrets Manager service:
 ┃ >
 
 enter submit
@@ -631,7 +631,7 @@ enter submit
 
 ────────────────────────────────────────────────────────────────────────────────
 > conjur init
-┃ Enter the URL of your Conjur service:
+┃ Enter the URL of your Secrets Manager service:
 ┃ > https://example.com
 
 enter submit

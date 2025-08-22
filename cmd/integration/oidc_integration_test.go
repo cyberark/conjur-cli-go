@@ -35,7 +35,7 @@ type authnOidcConfig struct {
 func testLogin(t *testing.T, cli *testConjurCLI, oc oidcCredentials, aoc authnOidcConfig) {
 	t.Run("init", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run(
-			"init", string(conjurapi.EnvironmentCE), "-a", cli.account,
+			"init", string(conjurapi.EnvironmentSH), "-a", cli.account,
 			"-u", "http://conjur",
 			"-t", "oidc",
 			"--service-id", aoc.serviceID,

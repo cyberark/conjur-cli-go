@@ -25,7 +25,7 @@ type authnJwtConfig struct {
 func testJwtLogin(t *testing.T, cli *testConjurCLI, jwtConfig authnJwtConfig) {
 	t.Run("init", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run(
-			"init", string(conjurapi.EnvironmentCE), "-a", cli.account,
+			"init", string(conjurapi.EnvironmentSH), "-a", cli.account,
 			"-u", "http://conjur",
 			"-t", "jwt",
 			"--jwt-file", jwtConfig.jwtFilePath,

@@ -5,11 +5,12 @@ package main
 
 import (
 	"bytes"
-	"github.com/cyberark/conjur-api-go/conjurapi"
 	"io"
 	"os"
 	"os/exec"
 	"testing"
+
+	"github.com/cyberark/conjur-api-go/conjurapi"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -41,7 +42,7 @@ func (cli *testConjurCLI) InitAndLoginAsAdmin(t *testing.T) {
 }
 
 func (cli *testConjurCLI) Init(t *testing.T) {
-	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentCC), "-u", os.Getenv("CONJUR_APPLIANCE_URL"), "--force-netrc", "--force")
+	stdOut, _, err := cli.Run("init", string(conjurapi.EnvironmentSaaS), "-u", os.Getenv("CONJUR_APPLIANCE_URL"), "--force-netrc", "--force")
 	assertInitCmd(t, err, stdOut, cli.homeDir)
 }
 

@@ -1,4 +1,57 @@
->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+
 
 
 
@@ -344,32 +397,8 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ────────────────────────────────────────────────────────────────────────────────
->
+> conjur user --hel
 
 
 
@@ -429,51 +458,22 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur user --help
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> conjur user --help
-
-  User commands (change-password, rotate-api-key)
+  User commands (change-password, rotate-api-key)
 
   USAGE
 
-    conjur user [command] [--flags]
+    conjur user [command] [--flags]
 
   COMMANDS
 
-    change-password [--flags]  Update the password for the currently logged-in user.
-    rotate-api-key [--flags]   Rotate a user's API key
+    change-password [--flags]  Update the password for the currently logged-in user.
+    rotate-api-key [--flags]   Rotate a user's API key
 
   FLAGS
 
-    -d --debug                 Debug logging enabled
-    -h --help                  Help for user
-    --timeout                  Http timeout duration, between 1s and 10m (1m0s)
+    -d --debug                 Debug logging enabled
+    -h --help                  Help for user
+    --timeout                  Http timeout duration, between 1s and 10m (1m0s)
 
 >
 

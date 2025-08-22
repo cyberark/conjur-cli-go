@@ -70,7 +70,7 @@ func newAuthenticateCommand(clientFactory authenticateClientFactoryFunc) *cobra.
 
 func init() {
 	config := clients.LoadConfigOrDefault()
-	if config.IsConjurCE() || config.IsConjurOSS() {
+	if config.IsSelfHosted() || config.IsConjurOSS() {
 		authenticateCmd := newAuthenticateCommand(authenticateClientFactory)
 		rootCmd.AddCommand(authenticateCmd)
 	}

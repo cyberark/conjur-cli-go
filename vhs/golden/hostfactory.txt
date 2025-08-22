@@ -458,24 +458,24 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur hostfactory --help
 
-  Manage host factories
+  Manage host factories
 
   USAGE
 
-    conjur hostfactory [command] [--flags]
+    conjur hostfactory [command] [--flags]
 
   COMMANDS
 
-    create [command]  Deprecated: Use hostfactory (hosts / tokens) create
-    hosts [command]   Commands for managing hostfactory hosts
-    revoke [command]  Deprecated: Use hostfactory tokens revoke
-    tokens [command]  Operations on tokens
+    create [command]  Deprecated: Use hostfactory (hosts / tokens) create
+    hosts [command]   Commands for managing hostfactory hosts
+    revoke [command]  Deprecated: Use hostfactory tokens revoke
+    tokens [command]  Operations on tokens
 
   FLAGS
 
-    -d --debug        Debug logging enabled
-    -h --help         Help for hostfactory
-    --timeout         Http timeout duration, between 1s and 10m (1m0s)
+    -d --debug        Debug logging enabled
+    -h --help         Help for hostfactory
+    --timeout         Http timeout duration, between 1s and 10m (1m0s)
 
 >
 

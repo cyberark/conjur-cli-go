@@ -13,6 +13,6 @@ func TestRootCmd(t *testing.T) {
 
 		assert.NoError(t, err)
 		currentYear := time.Now().Format("2006")
-		assert.Equal(t, "Conjur CLI version unset-unset\n\nCopyright (c) "+currentYear+" CyberArk Software Ltd. All rights reserved.\n<www.cyberark.com>\n", stdout)
+		assert.Equal(t, "Secrets Manager CLI version unset-unset\n\nCopyright (c) "+currentYear+" CyberArk Software Ltd. All rights reserved.\n<www.cyberark.com>\n", stdout)
 	})
 }

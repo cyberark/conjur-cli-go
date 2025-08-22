@@ -70,7 +70,7 @@ checksum:
 
 brews:
   - name: conjur-cli
-    description: CyberArk Conjur command line interface
+    description: Secrets Manager command line interface
     homepage: https://conjur.org
     url_template: https://github.com/cyberark/conjur-cli-go/releases/download/v{{.Env.VERSION}}/conjur-cli_{{.Env.VERSION}}_{{.Os}}_{{.Arch}}.tar.gz
     install: |

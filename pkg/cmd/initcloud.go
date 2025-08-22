@@ -82,7 +82,7 @@ func getInitCloudCmdFlagValues(cmd *cobra.Command) (initCloudCmdFlagValues, erro
 
 func validateCloudCmdFlags(cmdFlagVals initCloudCmdFlagValues, cmd *cobra.Command) error {
 	if !strings.HasPrefix(cmdFlagVals.cloudURL, "https://") {
-		return fmt.Errorf("Conjur Cloud URL must use HTTPS")
+		return fmt.Errorf("Secrets Manager SaaS URL must use HTTPS")
 	}
 
 	if cmdFlagVals.selfSigned {
@@ -94,7 +94,7 @@ func validateCloudCmdFlags(cmdFlagVals initCloudCmdFlagValues, cmd *cobra.Comman
 			return nil
 		}
 	}
-	return fmt.Errorf("invalid Conjur Cloud URL: %s. Please provide valid", cmdFlagVals.cloudURL)
+	return fmt.Errorf("invalid Secrets Manager SaaS URL: %s. Please provide valid", cmdFlagVals.cloudURL)
 }
 
 func runInitCloudCommand(cmd *cobra.Command) error {
@@ -125,7 +125,7 @@ func runInitCloudCommand(cmd *cobra.Command) error {
 		AuthnType:    "cloud",
 		ServiceID:    "cyberark",
 		Proxy:        cmdFlagVals.proxy.String(),
-		Environment:  conjurapi.EnvironmentCC,
+		Environment:  conjurapi.EnvironmentSaaS,
 	}
 
 	// If the user has specified the --force-netrc flag, don't try to use the native keychain
@@ -188,10 +188,10 @@ func normalizeCloudURL(applianceURL string) string {
 
 func newCloudInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "cloud",
-		Aliases: []string{"CC"},
-		Short:   "Initialize the Conjur CLI with a Conjur Cloud server",
-		Long: `Initialize the Conjur CLI with a Conjur Cloud server.
+		Use:     string(conjurapi.EnvironmentSaaS),
+		Aliases: []string{"CC", "cloud"},
+		Short:   "Initialize the Secrets Manager CLI with a Secrets Manager SaaS server",
+		Long: `Initialize the Secrets Manager CLI with a Secrets Manager SaaS server.
 
 The init command creates a configuration file (.conjurrc) that contains the details for connecting to Conjur. This file is located under the user's root directory.`,
 		SilenceUsage: true,
@@ -208,8 +208,8 @@ The init command creates a configuration file (.conjurrc) that contains the deta
 	}
 
 	// cmd.Flags().StringP("account", "a", "", "Conjur organization account name")
-	cmd.Flags().StringP("url", "u", "", "URL of the Conjur service. Will prompt if omitted.")
-	cmd.Flags().StringP("ca-cert", "c", "", "Conjur SSL certificate (will be obtained from host unless provided by this option)")
+	cmd.Flags().StringP("url", "u", "", "URL of the Secrets Manager service. Will prompt if omitted.")
+	cmd.Flags().StringP("ca-cert", "c", "", "Secrets Manager SSL certificate (will be obtained from host unless provided by this option)")
 	cmd.Flags().StringP("file", "f", defaultConjurRC(userHomeDir), "File to write the configuration to. You must set the CONJURRC environment variable to the same value for this file to be used for further commands.")
 	cmd.Flags().String("cert-file", filepath.Join(userHomeDir, "conjur-server.pem"), "File to write the server's certificate to")
 	cmd.Flags().StringP("proxy", "p", "", "Proxy URL to use for connecting to Conjur")

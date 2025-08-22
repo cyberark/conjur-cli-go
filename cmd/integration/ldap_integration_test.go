@@ -13,7 +13,7 @@ import (
 func testLDAPLogin(t *testing.T, cli *testConjurCLI) {
 	t.Run("init", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run(
-			"init", string(conjurapi.EnvironmentCE), "-a", cli.account,
+			"init", string(conjurapi.EnvironmentSH), "-a", cli.account,
 			"-u", "http://conjur",
 			"-t", "ldap",
 			"--service-id=test-service",

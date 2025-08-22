@@ -1,4 +1,57 @@
->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+
 
 
 
@@ -344,32 +397,8 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ────────────────────────────────────────────────────────────────────────────────
->
+> conjur list --hel
 
 
 
@@ -429,59 +458,30 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur list --help
 
+  List resources visible to the currently logged-in user.
 
+  Optional flags can be used to narrow down specific resources.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> conjur list --help
-
-  List resources visible to the currently logged-in user.
-
-  Optional flags can be used to narrow down specific resources.
-
-  Examples:
-  - List all resources      : conjur list
-  - Count all resources     : conjur list -c
-  - List all users          : conjur list -k user
-  - Count all users         : conjur list -k user -c
-  - List first 5 users      : conjur list -k user -l 5
-  - List next 5 users       : conjur list -k user -l 5 -o 5
-  - List staging hosts      : conjur list -k host -s staging
-  - List resources for role : conjur list -r dev:group:somegroup
+  Examples:
+  - List all resources      : conjur list
+  - Count all resources     : conjur list -c
+  - List all users          : conjur list -k user
+  - Count all users         : conjur list -k user -c
+  - List first 5 users      : conjur list -k user -l 5
+  - List next 5 users       : conjur list -k user -l 5 -o 5
+  - List staging hosts      : conjur list -k host -s staging
+  - List resources for role : conjur list -r dev:group:somegroup
 
   USAGE
 
-    conjur list [--flags]
+    conjur list [--flags]
 
   FLAGS
 
-    -c --count         When `true`, only the number of matched resources is returned (instead of
+    -c --count         When `true`, only the number of matched resources is returned (instead of
  an array listing resource properties)
-    -d --debug         Debug logging enabled
-    -h --help          Help for list
-    -i --inspect       Lists the metadata for resources
-    -k --kind          Filters the resources by the specified `kind`, which must one of these: u
+    -d --debug         Debug logging enabled
+    -h --help          Help for list
+    -i --inspect       Lists the metadata for resources
+    -k --kind          Filters the resources by the specified `kind`, which must one of these: u
 ────────────────────────────────────────────────────────────────────────────────

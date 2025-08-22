@@ -398,7 +398,7 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> conjur pubkeys --help
+> conjur pubkeys --hel
 
 
 
@@ -458,20 +458,20 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur pubkeys --help
 
-  Display the public keys for a given [username].
+  Display the public keys for a given [username].
 
-  Examples:
-  - conjur pubkeys alice
+  Examples:
+  - conjur pubkeys alice
 
   USAGE
 
-    conjur pubkeys <username> [--flags]
+    conjur pubkeys <username> [--flags]
 
   FLAGS
 
-    -d --debug  Debug logging enabled
-    -h --help   Help for pubkeys
-    --timeout   Http timeout duration, between 1s and 10m (1m0s)
+    -d --debug  Debug logging enabled
+    -h --help   Help for pubkeys
+    --timeout   Http timeout duration, between 1s and 10m (1m0s)
 
 >
 

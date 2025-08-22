@@ -398,7 +398,7 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> conjur authenticator --help
+> conjur authenticator --hel
 
 
 
@@ -458,23 +458,23 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur authenticator --help
 
-  Manage Conjur authenticators
+  Manage Secrets Manager authenticators
 
   USAGE
 
-    conjur authenticator [command] [--flags]
+    conjur authenticator [command] [--flags]
 
   COMMANDS
 
-    disable     Disable an authenticator
-    enable      Enable an authenticator
+    disable     Disable an authenticator
+    enable      Enable an authenticator
 
   FLAGS
 
-    -d --debug  Debug logging enabled
-    -h --help   Help for authenticator
-    -i --id     (Required) Provide authenticator identifier
-    --timeout   Http timeout duration, between 1s and 10m (1m0s)
+    -d --debug  Debug logging enabled
+    -h --help   Help for authenticator
+    -i --id     (Required) Provide authenticator identifier
+    --timeout   Http timeout duration, between 1s and 10m (1m0s)
 
 >
 

@@ -1,4 +1,110 @@
->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+
 
 
 
@@ -291,85 +397,8 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ────────────────────────────────────────────────────────────────────────────────
->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
->
+> conjur variable --hel
 
 
 
@@ -429,51 +458,22 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur variable --help
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> conjur variable --help
-
-  Manage Conjur variables
+  Manage Secrets Manager variables
 
   USAGE
 
-    conjur variable [command] [--flags]
+    conjur variable [command] [--flags]
 
   COMMANDS
 
-    get [--flags]  Get the value of one or more Conjur variables
-    set [--flags]  Set the value of a Conjur variable
+    get [--flags]  Get the value of one or more Secrets Manager variables
+    set [--flags]  Set the value of a Secrets Manager variable
 
   FLAGS
 
-    -d --debug     Debug logging enabled
-    -h --help      Help for variable
-    --timeout      Http timeout duration, between 1s and 10m (1m0s)
+    -d --debug     Debug logging enabled
+    -h --help      Help for variable
+    --timeout      Http timeout duration, between 1s and 10m (1m0s)
 
 >
 

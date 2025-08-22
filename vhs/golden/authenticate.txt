@@ -398,7 +398,7 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-> conjur authenticate --help
+> conjur authenticate --hel
 
 
 
@@ -458,18 +458,18 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur authenticate --help
 
-  Obtain an access token for the currently logged-in user
+  Obtain an access token for the currently logged-in user
 
   USAGE
 
-    conjur authenticate [--flags]
+    conjur authenticate [--flags]
 
   FLAGS
 
-    -d --debug   Debug logging enabled
-    -H --header  Base64 encode the result and format as an HTTP Authorization header
-    -h --help    Help for authenticate
-    --timeout    Http timeout duration, between 1s and 10m (1m0s)
+    -d --debug   Debug logging enabled
+    -H --header  Base64 encode the result and format as an HTTP Authorization header
+    -h --help    Help for authenticate
+    --timeout    Http timeout duration, between 1s and 10m (1m0s)
 
 >
 

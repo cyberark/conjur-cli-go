@@ -82,10 +82,10 @@ func newInitCommand() *cobra.Command {
 		},
 		// we have to disable automatic flags parsing before handling the env flag
 		DisableFlagParsing: true,
-		Short:              "Initialize the Conjur CLI with a Conjur server",
+		Short:              "Initialize the Secrets Manager CLI with a Secrets Manager server",
 	}
 	var env conjurapi.EnvironmentType
-	cmd.Flags().Var(&env, "env", "Type of conjur server to connect to (enterprise, oss or cloud)")
+	cmd.Flags().Var(&env, "env", "Type of Secrets Manager server to connect to (self-hosted, oss or saas)")
 	return cmd
 }
 

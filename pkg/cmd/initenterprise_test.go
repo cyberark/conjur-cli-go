@@ -55,13 +55,20 @@ var initEnterpriseCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "help (self-hosted)",
+		args: []string{"init", "self-hosted", "--help"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
+			assert.Contains(t, stdout, "HELP LONG")
+		},
+	},
+	{
 		name: "writes conjurrc",
 		args: []string{"init", "enterprise", "-u=http://host", "-a=test-account", "-i"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			data, _ := os.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: test-account
 appliance_url: http://host
-environment: enterprise
+environment: self-hosted
 `
 
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -79,7 +86,7 @@ environment: enterprise
 appliance_url: http://host
 authn_type: ldap
 service_id: test
-environment: enterprise
+environment: self-hosted
 `
 
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -101,7 +108,7 @@ authn_type: jwt
 service_id: test
 jwt_host_id: host-id
 jwt_file: /path/to/jwt
-environment: enterprise
+environment: self-hosted
 `
 
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -115,7 +122,7 @@ environment: enterprise
 			return fmt.Errorf("jwt authentication failed")
 		},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
-			assert.Contains(t, stdout, "Unable to authenticate with Conjur using the provided JWT file: jwt authentication failed")
+			assert.Contains(t, stdout, "Unable to authenticate with Secrets Manager using the provided JWT file: jwt authentication failed")
 			assertFetchCertFailed(t, conjurrcInTmpDir)
 		},
 	},
@@ -124,7 +131,7 @@ environment: enterprise
 		args: []string{"init", "enterprise", "-i"},
 		promptResponses: []promptResponse{
 			{
-				prompt:   "Enter the URL of your Conjur service:",
+				prompt:   "Enter the URL of your Secrets Manager service:",
 				response: "http://conjur",
 			},
 			{
@@ -138,7 +145,7 @@ environment: enterprise
 			data, _ := os.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: dev
 appliance_url: http://conjur
-environment: enterprise
+environment: self-hosted
 `
 
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -183,7 +190,7 @@ environment: enterprise
 			data, _ := os.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: other-test-account
 appliance_url: http://host
-environment: enterprise
+environment: self-hosted
 `
 			assert.Equal(t, expectedConjurrc, string(data))
 		},
@@ -196,7 +203,7 @@ environment: enterprise
 			expectedConjurrc := `account: test-account
 appliance_url: http://host
 credential_storage: file
-environment: enterprise
+environment: self-hosted
 `
 
 			assert.Equal(t, expectedConjurrc, string(data))
@@ -215,7 +222,7 @@ environment: enterprise
 			data, _ := os.ReadFile(conjurrcInTmpDir)
 			expectedConjurrc := `account: yet-another-test-account
 appliance_url: http://host
-environment: enterprise
+environment: self-hosted
 `
 			assert.Equal(t, expectedConjurrc, string(data))
 
@@ -351,7 +358,7 @@ environment: enterprise
 			expectedConjurrc := `account: test-account
 appliance_url: https://example.com
 cert_file: ` + pwd + `/custom-cert.pem
-environment: enterprise
+environment: self-hosted
 `
 			assert.Equal(t, expectedConjurrc, string(data))
 		},
@@ -555,14 +562,14 @@ func Test_env(t *testing.T) {
 		name string
 		want conjurapi.EnvironmentType
 	}{{
-		name: "enterprise",
-		want: conjurapi.EnvironmentCE,
+		name: "self-hosted",
+		want: conjurapi.EnvironmentSH,
 	}, {
 		name: "CE",
-		want: conjurapi.EnvironmentCE,
+		want: conjurapi.EnvironmentSH,
 	}, {
 		name: "default",
-		want: conjurapi.EnvironmentCE,
+		want: conjurapi.EnvironmentSH,
 	}, {
 		name: "oss",
 		want: conjurapi.EnvironmentOSS,

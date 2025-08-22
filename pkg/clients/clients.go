@@ -95,8 +95,8 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		return nil, err
 	}
 
-	// Debug flag is not supported in Conjur Cloud
-	if config.IsConjurCE() || config.IsConjurOSS() {
+	// Debug flag is not supported in Secrets Manager SaaS
+	if config.IsSelfHosted() || config.IsConjurOSS() {
 		debug, err = cmd.Flags().GetBool("debug")
 		if err != nil {
 			return nil, err

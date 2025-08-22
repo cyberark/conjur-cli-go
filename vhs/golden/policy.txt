@@ -1,4 +1,57 @@
->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+
 
 
 
@@ -344,32 +397,8 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ────────────────────────────────────────────────────────────────────────────────
->
+> conjur policy --hel
 
 
 
@@ -429,54 +458,25 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur policy --help
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> conjur policy --help
-
-  Manage Conjur policies
+  Manage Secrets Manager policies
 
   USAGE
 
-    conjur policy [command] [--flags]
+    conjur policy [command] [--flags]
 
   COMMANDS
 
-    fetch [--flags]    Fetch effective policy
-    load [--flags]     Load a policy and create resources
-    replace [--flags]  Fully replace an existing policy
-    update [--flags]   Update existing resources in the policy or create new resources
+    fetch [--flags]    Fetch effective policy
+    load [--flags]     Load a policy and create resources
+    replace [--flags]  Fully replace an existing policy
+    update [--flags]   Update existing resources in the policy or create new resources
 
   FLAGS
 
-    -b --branch        (Required) The parent policy branch
-    -d --debug         Debug logging enabled
-    -h --help          Help for policy
-    --timeout          Http timeout duration, between 1s and 10m (1m0s)
+    -b --branch        (Required) The parent policy branch
+    -d --debug         Debug logging enabled
+    -h --help          Help for policy
+    --timeout          Http timeout duration, between 1s and 10m (1m0s)
 
 >
 

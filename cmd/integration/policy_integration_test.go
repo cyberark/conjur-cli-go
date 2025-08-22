@@ -80,7 +80,7 @@ func TestPolicyIntegration(t *testing.T) {
     body: []
 
 
-Warning: The effective policy's output may not fully replicate the policy defined in Conjur. If you try to upload the output to Conjur, the upload may fail.
+Warning: The effective policy's output may not fully replicate the policy defined in Secrets Manager. If you try to upload the output to Secrets Manager, the upload may fail.
 `
 		stdOut, _, err := cli.Run(
 			"policy", "fetch", "-b", "branch2",

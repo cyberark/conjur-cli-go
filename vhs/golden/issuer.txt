@@ -1,4 +1,57 @@
->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+
 
 
 
@@ -344,32 +397,8 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ────────────────────────────────────────────────────────────────────────────────
->
+> conjur issuer --hel
 
 
 
@@ -429,59 +458,30 @@
 ────────────────────────────────────────────────────────────────────────────────
 > conjur issuer --help
 
+  Manage dynamic secret issuers in Secrets Manager
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-────────────────────────────────────────────────────────────────────────────────
-> conjur issuer --help
-
-  Manage dynamic secret issuers in Conjur
-
-  Examples:
-   - conjur issuer create --id my-issuer [options] [args] Creates an issuer whose ID is my-
-  issuer
-   - conjur issuer delete --id my-issuer                  Deletes an issuer whose ID is my-
-  issuer
-   - conjur issuer get --id my-issuer                     Retrieves an issuer whose ID is my-
-  issuer
-   - conjur issuer list                                   Lists all the issuers
+  Examples:
+   - conjur issuer create --id my-issuer [options] [args] Creates an issuer whose ID is my-
+  issuer
+   - conjur issuer delete --id my-issuer                  Deletes an issuer whose ID is my-
+  issuer
+   - conjur issuer get --id my-issuer                     Retrieves an issuer whose ID is my-
+  issuer
+   - conjur issuer list                                   Lists all the issuers
 
   USAGE
 
-    conjur issuer [command] [--flags]
+    conjur issuer [command] [--flags]
 
   COMMANDS
 
-    create [--flags]  Create an issuer
-    delete [--flags]  Delete an issuer
-    get [--flags]     Retrieve information about an issuer
-    list              List all the issuers
-    update [--flags]  Update an issuer
+    create [--flags]  Create an issuer
+    delete [--flags]  Delete an issuer
+    get [--flags]     Retrieve information about an issuer
+    list              List all the issuers
+    update [--flags]  Update an issuer
 
   FLAGS
 
-    -d --debug        Debug logging enabled
+    -d --debug        Debug logging enabled
 ────────────────────────────────────────────────────────────────────────────────
