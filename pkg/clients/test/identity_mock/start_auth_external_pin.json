@@ -5,6 +5,7 @@
     "IdpRedirectShortUrl": "for_test_only://blabla.com",
     "IdpShortUrlId": "DsHKHpyfZVKu",
     "SessionId": "Ek1ZBvbiPYE4GSN93t4xBGKVzUMAJK5Fpj-87VqxpcU1",
+    "IdpOobAuthPinRequired": true,
     "IdpLoginSessionId": "lileTEcF0UOBN0viru2gfGqxkdAILx2xTg2IS4suWM41",
     "TenantId": "ABQ5234"
   },

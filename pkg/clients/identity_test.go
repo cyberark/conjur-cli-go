@@ -3,12 +3,13 @@ package clients
 import (
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/wiremock/go-wiremock"
 	"net/http"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/wiremock/go-wiremock"
 )
 
 const (
@@ -148,13 +149,14 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 			},
 		},
 		{
-			name:          "Successful authentication (External Action MFA)",
+			name:          "Successful authentication (External Action MFA with PIN)",
 			expectedToken: "valid-token",
 			beforeTest: func() {
-				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_idp.json")
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_pin.json")
 				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
-				OOBSuccessResponse, _ := os.ReadFile("test/identity_mock/oob_status_success.json")
-				mockResponse(wiremockClient, "/Security/OobAuthStatus", string(OOBSuccessResponse), http.StatusOK)
+				OOBSuccessRequest := `{"Action":"Answer","MechanismId":"OOBAUTHPIN","SessionId":"lileTEcF0UOBN0viru2gfGqxkdAILx2xTg2IS4suWM41"}`
+				OOBSuccessResponse, _ := os.ReadFile("test/identity_mock/advance_oob_success.json")
+				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", OOBSuccessRequest, string(OOBSuccessResponse), http.StatusOK)
 			},
 		},
 		{
@@ -219,28 +221,28 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 			name:          "External action MFA - request error",
 			expectedError: errors.New("received non-200 response: 500"),
 			beforeTest: func() {
-				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_idp.json")
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_pin.json")
 				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
-				mockResponse(wiremockClient, "/Security/OobAuthStatus", "500 internal server error", http.StatusInternalServerError)
+				mockResponse(wiremockClient, "/Security/AdvanceAuthentication", "500 internal server error", http.StatusInternalServerError)
 			},
 		},
 		{
 			name:          "External action MFA - authentication failure",
-			expectedError: errors.New("authentication failed"),
+			expectedError: errors.New("Authentication with federated identity provider failed: Authentication (login or challenge) has failed. Please try again or contact your system administrator."),
 			beforeTest: func() {
-				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_idp.json")
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_pin.json")
 				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
-				OOBFailureResponse, _ := os.ReadFile("test/identity_mock/oob_status_failure.json")
-				mockResponse(wiremockClient, "/Security/OobAuthStatus", string(OOBFailureResponse), http.StatusOK)
+				advanceFailureResponse, _ := os.ReadFile("test/identity_mock/advance_failure.json")
+				mockResponse(wiremockClient, "/Security/AdvanceAuthentication", string(advanceFailureResponse), http.StatusOK)
 			},
 		},
 		{
 			name:          "External action MFA - JSON parsing failed",
 			expectedError: errors.New("failed to parse response: invalid character 'o' in literal null (expecting 'u')"),
 			beforeTest: func() {
-				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_idp.json")
+				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_pin.json")
 				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
-				mockResponse(wiremockClient, "/Security/OobAuthStatus", "not a JSON response", http.StatusOK)
+				mockResponse(wiremockClient, "/Security/AdvanceAuthentication", "not a JSON response", http.StatusOK)
 			},
 		},
 	}

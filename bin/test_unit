@@ -36,6 +36,7 @@ function run_unit_tests() {
              -p 8080:8080 \
              wiremock/wiremock
   echo "Running unit tests..."
+  set +e
   docker run --rm \
             --network ip6net \
             --network ip4net \
@@ -43,10 +44,14 @@ function run_unit_tests() {
              conjur-cli-go-test-runner:latest \
              -coverprofile="./test/c.out.tmp" \
              ./... \
-             | tee -a "$junit_output_file" && \
-             cat c.out.tmp | grep -v "_dev.go" > c.out && \
-             rm -f c.out.tmp
-  echo "Unit test exit status: $?"
+             | tee -a "$junit_output_file"
+
+  test_result=$?
+  cat c.out.tmp | grep -v "_dev.go" > c.out
+  rm -f c.out.tmp
+  echo "Unit test exit status: $test_result"
+  set -e
+  exit $test_result
 }
 
 main

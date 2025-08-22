@@ -29,6 +29,8 @@ const (
 	mechanismFIDO2SecurityKey    = "U2F"
 	mechanismQRCode              = "QR"
 	mechanismPhoneCall           = "PF"
+
+	pinChallengeMechanism = "OOBAUTHPIN"
 )
 
 type identityResp[T any] struct {
@@ -59,10 +61,12 @@ type authStartResp struct {
 	Challenges         []struct {
 		Mechanisms []mechanismResp `json:"Mechanisms"`
 	} `json:"Challenges"`
-	TenantId            string `json:"TenantId"`
-	PodFQDN             string `json:"PodFQDN"`
-	IdpRedirectShortUrl string `json:"IdpRedirectShortUrl"`
-	IdpLoginSessionId   string `json:"IdpLoginSessionId"`
+	TenantId              string `json:"TenantId"`
+	PodFQDN               string `json:"PodFQDN"`
+	IdpRedirectShortUrl   string `json:"IdpRedirectShortUrl"`
+	IdpRedirectUrl        string `json:"IdpRedirectUrl"`
+	IdpLoginSessionId     string `json:"IdpLoginSessionId"`
+	IdpOobAuthPinRequired bool   `json:"IdpOobAuthPinRequired"`
 }
 
 type mechanismResp struct {
@@ -112,7 +116,11 @@ func (ia *IdentityAuthenticator) GetToken(username, password string) (string, er
 		return "", fmt.Errorf("authentication failed: %s", startResp.Message)
 	}
 	if len(startResp.Result.IdpRedirectShortUrl) > 0 && len(startResp.Result.IdpLoginSessionId) > 0 {
-		return ia.waitForExternalAction(startResp.Result.IdpRedirectShortUrl, startResp.Result.IdpLoginSessionId)
+		if startResp.Result.IdpOobAuthPinRequired == false {
+			return "", fmt.Errorf("oob auth pin required for login with external identity provider")
+		}
+		ia.sessionID = startResp.Result.IdpLoginSessionId
+		return ia.loginWithPIN(startResp.Result.IdpRedirectShortUrl)
 	}
 	if len(startResp.Result.Challenges) == 0 {
 		return "", errors.New("no challenges available for authentication")
@@ -247,6 +255,27 @@ func (ia *IdentityAuthenticator) startAuthentication(userName string) (*identity
 	return &startAuthResponse, nil
 }
 
+func (ia *IdentityAuthenticator) loginWithPIN(idpURL string) (string, error) {
+	log.Printf("Opening browser for external authentication: %s", idpURL)
+	_ = openBrowser(idpURL) // this may fail on headless systems, but we don't want to block the authentication process
+	ctx := context.Background()
+	answer, err := prompts.AskForPrompt(ctx, "Enter the pin code that you received in the browser", ia.timeout)
+	if err != nil {
+		return "", err
+	}
+	resp, err := ia.advanceAuthentication(pinChallengeMechanism, "Answer", answer)
+	if err != nil {
+		return "", err
+	}
+	if resp.Success != true {
+		return "", fmt.Errorf("Authentication with federated identity provider failed: %s", resp.Message)
+	}
+	if len(resp.Result.Token) == 0 {
+		return "", errors.New("Authentication with federated identity provider failed: no token received")
+	}
+	return resp.Result.Token, nil
+}
+
 func (ia *IdentityAuthenticator) waitForExternalAction(idpURL, idpSessionID string) (string, error) {
 	log.Printf("Opening browser for external authentication: %s", idpURL)
 	_ = openBrowser(idpURL) // this may fail on headless systems, but we don't want to block the authentication process
@@ -352,6 +381,8 @@ func (ia *IdentityAuthenticator) invokeEndpoint(method, url string, payload []by
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-IDAP-NATIVE-CLIENT", "true")
+	req.Header.Set("OobIdPAuth", "true")
+	req.Header.Set("User-Agent", "conjur-cli-go")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
