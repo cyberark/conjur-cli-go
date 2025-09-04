@@ -10,6 +10,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [9.0.0] - 2025-09-04
+
+### Added
+- Add support for CyberArk Secrets Manager SaaS
+  CNJR-9039, CNJR-9043, CNJR-9349, CNJR-9046, CNJR-9040, CNJR-9344
+- Integration with identity for CyberArk Secrets Manager SaaS authentication
+  CNJR-9044
+- Added copyright disclaimer to version command
+  CNJR-9042
+
+### Changed
+- Use huh library instead of survey for user input prompts
+  CNJR-10253
+
 ## [8.1.3] - 2025-09-12
 
 ### Added
