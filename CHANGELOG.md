@@ -10,12 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [8.1.3] - 2025-08-05
+## [8.1.3] - 2025-09-12
 
 ### Added
 - Add `-f/--file` flag to `variable set` command to read secret values from files. (CNJR-6876)
 
 ### Changed
+- Update documentation to align with Conjur Enterprise name change to Secrets Manager. (CNJR-10975)
 - Update Go dependencies to reflect conjur-api-go v0.13.2
 - Improve error handling for missing .netrc file. ([cyberark/summon-conjur#83](https://github.com/cyberark/summon-conjur/issues/83), CNJR-10190)
 - Remove `-go` suffix from CLI binaries. (CNJR-3725)
@@ -233,7 +234,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.1...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.3...HEAD
+[8.1.3]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.2...v8.1.3
+[8.1.2]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.1...v8.1.2
 [8.1.1]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.0...v8.1.1
 [8.1.0]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.19...v8.1.0
 [8.0.19]: https://github.com/cyberark/conjur-cli-go/compare/v8.0.18...v8.0.19
