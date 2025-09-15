@@ -11,7 +11,7 @@ require (
 	github.com/charmbracelet/fang v0.4.2
 	github.com/charmbracelet/huh v0.7.1-0.20250714122654-40d2b68703eb
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.3.0.20250917201909-41ff0bf215ea
+	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta1
 	github.com/cyberark/conjur-api-go v0.13.2 // Run "go get github.com/cyberark/conjur-api-go@main" to update
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -44,15 +44,12 @@ require (
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/charmbracelet/bubbles v0.21.1-0.20250623103423-23b8fd6302d7 // indirect
 	github.com/charmbracelet/colorprofile v0.3.2 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20250915111650-81d4262876ef // indirect
 	github.com/charmbracelet/x/ansi v0.10.1 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
 	github.com/charmbracelet/x/exp/charmtone v0.0.0-20250720010745-3615766e35a0 // indirect
 	github.com/charmbracelet/x/exp/color v0.0.0-20250720010745-3615766e35a0 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20250720010745-3615766e35a0 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
-	github.com/charmbracelet/x/termios v0.1.1 // indirect
-	github.com/charmbracelet/x/windows v0.2.2 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -79,7 +76,6 @@ require (
 	github.com/spf13/pflag v1.0.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/zalando/go-keyring v0.2.6 // indirect
-	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect

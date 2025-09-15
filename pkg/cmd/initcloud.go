@@ -94,7 +94,7 @@ func validateCloudCmdFlags(cmdFlagVals initCloudCmdFlagValues, cmd *cobra.Comman
 			return nil
 		}
 	}
-	return fmt.Errorf("invalid Secrets Manager SaaS URL: %s. Please provide valid", cmdFlagVals.cloudURL)
+	return fmt.Errorf("invalid Secrets Manager SaaS URL: %s. Please provide valid URL", cmdFlagVals.cloudURL)
 }
 
 func runInitCloudCommand(cmd *cobra.Command) error {

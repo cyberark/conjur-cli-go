@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
 	"net/url"
 	"os"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/cmd/style"
+	"github.com/cyberark/conjur-cli-go/pkg/utils"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -49,7 +49,7 @@ func AskForPrompt(ctx context.Context, message string, timeout time.Duration) (s
 // AskForMFAMechanism presents a prompt to select MFA mechanism to use
 func AskForMFAMechanism(options []string) (string, error) {
 	return option(
-		options,
+		huh.NewOptions(options...),
 		"Select MFA Mechanism",
 		"Please select the multi factor authentication mechanism you want to use.",
 	)
@@ -170,10 +170,15 @@ func MaybeAskForEnvironment(env string) (string, error) {
 	if len(env) > 0 {
 		return env, nil
 	}
+	options := make([]huh.Option[string], 0, len(conjurapi.SupportedEnvironments))
+	for _, e := range conjurapi.SupportedEnvironments {
+		environmentType := conjurapi.EnvironmentType(e)
+		options = append(options, huh.NewOption(environmentType.FullName(), environmentType.String()))
+	}
 	return option(
-		conjurapi.SupportedEnvironments,
+		options,
 		"Select the environment you want to use:",
-		"The environment you want to use. The default is self-hosted.",
+		"The environment you want to use.",
 	)
 }
 
@@ -209,12 +214,12 @@ func input(title string) (string, error) {
 }
 
 // option presents a prompt to select an option from a list
-func option(options []string, title string, description string) (string, error) {
+func option(options []huh.Option[string], title string, description string) (string, error) {
 	var selected string
 	err := huh.NewForm(huh.NewGroup(
 		huh.NewSelect[string]().
 			Title(title).
-			Options(huh.NewOptions(options...)...).
+			Options(options...).
 			Value(&selected).
 			Description(description),
 	)).

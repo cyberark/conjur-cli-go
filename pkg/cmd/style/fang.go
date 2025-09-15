@@ -2,6 +2,7 @@ package style
 
 import (
 	"context"
+
 	"github.com/charmbracelet/fang"
 	"github.com/charmbracelet/lipgloss/v2"
 	"github.com/spf13/cobra"
