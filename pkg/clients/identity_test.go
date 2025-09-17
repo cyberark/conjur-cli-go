@@ -121,16 +121,16 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 			beforeTest: func() {
 				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_mfa.json")
 				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
-				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`, password)
 				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
-				startOOBRequest := `{"Action":"StartOOB","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				startOOBRequest := `{"Action":"StartOOB","MechanismId":"email_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`
 				startOOBResponse, _ := os.ReadFile("test/identity_mock/advance_start_oob.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", startOOBRequest, string(startOOBResponse), http.StatusOK)
-				OOBSuccessRequest := `{"Action":"Answer","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				OOBSuccessRequest := `{"Action":"Answer","MechanismId":"email_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`
 				OOBSuccessResponse, _ := os.ReadFile("test/identity_mock/advance_oob_success.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", OOBSuccessRequest, string(OOBSuccessResponse), http.StatusOK)
-				pollRequest := `{"Action":"Poll","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				pollRequest := `{"Action":"Poll","MechanismId":"email_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`
 				pollResponse, _ := os.ReadFile("test/identity_mock/advance_oob_success.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", pollRequest, string(pollResponse), http.StatusOK)
 			},
@@ -141,7 +141,7 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 			beforeTest: func() {
 				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_qr.json")
 				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
-				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`, password)
 				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
 				startPollResponse, _ := os.ReadFile("test/identity_mock/advance_oob_success.json")
@@ -154,7 +154,7 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 			beforeTest: func() {
 				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_external_pin.json")
 				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
-				OOBSuccessRequest := `{"Action":"Answer","MechanismId":"OOBAUTHPIN","SessionId":"lileTEcF0UOBN0viru2gfGqxkdAILx2xTg2IS4suWM41"}`
+				OOBSuccessRequest := `{"Action":"Answer","MechanismId":"OOBAUTHPIN","SessionId":"lileTEcF0UOBN0viru2gfGqxkdAILx2xTg2IS4suWM41","TenantId":"ABQ5234"}`
 				OOBSuccessResponse, _ := os.ReadFile("test/identity_mock/advance_oob_success.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", OOBSuccessRequest, string(OOBSuccessResponse), http.StatusOK)
 			},
@@ -165,7 +165,7 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 			beforeTest: func() {
 				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_unsupported_mfa.json")
 				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
-				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`, password)
 				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
 			},
@@ -176,10 +176,10 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 			beforeTest: func() {
 				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_mfa.json")
 				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
-				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`, password)
 				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
-				advanceRequest := `{"Action":"Answer","Answer":"password","MechanismId":"password_mechanism_id","SessionId":"session_id"}`
+				advanceRequest := `{"Action":"Answer","Answer":"password","MechanismId":"password_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", advanceRequest, "500 Internal Server Error", http.StatusInternalServerError)
 			},
 		},
@@ -189,13 +189,13 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 			beforeTest: func() {
 				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_mfa.json")
 				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
-				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`, password)
 				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
-				startOOBRequest := `{"Action":"StartOOB","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				startOOBRequest := `{"Action":"StartOOB","MechanismId":"email_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`
 				startOOBResponse, _ := os.ReadFile("test/identity_mock/advance_start_oob.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", startOOBRequest, string(startOOBResponse), http.StatusOK)
-				OOBFailureRequest := `{"Action":"Poll","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				OOBFailureRequest := `{"Action":"Poll","MechanismId":"email_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", OOBFailureRequest, "500 Internal Server Error", http.StatusInternalServerError)
 			},
 		},
@@ -206,13 +206,13 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 			beforeTest: func() {
 				startAuthResponse, _ := os.ReadFile("test/identity_mock/start_auth_mfa.json")
 				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
-				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id"}`, password)
+				nextChallengeRequest := fmt.Sprintf(`{"Action":"Answer","Answer":"%s","MechanismId":"password_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`, password)
 				advanceAuthResponse, _ := os.ReadFile("test/identity_mock/advance_next_challenge.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", nextChallengeRequest, string(advanceAuthResponse), http.StatusOK)
-				startOOBRequest := `{"Action":"StartOOB","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				startOOBRequest := `{"Action":"StartOOB","MechanismId":"email_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`
 				startOOBResponse, _ := os.ReadFile("test/identity_mock/advance_start_oob.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", startOOBRequest, string(startOOBResponse), http.StatusOK)
-				OOBFailureRequest := `{"Action":"Poll","MechanismId":"email_mechanism_id","SessionId":"session_id"}`
+				OOBFailureRequest := `{"Action":"Poll","MechanismId":"email_mechanism_id","SessionId":"session_id","TenantId":"ABD5189"}`
 				OOBFailureResponse, _ := os.ReadFile("test/identity_mock/advance_failure.json")
 				mockResponseWithRequestBody(wiremockClient, "/Security/AdvanceAuthentication", OOBFailureRequest, string(OOBFailureResponse), http.StatusOK)
 			},

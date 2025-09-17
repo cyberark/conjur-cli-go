@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 
@@ -46,6 +47,12 @@ type identityResp[T any] struct {
 	InnerExceptions string `json:"InnerExceptions"`
 }
 
+type authStartReq struct {
+	User     string `json:"User"`
+	Version  string `json:"Version"`
+	TenantID string `json:"TenantId,omitempty"`
+}
+
 type authStartResp struct {
 	ClientHints struct {
 		PersistDefault                bool `json:"PersistDefault"`
@@ -54,7 +61,7 @@ type authStartResp struct {
 		EndpointAuthenticationEnabled bool `json:"EndpointAuthenticationEnabled"`
 	} `json:"ClientHints"`
 	Version            string `json:"Version"`
-	SessionId          string `json:"SessionId"`
+	SessionID          string `json:"SessionId"`
 	EventDescription   string `json:"EventDescription"`
 	RetryWaitingTime   int    `json:"RetryWaitingTime"`
 	SecurityImageName  string `json:"SecurityImageName"`
@@ -62,11 +69,11 @@ type authStartResp struct {
 	Challenges         []struct {
 		Mechanisms []mechanismResp `json:"Mechanisms"`
 	} `json:"Challenges"`
-	TenantId              string `json:"TenantId"`
+	TenantID              string `json:"TenantId"`
 	PodFQDN               string `json:"PodFQDN"`
-	IdpRedirectShortUrl   string `json:"IdpRedirectShortUrl"`
-	IdpRedirectUrl        string `json:"IdpRedirectUrl"`
-	IdpLoginSessionId     string `json:"IdpLoginSessionId"`
+	IdpRedirectShortURL   string `json:"IdpRedirectShortUrl"`
+	IdpRedirectURL        string `json:"IdpRedirectUrl"`
+	IdpLoginSessionID     string `json:"IdpLoginSessionId"`
 	IdpOobAuthPinRequired bool   `json:"IdpOobAuthPinRequired"`
 }
 
@@ -79,23 +86,44 @@ type mechanismResp struct {
 	Enrolled         bool   `json:"Enrolled"`
 	Image            string `json:"Image"`
 }
+
+type authAdvanceReq struct {
+	SessionID   string `json:"SessionId"`
+	MechanismId string `json:"MechanismId"`
+	Action      string `json:"Action"`
+	Answer      string `json:"Answer,omitempty"`
+	TenantID    string `json:"TenantId,omitempty"`
+}
+
 type authAdvanceResp struct {
 	Summary            string `json:"Summary"`
 	GeneratedAuthValue string `json:"GeneratedAuthValue"`
 	Token              string `json:"Token"`
 }
 
+type authStatusOOBReq struct {
+	SessionID string `json:"SessionId"`
+	TenantID  string `json:"TenantId,omitempty"`
+}
+
+type authStatusOOBResp struct {
+	Result struct {
+		State string `json:"State"`
+		Token string `json:"Token,omitempty"`
+	} `json:"Result"`
+}
+
 // IdentityAuthenticator struct
 type IdentityAuthenticator struct {
-	identityURL     string
-	customTenantURL string
-	client          ConjurClient
-	sessionID       string
-	timeout         time.Duration
+	identityURL string
+	tenantID    string
+	client      ConjurClient
+	sessionID   string
+	timeout     time.Duration
 }
 
 // NewIdentityAuthenticator creates a new instance of IdentityAuthenticator
-func NewIdentityAuthenticator(client ConjurClient, identityURL string) *IdentityAuthenticator {
+func NewIdentityAuthenticator(client ConjurClient, identityURL, tenantID string) *IdentityAuthenticator {
 	timeout := time.Duration(client.GetConfig().ConjurCloudTimeout)
 	if timeout == 0 {
 		timeout = defaultTimeout
@@ -103,6 +131,7 @@ func NewIdentityAuthenticator(client ConjurClient, identityURL string) *Identity
 
 	return &IdentityAuthenticator{
 		identityURL: identityURL,
+		tenantID:    tenantID,
 		client:      client,
 		timeout:     timeout,
 	}
@@ -116,17 +145,17 @@ func (ia *IdentityAuthenticator) GetToken(username, password string) (string, er
 	if !startResp.Success {
 		return "", fmt.Errorf("authentication failed: %s", startResp.Message)
 	}
-	if len(startResp.Result.IdpRedirectShortUrl) > 0 && len(startResp.Result.IdpLoginSessionId) > 0 {
+	if len(startResp.Result.IdpRedirectShortURL) > 0 && len(startResp.Result.IdpLoginSessionID) > 0 {
 		if startResp.Result.IdpOobAuthPinRequired == false {
 			return "", fmt.Errorf("oob auth pin required for login with external identity provider")
 		}
-		ia.sessionID = startResp.Result.IdpLoginSessionId
-		return ia.loginWithPIN(startResp.Result.IdpRedirectShortUrl)
+		ia.sessionID = startResp.Result.IdpLoginSessionID
+		return ia.loginWithPIN(startResp.Result.IdpRedirectShortURL)
 	}
 	if len(startResp.Result.Challenges) == 0 {
 		return "", errors.New("no challenges available for authentication")
 	}
-	ia.sessionID = startResp.Result.SessionId
+	ia.sessionID = startResp.Result.SessionID
 	for _, challenge := range startResp.Result.Challenges {
 		if len(challenge.Mechanisms) == 0 {
 			return "", errors.New("no mechanisms available for authentication")
@@ -253,6 +282,9 @@ func (ia *IdentityAuthenticator) startAuthentication(userName string) (*identity
 		ia.identityURL = startAuthResponse.Result.PodFQDN
 		return ia.startAuthentication(userName)
 	}
+	if len(ia.tenantID) == 0 {
+		ia.tenantID = startAuthResponse.Result.TenantID
+	}
 	return &startAuthResponse, nil
 }
 
@@ -300,13 +332,12 @@ func (ia *IdentityAuthenticator) waitForExternalAction(idpURL, idpSessionID stri
 }
 
 func (ia *IdentityAuthenticator) advanceAuthentication(mechanismID, action, answer string) (*identityResp[authAdvanceResp], error) {
-	payload := map[string]interface{}{
-		"SessionId":   ia.sessionID,
-		"MechanismId": mechanismID,
-		"Action":      action,
-	}
-	if action == "Answer" && len(answer) > 0 {
-		payload["Answer"] = answer
+	payload := authAdvanceReq{
+		SessionID:   ia.sessionID,
+		MechanismId: mechanismID,
+		Action:      action,
+		TenantID:    ia.tenantID,
+		Answer:      answer,
 	}
 
 	payloadBytes, err := json.Marshal(payload)
@@ -327,9 +358,10 @@ func (ia *IdentityAuthenticator) advanceAuthentication(mechanismID, action, answ
 }
 
 func (ia *IdentityAuthenticator) callIdentityStartAuth(userName string) ([]byte, error) {
-	payload := map[string]string{
-		"User":    userName,
-		"Version": "1.0",
+	payload := authStartReq{
+		User:     userName,
+		Version:  "1.0",
+		TenantID: ia.tenantID,
 	}
 
 	payloadBytes, err := json.Marshal(payload)
@@ -341,8 +373,9 @@ func (ia *IdentityAuthenticator) callIdentityStartAuth(userName string) ([]byte,
 }
 
 func (ia *IdentityAuthenticator) getAuthStatusToken(sessionID string) (string, error) {
-	payload := map[string]string{
-		"SessionId": sessionID,
+	payload := authStatusOOBReq{
+		SessionID: sessionID,
+		TenantID:  ia.tenantID,
 	}
 
 	payloadBytes, err := json.Marshal(payload)
@@ -355,12 +388,7 @@ func (ia *IdentityAuthenticator) getAuthStatusToken(sessionID string) (string, e
 		return "", err
 	}
 
-	var authStatus struct {
-		Result struct {
-			State string `json:"State"`
-			Token string `json:"Token,omitempty"`
-		} `json:"Result"`
-	}
+	var authStatus authStatusOOBResp
 	if err := json.Unmarshal(response, &authStatus); err != nil {
 		return "", fmt.Errorf("failed to parse response: %w", err)
 	}
@@ -383,7 +411,7 @@ func (ia *IdentityAuthenticator) invokeEndpoint(method, url string, payload []by
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-IDAP-NATIVE-CLIENT", "true")
 	req.Header.Set("OobIdPAuth", "true")
-	req.Header.Set("User-Agent", "conjur-cli-go "+version.Version)
+	req.Header.Set("User-Agent", fmt.Sprintf("conjur-cli-go/%s (%s %s)", version.Version, runtime.GOOS, runtime.GOARCH))
 
 	client := http.DefaultClient
 	if ia.client != nil && ia.client.GetHttpClient() != nil {
