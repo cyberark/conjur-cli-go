@@ -280,6 +280,7 @@ type advanceAuthResponse struct {
 	Result  struct {
 		Summary            string `json:"Summary"`
 		GeneratedAuthValue string `json:"GeneratedAuthValue"`
+		Token              string `json:"Token"`
 	} `json:"Result"`
 	Message         string `json:"Message"`
 	MessageId       string `json:"MessageID"`
@@ -373,7 +374,7 @@ func fetchAuthTokenFromIdentity(httpClient *http.Client, providerURL string, use
 
 	// Advance Password-based authentication handshake.
 
-	resp, advanceResp, err := advanceAuthRequest(host, advanceAuthData{
+	_, advanceResp, err := advanceAuthRequest(host, advanceAuthData{
 		Action:      "Answer",
 		Answer:      password,
 		MechanismId: passwordMechanism.MechanismId,
@@ -388,11 +389,10 @@ func fetchAuthTokenFromIdentity(httpClient *http.Client, providerURL string, use
 
 	// If only one challenge exists (Password), return the token immediately
 	if len(startResp.Result.Challenges) == 1 {
-		return resp.Cookies()[slices.IndexFunc(
-			resp.Cookies(), func(c *http.Cookie) bool {
-				return c.Name == ".ASPXAUTH"
-			},
-		)].Value, nil
+		if len(advanceResp.Result.Token) == 0 {
+			return "", errors.New("missing token in identity response")
+		}
+		return advanceResp.Result.Token, nil
 	} else {
 
 		// Otherwise advance the Mobile Authenticator-based authentication handshake.
@@ -405,7 +405,7 @@ func fetchAuthTokenFromIdentity(httpClient *http.Client, providerURL string, use
 			},
 		)]
 
-		resp, advanceResp, err = advanceAuthRequest(host, advanceAuthData{
+		_, advanceResp, err = advanceAuthRequest(host, advanceAuthData{
 			Action:      "StartOOB",
 			MechanismId: mobileAuthMechanism.MechanismId,
 			SessionId:   startResp.Result.SessionId,
@@ -429,7 +429,7 @@ func fetchAuthTokenFromIdentity(httpClient *http.Client, providerURL string, use
 				case <-timeout:
 					return errors.New("Timed out waiting for out-of-band authentication")
 				case <-ticker.C:
-					resp, advanceResp, err = advanceAuthRequest(host, advanceAuthData{
+					_, advanceResp, err = advanceAuthRequest(host, advanceAuthData{
 						Action:      "Poll",
 						MechanismId: mobileAuthMechanism.MechanismId,
 						SessionId:   startResp.Result.SessionId,
@@ -450,14 +450,10 @@ func fetchAuthTokenFromIdentity(httpClient *http.Client, providerURL string, use
 			return "", err
 		}
 
-		// When the OOB Poll response indicates LoginSuccess, the bearer token is
-		// included as an .ASPXAUTH cookie.
-
-		return resp.Cookies()[slices.IndexFunc(
-			resp.Cookies(), func(c *http.Cookie) bool {
-				return c.Name == ".ASPXAUTH"
-			},
-		)].Value, nil
+		if len(advanceResp.Result.Token) == 0 {
+			return "", errors.New("missing token in identity response")
+		}
+		return advanceResp.Result.Token, nil
 	}
 }
 
