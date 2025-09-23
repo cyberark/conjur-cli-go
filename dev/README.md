@@ -1,7 +1,7 @@
 # conjur-cli-go dev
 
 `./start` creates a dev environment, including a CLI container that is already
-logged into Conjur as the admin user. You can optionally pass `--oidc-keycloak` to enable
+logged into Conjur OSS as the admin user. You can optionally pass `--oidc-keycloak` to enable
 OIDC authentication with Keycloak.
 
 `./stop` tears down the environment.

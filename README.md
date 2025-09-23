@@ -1,6 +1,6 @@
 # conjur-cli-go
 
-A CLI for Conjur written in Golang using the [Cobra CLI framework](https://github.com/spf13/cobra).
+A CLI for CyberArk Secrets Manager written in Golang using the [Cobra CLI framework](https://github.com/spf13/cobra).
 
 ## Certification level
 
