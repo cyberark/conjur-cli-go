@@ -27,3 +27,15 @@ func TestCheckIntegration(t *testing.T) {
 		assert.Equal(t, "false\n", stdOut)
 	})
 }
+
+func TestCheckIntegrationCloud(t *testing.T) {
+	cli := newConjurTestCLI(t)
+	cli.InitCloud(t)
+
+	t.Run("check command", func(t *testing.T) {
+		stdOut, stdErr, err := cli.Run("check")
+		assert.Error(t, err)
+		assert.Empty(t, stdOut)
+		assert.Contains(t, stdErr, "unknown command \"check\" for \"conjur\"\n")
+	})
+}

@@ -4,21 +4,33 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // ServerCert represents a TLS certificate and its fingerprint
 type ServerCert struct {
-	Fingerprint string
-	Cert        string
+	Fingerprint    string
+	Issuer         pkix.Name
+	CreationDate   string
+	ExpirationDate string
+	Cert           string
+	SelfSigned     bool
+	UntrustedCA    bool
+}
+
+func isSelfSigned(cert *x509.Certificate) bool {
+	return cert.Subject.CommonName == cert.Issuer.CommonName
 }
 
 // GetServerCert returns the TLS certificate and fingerprint for a given host.
 // The host should be in the format hostname:port. If the port is not specified,
 // 443 is used.
-func GetServerCert(host string, allowSelfSigned bool) (ServerCert, error) {
+func GetServerCert(host string) (ServerCert, error) {
 	// Split host into hostname and port
 	hostParts := strings.Split(host, ":")
 	hostname := hostParts[0]
@@ -28,7 +40,7 @@ func GetServerCert(host string, allowSelfSigned bool) (ServerCert, error) {
 	}
 
 	conn, err := tls.Dial("tcp", hostname+":"+port, &tls.Config{
-		InsecureSkipVerify: allowSelfSigned,
+		InsecureSkipVerify: true,
 	})
 	if err != nil {
 		return ServerCert{}, err
@@ -36,19 +48,41 @@ func GetServerCert(host string, allowSelfSigned bool) (ServerCert, error) {
 	defer conn.Close()
 
 	// Get the server's certificate
-	cert := conn.ConnectionState().PeerCertificates[0]
+	peerCerts := conn.ConnectionState().PeerCertificates
+	if len(peerCerts) == 0 {
+		return ServerCert{}, errors.New("no peer certificates found")
+	}
+	cert := peerCerts[0]
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+	selfSigned := isSelfSigned(cert)
 
-	if allowSelfSigned {
-		// If allowing self-signed certificates, we need to verify the certificate manually because
-		// InsecureSkipVerify is set to true which bypasses the automatic verification.
-		// We load the system root CAs and add the server's certificate to the pool, then verify.
-		rootCAs, _ := x509.SystemCertPool()
-		if rootCAs == nil {
-			rootCAs = x509.NewCertPool()
-		}
+	if selfSigned {
 		rootCAs.AddCert(cert)
-		_, err = cert.Verify(x509.VerifyOptions{Roots: rootCAs})
-		if err != nil {
+	}
+
+	opts := x509.VerifyOptions{
+		Roots:         rootCAs,
+		DNSName:       hostname,
+		Intermediates: x509.NewCertPool(),
+	}
+
+	for _, cert := range peerCerts[1:] {
+		opts.Intermediates.AddCert(cert)
+	}
+
+	var untrustedCA bool
+
+	_, err = cert.Verify(opts)
+	if err != nil {
+		fmt.Println("Error verifying certificate:", err)
+		// check if error is due to unknowh authority
+		var unknownAuthorityError x509.UnknownAuthorityError
+		if errors.As(err, &unknownAuthorityError) {
+			untrustedCA = true
+		} else {
 			return ServerCert{}, err
 		}
 	}
@@ -60,7 +94,9 @@ func GetServerCert(host string, allowSelfSigned bool) (ServerCert, error) {
 		Bytes: cert.Raw,
 	})
 
-	return ServerCert{Fingerprint: fingerprint, Cert: string(pem)}, nil
+	creationDate := cert.NotBefore.Format(time.RFC1123)
+	expirationDate := cert.NotAfter.Format(time.RFC1123)
+	return ServerCert{Fingerprint: fingerprint, Issuer: cert.Issuer, CreationDate: creationDate, ExpirationDate: expirationDate, Cert: string(pem), SelfSigned: selfSigned, UntrustedCA: untrustedCA}, nil
 }
 
 func getSha256Fingerprint(cert []byte) string {

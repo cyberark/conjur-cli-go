@@ -1,0 +1,27 @@
+{
+  "success":true,
+  "Result":{
+    "ClientHints":{
+      "PersistDefault":false,
+      "AllowPersist":false,
+      "AllowForgotPassword":false,
+      "EndpointAuthenticationEnabled":false
+    },
+    "Version":"1.0",
+    "SessionId":"8vwknPnxZ0ywsj95Y6-uK1kIr6XbtufC310N6qiE8Lc1",
+    "EventDescription":null,
+    "RetryWaitingTime":0,
+    "SecurityImageName":null,
+    "AllowLoginMfaCache":false,
+    "Challenges":[],
+    "Summary":"NewPackage",
+    "TenantId":"ABC1234"
+  },
+  "Message":null,
+  "MessageID":null,
+  "Exception":null,
+  "ErrorID":null,
+  "ErrorCode":null,
+  "IsSoftError":false,
+  "InnerExceptions":null
+}

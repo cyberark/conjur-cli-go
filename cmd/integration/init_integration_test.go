@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"testing"
 
+	"github.com/cyberark/conjur-api-go/conjurapi"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,20 +29,19 @@ func TestInitIntegration(t *testing.T) {
 	})
 
 	t.Run("init with self-signed cert", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("init", "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force")
+		stdOut, stdErr, err := cli.Run("init", string(conjurapi.EnvironmentSH), "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force")
 		assert.Error(t, err)
-		assert.Equal(t, "", stdOut)
-		assert.Contains(t, stdErr, "Unable to retrieve and validate certificate")
-		assert.Contains(t, stdErr, "re-run the init command with the `--self-signed` flag")
+		assert.Contains(t, stdOut, "Do you want to trust this certificate? [y/N]")
 
-		stdOut, stdErr, err = cli.Run("init", "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force", "--self-signed")
+		stdOut, stdErr, err = cli.Run("init", string(conjurapi.EnvironmentSH), "-a", cli.account, "-u", "https://proxy", "--force-netrc", "--force", "--self-signed")
 		assert.NotContains(t, stdErr, "Unable to retrieve and validate certificate")
-		assert.Contains(t, stdOut, "The server's certificate Sha256 fingerprint is")
+		assert.NotContains(t, stdOut, "Do you want to trust this certificate? [y/N]")
+		assert.Contains(t, stdOut, "Wrote certificate to ")
 		assert.Contains(t, stdErr, selfSignedWarning)
 	})
 
 	t.Run("init with insecure flag", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("init", "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
+		stdOut, stdErr, err := cli.Run("init", string(conjurapi.EnvironmentSH), "-a", cli.account, "-u", "http://conjur", "-i", "--force-netrc", "--force")
 		assertInitCmd(t, err, stdOut, cli.homeDir)
 		assert.Equal(t, insecureModeWarning, stdErr)
 	})

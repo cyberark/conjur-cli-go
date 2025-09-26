@@ -1,0 +1,13 @@
+{
+  "success": false,
+  "Result": {
+    "Summary": "Failure"
+  },
+  "Message": "Authentication (login or challenge) has failed. Please try again or contact your system administrator.",
+  "MessageID": null,
+  "Exception": null,
+  "ErrorID": "9e3f77bc-2467-46d3-ab3f-96a34a923de8:68f24989befe48858b73182611a87066",
+  "ErrorCode": null,
+  "IsSoftError": false,
+  "InnerExceptions": null
+}

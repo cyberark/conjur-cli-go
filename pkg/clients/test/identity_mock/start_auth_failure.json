@@ -1,0 +1,10 @@
+{
+  "success":false,
+  "Message":"some error",
+  "MessageID":null,
+  "Exception":null,
+  "ErrorID":null,
+  "ErrorCode":null,
+  "IsSoftError":false,
+  "InnerExceptions":null
+}

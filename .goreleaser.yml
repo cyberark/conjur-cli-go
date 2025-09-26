@@ -37,6 +37,7 @@ builds:
       - -w
       - -X "github.com/cyberark/conjur-cli-go/pkg/version.Tag={{ .ShortCommit }}"
       - -X "github.com/cyberark/conjur-cli-go/pkg/version.Version={{ .Env.VERSION }}"
+      - -X "github.com/cyberark/conjur-cli-go/pkg/version.buildYear={{ .Env.BUILD_YEAR }}"
     hooks:
       post:
         # Copy the separately-built FIPS binaries into the GoReleaser build directory
@@ -69,7 +70,7 @@ checksum:
 
 brews:
   - name: conjur-cli
-    description: CyberArk Conjur command line interface
+    description: Secrets Manager command line interface
     homepage: https://conjur.org
     url_template: https://github.com/cyberark/conjur-cli-go/releases/download/v{{.Env.VERSION}}/conjur-cli_{{.Env.VERSION}}_{{.Os}}_{{.Arch}}.tar.gz
     install: |

@@ -36,6 +36,7 @@ function build_binaries_and_archives() {
     echo "Docker image for release build: ${GORELEASER_IMAGE}"
     docker run --rm \
       --env VERSION="${VERSION}" \
+      --env BUILD_YEAR="${BUILD_YEAR}" \
       --env GO_VERSION="${GO_VERSION}" \
       --env GOTOOLCHAIN=auto \
       --volume "${REPO_ROOT}:/${PROJECT_WD}" \
@@ -72,6 +73,7 @@ function build_packages() {
 
         docker run --rm \
           --env VERSION="${VERSION}" \
+          --env BUILD_YEAR="${BUILD_YEAR}" \
           --env GOARCH="${arch}" \
           --volume "${REPO_ROOT}:/${PROJECT_WD}" \
           --workdir "/${PROJECT_WD}" \
@@ -97,6 +99,7 @@ function main() {
     REPO_ROOT="$(repo_root)"
     PROJECT_WD="github.com/cyberark/conjur-cli-go"
     VERSION="$(project_semantic_version)"
+    BUILD_YEAR="$(date +%Y)"
 
     build_binaries_and_archives "$@"
     build_packages

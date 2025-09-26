@@ -13,6 +13,9 @@ build_integration:
 integration: install
 	go test -tags=dev,integration -p=1 -count=1 -v ./cmd/integration/...
 
+integration_cloud: install
+	go test -tags=integration -p=1 -count=1 -v ./cmd/integration_cloud/...
+
 # Example usage of run: make run ARGS="variable get -i path/to/var"
 run:
 	go run -tags=dev ./cmd/conjur $(ARGS)

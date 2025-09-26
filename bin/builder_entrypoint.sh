@@ -22,7 +22,8 @@ function main() {
   go build \
     -ldflags "-w \
       -X github.com/cyberark/conjur-cli-go/pkg/version.Tag=$SHORT_COMMIT_HASH \
-      -X github.com/cyberark/conjur-cli-go/pkg/version.Version=$VERSION" \
+      -X github.com/cyberark/conjur-cli-go/pkg/version.Version=$VERSION \
+      -X github.com/cyberark/conjur-cli-go/pkg/version.buildYear=$(date +%Y)" \
     -o "$OUTPUT_DIR/conjur-cli_linux_amd64_v1/conjur" \
     ./cmd/conjur/main.go
   

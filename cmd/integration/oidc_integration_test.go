@@ -6,6 +6,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/cyberark/conjur-api-go/conjurapi"
 	"os"
 	"strings"
 	"testing"
@@ -34,7 +35,7 @@ type authnOidcConfig struct {
 func testLogin(t *testing.T, cli *testConjurCLI, oc oidcCredentials, aoc authnOidcConfig) {
 	t.Run("init", func(t *testing.T) {
 		stdOut, stdErr, err := cli.Run(
-			"init", "-a", cli.account,
+			"init", string(conjurapi.EnvironmentSH), "-a", cli.account,
 			"-u", "http://conjur",
 			"-t", "oidc",
 			"--service-id", aoc.serviceID,
@@ -42,7 +43,7 @@ func testLogin(t *testing.T, cli *testConjurCLI, oc oidcCredentials, aoc authnOi
 			"-i", "--force",
 		)
 		assertInitCmd(t, err, stdOut, cli.homeDir)
-		assert.Equal(t, insecureModeWarning, stdErr)
+		assert.Contains(t, stdErr, insecureModeWarning)
 	})
 
 	t.Run("login", func(t *testing.T) {

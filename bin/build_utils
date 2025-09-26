@@ -21,8 +21,8 @@ function retrieve_cyberark_ca_cert() {
   if command -v security &> /dev/null
   then
     security find-certificate \
-      -a -c "CyberArk Enterprise Root CA" \
-      -p > build_ca_certificate/cyberark_root.crt
+      -a -c "CyberArk Root CA" \
+      -p > "$(repo_root)/build_ca_certificate/cyberark_root.crt"
   fi
 }
 

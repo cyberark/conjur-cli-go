@@ -16,6 +16,7 @@ type loginCmdFuncs struct {
 	LoginWithPromptFallback     func(client clients.ConjurClient, username string, password string) (*authn.LoginPair, error)
 	OidcLogin                   func(conjurClient clients.ConjurClient, username string, password string) (clients.ConjurClient, error)
 	JWTAuthenticate             func(conjurClient clients.ConjurClient) error
+	CloudLogin                  func(conjurClient clients.ConjurClient, username string, password string) (clients.ConjurClient, error)
 }
 
 var defaultLoginCmdFuncs = loginCmdFuncs{
@@ -23,6 +24,7 @@ var defaultLoginCmdFuncs = loginCmdFuncs{
 	LoginWithPromptFallback:     clients.LoginWithPromptFallback,
 	OidcLogin:                   clients.OidcLogin,
 	JWTAuthenticate:             clients.JWTAuthenticate,
+	CloudLogin:                  clients.CloudLogin,
 }
 
 type loginCmdFlagValues struct {
@@ -45,6 +47,7 @@ func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 	}
 
 	debug, err := cmd.Flags().GetBool("debug")
+
 	if err != nil {
 		return loginCmdFlagValues{}, err
 	}
@@ -59,8 +62,8 @@ func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 func newLoginCmd(funcs loginCmdFuncs) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
-		Short: "Authenticate with Conjur using the provided identity and password",
-		Long: `Authenticate with Conjur using the provided identity and password.
+		Short: "Authenticate with Secrets Manager using the provided identity and password",
+		Long: `Authenticate with Secrets Manager using the provided identity and password.
 
 The command will prompt for identity and password if they are not provided via flags.
 
@@ -117,7 +120,14 @@ Examples:
 				// to validate their jwt file before running other commands.
 				err = funcs.JWTAuthenticate(conjurClient)
 				if err != nil {
-					err = fmt.Errorf("Unable to authenticate with Conjur using the provided JWT file: %s", err)
+					err = fmt.Errorf("Unable to authenticate with Secrets Manager using the provided JWT file: %s", err)
+				}
+			} else if config.AuthnType == "cloud" {
+				// If the user is using the cloud authn type, we need to
+				// authenticate with the cloud login method.
+				_, err := funcs.CloudLogin(conjurClient, cmdFlagVals.identity, cmdFlagVals.password)
+				if err != nil {
+					return fmt.Errorf("Unable to authenticate with Secrets Manager SaaS: %s", err)
 				}
 			} else {
 				return fmt.Errorf("unsupported authentication type: %s", config.AuthnType)

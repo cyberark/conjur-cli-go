@@ -53,6 +53,9 @@ Examples:
 }
 
 func init() {
-	pubKeysCmd := newPubKeysCommand(pubKeysClientFactory)
-	rootCmd.AddCommand(pubKeysCmd)
+	config := clients.LoadConfigOrDefault()
+	if config.IsSelfHosted() || config.IsConjurOSS() {
+		pubKeysCmd := newPubKeysCommand(pubKeysClientFactory)
+		rootCmd.AddCommand(pubKeysCmd)
+	}
 }

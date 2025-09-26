@@ -45,7 +45,7 @@ func TestPolicyIntegration(t *testing.T) {
 `
 		stdOut, stdErr, err := cli.RunWithStdin(
 			bytes.NewReader([]byte(policyText)),
-			"policy", "load", "-b", "branch2", "-f", "-",
+			"policy", "replace", "-b", "branch2", "-f", "-",
 		)
 		assert.NoError(t, err)
 		assert.Contains(t, stdOut, "created_roles")
@@ -80,7 +80,7 @@ func TestPolicyIntegration(t *testing.T) {
     body: []
 
 
-Warning: The effective policy's output may not fully replicate the policy defined in Conjur. If you try to upload the output to Conjur, the upload may fail.
+Warning: The effective policy's output may not fully replicate the policy defined in Secrets Manager. If you try to upload the output to Secrets Manager, the upload may fail.
 `
 		stdOut, _, err := cli.Run(
 			"policy", "fetch", "-b", "branch2",
@@ -89,4 +89,40 @@ Warning: The effective policy's output may not fully replicate the policy define
 		assert.NotEmpty(t, stdOut)
 		assert.Equal(t, policyText, stdOut)
 	})
+}
+
+func TestPolicyIntegrationCloud(t *testing.T) {
+	cli := newConjurTestCLI(t)
+	cli.InitCloud(t)
+
+	t.Run("fetch policy is not available", func(t *testing.T) {
+		stdOut, _, err := cli.Run(
+			"policy", "--help",
+		)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, stdOut)
+		assert.NotContains(t, stdOut, "fetch")
+	})
+
+	t.Run("Dry run load policy is not present", func(t *testing.T) {
+		stdOut, stdErr, err := cli.Run("policy", "load", "--dry-run", "--help")
+		assert.Error(t, err)
+		assert.Contains(t, stdOut, "")
+		assert.Contains(t, stdErr, "unknown flag: --dry-run")
+	})
+
+	t.Run("replace policy from stdin", func(t *testing.T) {
+		stdOut, stdErr, err := cli.Run("policy", "replace", "--dry-run", "--help")
+		assert.Error(t, err)
+		assert.Contains(t, stdOut, "")
+		assert.Contains(t, stdErr, "unknown flag: --dry-run")
+	})
+
+	t.Run("update policy from stdin", func(t *testing.T) {
+		stdOut, stdErr, err := cli.Run("policy", "update", "--dry-run", "--help")
+		assert.Error(t, err)
+		assert.Contains(t, stdOut, "")
+		assert.Contains(t, stdErr, "unknown flag: --dry-run")
+	})
+
 }

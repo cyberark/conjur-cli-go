@@ -151,7 +151,7 @@ var loginTestCases = []struct {
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Error(t, err)
 			assert.Empty(t, stdout)
-			assert.Contains(t, stderr, "Unable to authenticate with Conjur using the provided JWT file: jwt authentication failed")
+			assert.Contains(t, stderr, "Unable to authenticate with Secrets Manager using the provided JWT file: jwt authentication failed")
 		},
 	},
 }

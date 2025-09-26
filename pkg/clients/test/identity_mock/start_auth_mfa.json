@@ -1,0 +1,52 @@
+{
+  "success": true,
+  "Result": {
+    "ClientHints": {
+      "PersistDefault": false,
+      "AllowPersist": false,
+      "AllowForgotPassword": false,
+      "EndpointAuthenticationEnabled": false
+    },
+    "Version": "1.0",
+    "SessionId": "session_id",
+    "EventDescription": null,
+    "RetryWaitingTime": 0,
+    "SecurityImageName": null,
+    "AllowLoginMfaCache": false,
+    "Challenges": [
+      {
+        "Mechanisms": [
+          {
+            "AnswerType": "Text",
+            "Name": "UP",
+            "PromptMechChosen": "Enter Password",
+            "PromptSelectMech": "Password",
+            "MechanismId": "password_mechanism_id"
+          }
+        ]
+      },
+      {
+        "Mechanisms": [
+          {
+            "MaskedEmailAddress": "***@cyberark.com",
+            "AnswerType": "StartTextOob",
+            "Name": "EMAIL",
+            "PromptMechChosen": "Email sent to xxxx@cyberark.com. Click the link or manually enter the code to authenticate.",
+            "PromptSelectMech": "Email... @cyberark.com",
+            "PartialAddress": "cyberark.com",
+            "MechanismId": "email_mechanism_id"
+          }
+        ]
+      }
+    ],
+    "Summary": "NewPackage",
+    "TenantId": "ABD5189"
+  },
+  "Message": null,
+  "MessageID": null,
+  "Exception": null,
+  "ErrorID": null,
+  "ErrorCode": null,
+  "IsSoftError": false,
+  "InnerExceptions": null
+}

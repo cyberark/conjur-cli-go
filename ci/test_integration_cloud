@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -eox pipefail
+
+# Navigate to the ci directory (where this script lives) to ensure we can run this script
+# from anywhere.
+cd "$(dirname "$0")"
+
+# set the COMPOSE_PROJECT_NAME for the tests you'll be running
+COMPOSE_PROJECT_NAME="$(openssl rand -hex 3)"
+
+export COMPOSE_PROJECT_NAME
+
+cleanup_and_dump_logs() {
+  echo "Cleaning up... Saving container logs in cloud_cleanup.log"
+  docker compose logs &> cloud_cleanup.log
+  docker compose rm --stop --force
+}
+
+trap 'cleanup_and_dump_logs' EXIT
+
+function main() {
+  echo "Starting Containers"
+  docker compose up -d --no-deps cli
+
+  docker compose exec -T cli make integration_cloud
+}
+
+main

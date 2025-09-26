@@ -48,6 +48,7 @@ type ConjurClient interface {
 	DeleteToken(token string) error
 	CreateHost(id string, token string) (conjurapi.HostFactoryHostResponse, error)
 	PublicKeys(kind string, identifier string) ([]byte, error)
+	EnableAuthenticator(authenticatorType string, serviceID string, enabled bool) error
 
 	Issuer(issuerID string) (issuer conjurapi.Issuer, err error)
 	Issuers() (issuers []conjurapi.Issuer, err error)
@@ -75,12 +76,35 @@ func LoadAndValidateConjurConfig(timeout time.Duration) (conjurapi.Config, error
 	return config, err
 }
 
+// LoadConfigOrDefault loads the Conjur configuration or returns a default configuration
+// in case the configuration is not found or invalid, this method is needed for initialization
+// of commands which depends on the environment
+func LoadConfigOrDefault() conjurapi.Config {
+	config, _ := conjurapi.LoadConfig()
+	return config
+}
+
 // AuthenticatedConjurClientForCommand attempts to get an authenticated Conjur client by iterating through
 // configuration, environment variables and then ultimately falling back on prompting the user for credentials.
 func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, error) {
 	var err error
+	var debug bool
 
-	debug, err := cmd.Flags().GetBool("debug")
+	config, err := LoadAndValidateConjurConfig(0)
+	if err != nil {
+		return nil, err
+	}
+
+	debug, err = cmd.Flags().GetBool("debug")
+	if err != nil {
+		return nil, err
+	}
+	timeout, err := GetTimeout(cmd)
+	if err != nil {
+		return nil, err
+	}
+	// Overwrite config with the timeout value
+	config, err = LoadAndValidateConjurConfig(timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -90,16 +114,6 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 	// we should just have one then the rest is an attempt to get an authenticator
 	decorateConjurClient := func(client ConjurClient) {
 		MaybeDebugLoggingForClient(debug, cmd, client)
-	}
-
-	timeout, err := GetTimeout(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	config, err := LoadAndValidateConjurConfig(timeout)
-	if err != nil {
-		return nil, err
 	}
 
 	var client ConjurClient
@@ -116,13 +130,16 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		}
 		decorateConjurClient(client)
 
-		if config.AuthnType == "" || config.AuthnType == "authn" || config.AuthnType == "ldap" {
+		switch config.AuthnType {
+		case "", "authn", "ldap":
 			client, err = Login(client)
-		} else if config.AuthnType == "oidc" {
+		case "oidc":
 			client, err = OidcLogin(client, "", "")
-		} else if config.AuthnType == "jwt" {
+		case "cloud":
+			client, err = CloudLogin(client, "", "")
+		case "jwt":
 			// Will use the token in the config
-		} else {
+		default:
 			return nil, fmt.Errorf("unsupported authentication type: %s", config.AuthnType)
 		}
 

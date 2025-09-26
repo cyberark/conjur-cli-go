@@ -48,3 +48,15 @@ func TestUserIntegration(t *testing.T) {
 		assert.Equal(t, "Password changed\n", stdOut)
 	})
 }
+
+func TestUserIntegrationCloud(t *testing.T) {
+	cli := newConjurTestCLI(t)
+	cli.InitCloud(t)
+
+	t.Run("user command", func(t *testing.T) {
+		stdOut, stdErr, err := cli.Run("user")
+		assert.Error(t, err)
+		assert.Empty(t, stdOut)
+		assert.Contains(t, stdErr, "unknown command \"user\" for \"conjur\"\n")
+	})
+}
