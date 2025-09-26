@@ -411,7 +411,7 @@ func (ia *IdentityAuthenticator) invokeEndpoint(method, url string, payload []by
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-IDAP-NATIVE-CLIENT", "true")
 	req.Header.Set("OobIdPAuth", "true")
-	req.Header.Set("User-Agent", fmt.Sprintf("conjur-cli-go/%s (%s %s)", version.Version, runtime.GOOS, runtime.GOARCH))
+	req.Header.Set("User-Agent", userAgent())
 
 	client := http.DefaultClient
 	if ia.client != nil && ia.client.GetHttpClient() != nil {
@@ -428,6 +428,21 @@ func (ia *IdentityAuthenticator) invokeEndpoint(method, url string, payload []by
 	}
 
 	return io.ReadAll(resp.Body)
+}
+
+func userAgent() string {
+	var platform string
+	switch runtime.GOOS {
+	case "darwin":
+		platform = "Macintosh"
+	case "linux":
+		platform = "Linux"
+	case "windows":
+		platform = "Windows"
+	default:
+		platform = runtime.GOOS
+	}
+	return fmt.Sprintf("conjur-cli-go/%s (%s; %s %s)", version.Version, platform, runtime.GOOS, runtime.GOARCH)
 }
 
 func (ia *IdentityAuthenticator) handleAnswerableMechanism(mechanism *mechanismResp) (*identityResp[authAdvanceResp], error) {
