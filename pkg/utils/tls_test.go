@@ -27,21 +27,21 @@ func TestGetServerCert(t *testing.T) {
 	})
 
 	t.Run("Returns an object with SelfSigned field set to true for self-signed certificates", func(t *testing.T) {
-		server := startSelfSignedServer(t, 8080)
+		server := startSelfSignedServer(t, 8081)
 		defer server.Close()
 
-		res, err := GetServerCert("localhost:8080")
+		res, err := GetServerCert("localhost:8081")
 		assert.NoError(t, err)
 		assert.Equal(t, true, res.SelfSigned)
 	})
 
 	t.Run("Returns the right certificate for self-signed certificates when allowed", func(t *testing.T) {
-		server := startSelfSignedServer(t, 8080)
+		server := startSelfSignedServer(t, 8081)
 		defer server.Close()
 
 		selfSignedFingerprint := getSha256Fingerprint(server.Certificate().Raw)
 
-		cert, err := GetServerCert("localhost:8080")
+		cert, err := GetServerCert("localhost:8081")
 		assert.NoError(t, err)
 
 		assert.Equal(t, selfSignedFingerprint, cert.Fingerprint)
