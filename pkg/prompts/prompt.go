@@ -18,6 +18,12 @@ import (
 	"golang.org/x/term"
 )
 
+// Option represents a selectable option in a prompt
+type Option struct {
+	Label string
+	Value string
+}
+
 // AskForPrompt presents a prompt to retrieve a custom message from the user
 func AskForPrompt(ctx context.Context, message string, timeout time.Duration) (string, error) {
 	var userInput string
@@ -47,9 +53,13 @@ func AskForPrompt(ctx context.Context, message string, timeout time.Duration) (s
 }
 
 // AskForMFAMechanism presents a prompt to select MFA mechanism to use
-func AskForMFAMechanism(options []string) (string, error) {
+func AskForMFAMechanism(options []Option) (string, error) {
+	o := make([]huh.Option[string], len(options))
+	for i, option := range options {
+		o[i] = huh.NewOption(option.Label, option.Value)
+	}
 	return option(
-		huh.NewOptions(options...),
+		o,
 		"Select MFA Mechanism",
 		"Please select the multi factor authentication mechanism you want to use.",
 	)

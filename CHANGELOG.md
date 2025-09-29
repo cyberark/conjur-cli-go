@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Use huh library instead of survey for user input prompts
   CNJR-10253
 
+### Fixed
+- Prepare identity implementation for responses missing vital user facing information
+  by providing default values when missing information from the server
+  CNJR-11332
+
 ## [8.1.3] - 2025-09-12
 
 ### Added

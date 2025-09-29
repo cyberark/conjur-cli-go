@@ -279,3 +279,125 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 		})
 	}
 }
+
+func Test_promptMechChosen(t *testing.T) {
+	tests := []struct {
+		name      string
+		mechanism *mechanismResp
+		want      string
+	}{{
+		name:      "nil mechanism",
+		mechanism: nil,
+		want:      "",
+	}, {
+		name:      "unsupported mechanism",
+		mechanism: &mechanismResp{Name: "UNSUPPORTED"},
+		want:      "Please provide the required input for the selected authentication mechanism",
+	}, {
+		name:      "with prompt message",
+		mechanism: &mechanismResp{PromptMechChosen: "Enter the PIN from your authenticator app"},
+		want:      "Enter the PIN from your authenticator app",
+	}, {
+		name:      "without prompt message - SQ",
+		mechanism: &mechanismResp{Name: "SQ"},
+		want:      "Please answer your security question",
+	}, {
+		name:      "without prompt message - UP",
+		mechanism: &mechanismResp{Name: "UP"},
+		want:      "Please enter your password",
+	}, {
+		name:      "without prompt message - SMS",
+		mechanism: &mechanismResp{Name: "SMS"},
+		want:      "Please enter the code sent to your phone via SMS",
+	}, {
+		name:      "without prompt message - Email",
+		mechanism: &mechanismResp{Name: "Email"},
+		want:      "Please enter the code sent to your email",
+	}, {
+		name:      "without prompt message - OATH",
+		mechanism: &mechanismResp{Name: "OATH"},
+		want:      "Please enter your OATH one-time passcode",
+	}, {
+		name:      "without prompt message - OTP",
+		mechanism: &mechanismResp{Name: "OTP"},
+		want:      "Please enter the code from your identity mobile app",
+	}, {
+		name:      "without prompt message - U2F",
+		mechanism: &mechanismResp{Name: "U2F"},
+		want:      "Please complete the FIDO2 security key challenge",
+	}, {}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, promptMechChosen(tt.mechanism), "promptMechChosen(%v)", tt.mechanism)
+		})
+	}
+}
+
+func Test_promptSelectMech(t *testing.T) {
+	tests := []struct {
+		name string
+		mech mechanismResp
+		want string
+	}{
+		{
+			name: "with prompt message",
+			mech: mechanismResp{PromptSelectMech: "Custom Prompt"},
+			want: "Custom Prompt",
+		},
+		{
+			name: "Security Question",
+			mech: mechanismResp{Name: "SQ"},
+			want: "Security Question",
+		},
+		{
+			name: "Password",
+			mech: mechanismResp{Name: "UP"},
+			want: "Password",
+		},
+		{
+			name: "SMS",
+			mech: mechanismResp{Name: "SMS"},
+			want: "SMS",
+		},
+		{
+			name: "Email",
+			mech: mechanismResp{Name: "EMAIL"},
+			want: "Email",
+		},
+		{
+			name: "OATH One-Time Passcode",
+			mech: mechanismResp{Name: "OATH"},
+			want: "OATH One-Time Passcode",
+		},
+		{
+			name: "Identity Mobile App",
+			mech: mechanismResp{Name: "OTP"},
+			want: "Identity Mobile App",
+		},
+		{
+			name: "FIDO2 Security Key",
+			mech: mechanismResp{Name: "U2F"},
+			want: "FIDO2 Security Key",
+		},
+		{
+			name: "QR Code",
+			mech: mechanismResp{Name: "QR"},
+			want: "QR Code",
+		},
+		{
+			name: "Phone Call",
+			mech: mechanismResp{Name: "PF"},
+			want: "Phone Call",
+		},
+		{
+			name: "unsupported mechanism",
+			mech: mechanismResp{Name: "UNSUPPORTED"},
+			want: "UNSUPPORTED",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, promptSelectMech(tt.mech), "promptSelectMech(%v)", tt.mech)
+		})
+	}
+}
