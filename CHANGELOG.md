@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Prepare identity implementation for responses missing vital user facing information
   by providing default values when missing information from the server
   CNJR-11332
+- Enable identity security question flow with multiple questions answered at once
+  CNJR-11333
 
 ## [8.1.3] - 2025-09-12
 

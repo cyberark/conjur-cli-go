@@ -78,20 +78,30 @@ type authStartResp struct {
 }
 
 type mechanismResp struct {
-	AnswerType       string `json:"AnswerType"`
-	Name             string `json:"Name"`
-	PromptMechChosen string `json:"PromptMechChosen"`
+	AnswerType         string              `json:"AnswerType"`
+	Name               string              `json:"Name"`
+	PromptMechChosen   string              `json:"PromptMechChosen"`
+	PromptSelectMech   string              `json:"PromptSelectMech"`
+	MechanismId        string              `json:"MechanismId"`
+	Enrolled           bool                `json:"Enrolled"`
+	MultipartMechanism *multiPartMechanism `json:"MultipartMechanism,omitempty"`
+	Image              string              `json:"Image"`
+}
+
+type multiPartMechanism struct {
 	PromptSelectMech string `json:"PromptSelectMech"`
-	MechanismId      string `json:"MechanismId"`
-	Enrolled         bool   `json:"Enrolled"`
-	Image            string `json:"Image"`
+	MechanismParts   []struct {
+		Uuid             string `json:"Uuid"`
+		QuestionText     string `json:"QuestionText"`
+		PromptMechChosen string `json:"PromptMechChosen"`
+	} `json:"MechanismParts"`
 }
 
 type authAdvanceReq struct {
 	SessionID   string `json:"SessionId"`
 	MechanismId string `json:"MechanismId"`
 	Action      string `json:"Action"`
-	Answer      string `json:"Answer,omitempty"`
+	Answer      any    `json:"Answer,omitempty"`
 	TenantID    string `json:"TenantId,omitempty"`
 }
 
@@ -172,10 +182,10 @@ func (ia *IdentityAuthenticator) GetToken(username, password string) (string, er
 				return "", err
 			}
 			advanceResp, err = ia.advanceAuthentication(mechanism.MechanismId, "Answer", password)
-		case mechanismSecurityQuestion, mechanismSMS, mechanismEMAIL,
+		case mechanismSMS, mechanismEMAIL,
 			mechanismOATHOneTimePasscode, mechanismIdentityMobileApp,
 			mechanismFIDO2SecurityKey, mechanismPhoneCall:
-			advanceResp, err = ia.advanceAuthentication(mechanism.MechanismId, "StartOOB", "")
+			advanceResp, err = ia.advanceAuthentication(mechanism.MechanismId, "StartOOB", nil)
 			if err != nil {
 				return "", err
 			}
@@ -184,6 +194,8 @@ func (ia *IdentityAuthenticator) GetToken(username, password string) (string, er
 			} else {
 				advanceResp, err = ia.startPoll(mechanism.MechanismId)
 			}
+		case mechanismSecurityQuestion:
+			advanceResp, err = ia.handleSecurityQuestions(mechanism)
 		case mechanismQRCode:
 			err = qr.DisplayQRCode(mechanism.Image)
 			if err != nil {
@@ -257,7 +269,7 @@ func (ia *IdentityAuthenticator) startPoll(mechanismID string) (advanceResp *ide
 		case <-timeout:
 			return nil, errors.New("Timed out waiting for out-of-band authentication")
 		case <-ticker.C:
-			advanceResp, err = ia.advanceAuthentication(mechanismID, "Poll", "")
+			advanceResp, err = ia.advanceAuthentication(mechanismID, "Poll", nil)
 			if err != nil {
 				return nil, fmt.Errorf("failed to poll authentication status: %w", err)
 			}
@@ -331,7 +343,7 @@ func (ia *IdentityAuthenticator) waitForExternalAction(idpURL, idpSessionID stri
 	}
 }
 
-func (ia *IdentityAuthenticator) advanceAuthentication(mechanismID, action, answer string) (*identityResp[authAdvanceResp], error) {
+func (ia *IdentityAuthenticator) advanceAuthentication(mechanismID, action string, answer any) (*identityResp[authAdvanceResp], error) {
 	payload := authAdvanceReq{
 		SessionID:   ia.sessionID,
 		MechanismId: mechanismID,
@@ -481,6 +493,29 @@ func (ia *IdentityAuthenticator) handleAnswerableMechanism(mechanism *mechanismR
 		<-done
 		return nil, err
 	}
+}
+
+func (ia *IdentityAuthenticator) handleSecurityQuestions(mechanism *mechanismResp) (*identityResp[authAdvanceResp], error) {
+	if mechanism.MultipartMechanism == nil || len(mechanism.MultipartMechanism.MechanismParts) < 2 {
+		return ia.answer(context.Background(), mechanism)
+	}
+	questions := make([]string, len(mechanism.MultipartMechanism.MechanismParts))
+	for i, part := range mechanism.MultipartMechanism.MechanismParts {
+		questions[i] = part.QuestionText
+	}
+	answers, err := prompts.AskForPrompts(
+		context.Background(),
+		mechanism.MultipartMechanism.PromptSelectMech,
+		questions,
+	)
+	if err != nil {
+		return nil, err
+	}
+	resp := make(map[string]string)
+	for i, part := range mechanism.MultipartMechanism.MechanismParts {
+		resp[part.Uuid] = answers[i]
+	}
+	return ia.advanceAuthentication(mechanism.MechanismId, "Answer", resp)
 }
 
 func promptMechChosen(mech *mechanismResp) string {

@@ -52,6 +52,26 @@ func AskForPrompt(ctx context.Context, message string, timeout time.Duration) (s
 	return strings.TrimSpace(userInput), err
 }
 
+// AskForPrompts presents a series of prompts to retrieve custom messages from the user
+func AskForPrompts(ctx context.Context, title string, messages []string) ([]string, error) {
+	answers := make([]string, len(messages))
+	fields := make([]huh.Field, len(messages)+1)
+	fields[0] = huh.NewNote().Title(title)
+	for i, message := range messages {
+		fields[i+1] = huh.NewInput().
+			Title(message).
+			Value(&answers[i]).
+			Validate(huh.ValidateNotEmpty())
+	}
+	form := huh.NewForm(
+		huh.NewGroup(fields...)).
+		WithTheme(style.GetTheme()).
+		WithAccessible(useAccessibleForm())
+
+	err := form.RunWithContext(ctx)
+	return answers, err
+}
+
 // AskForMFAMechanism presents a prompt to select MFA mechanism to use
 func AskForMFAMechanism(options []Option) (string, error) {
 	o := make([]huh.Option[string], len(options))
