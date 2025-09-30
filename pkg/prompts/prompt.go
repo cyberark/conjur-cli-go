@@ -32,7 +32,7 @@ func AskForPrompt(ctx context.Context, message string, timeout time.Duration) (s
 			huh.NewInput().
 				Title(message).
 				Value(&userInput).
-				Validate(huh.ValidateNotEmpty()),
+				Validate(validateNotEmpty()),
 		),
 	).
 		WithTheme(style.GetTheme()).
@@ -61,7 +61,7 @@ func AskForPrompts(ctx context.Context, title string, messages []string) ([]stri
 		fields[i+1] = huh.NewInput().
 			Title(message).
 			Value(&answers[i]).
-			Validate(huh.ValidateNotEmpty())
+			Validate(validateNotEmpty())
 	}
 	form := huh.NewForm(
 		huh.NewGroup(fields...)).
@@ -224,7 +224,7 @@ func passwordInput(title string) (string, error) {
 		EchoMode(huh.EchoModeNone).
 		Title(title).
 		Value(&password).
-		Validate(huh.ValidateNotEmpty()),
+		Validate(validateNotEmpty()),
 	)).
 		WithTheme(style.GetTheme()).
 		WithAccessible(useAccessibleForm()).
@@ -238,7 +238,7 @@ func input(title string) (string, error) {
 		huh.NewInput().
 			Title(title).
 			Value(&userInput).
-			Validate(huh.ValidateNotEmpty()),
+			Validate(validateNotEmpty()),
 	)).
 		WithTheme(style.GetTheme()).
 		WithAccessible(useAccessibleForm()).
@@ -279,4 +279,13 @@ func confirm(message, description string) (bool, error) {
 
 func useAccessibleForm() bool {
 	return !term.IsTerminal(int(os.Stdout.Fd()))
+}
+
+func validateNotEmpty() func(s string) error {
+	return func(s string) error {
+		if len(strings.TrimSpace(s)) == 0 {
+			return fmt.Errorf("input cannot be empty")
+		}
+		return nil
+	}
 }
