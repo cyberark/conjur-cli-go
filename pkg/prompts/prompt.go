@@ -18,6 +18,12 @@ import (
 	"golang.org/x/term"
 )
 
+// Option represents a selectable option in a prompt
+type Option struct {
+	Label string
+	Value string
+}
+
 // AskForPrompt presents a prompt to retrieve a custom message from the user
 func AskForPrompt(ctx context.Context, message string, timeout time.Duration) (string, error) {
 	var userInput string
@@ -26,7 +32,7 @@ func AskForPrompt(ctx context.Context, message string, timeout time.Duration) (s
 			huh.NewInput().
 				Title(message).
 				Value(&userInput).
-				Validate(huh.ValidateNotEmpty()),
+				Validate(validateNotEmpty()),
 		),
 	).
 		WithTheme(style.GetTheme()).
@@ -46,10 +52,34 @@ func AskForPrompt(ctx context.Context, message string, timeout time.Duration) (s
 	return strings.TrimSpace(userInput), err
 }
 
+// AskForPrompts presents a series of prompts to retrieve custom messages from the user
+func AskForPrompts(ctx context.Context, title string, messages []string) ([]string, error) {
+	answers := make([]string, len(messages))
+	fields := make([]huh.Field, len(messages)+1)
+	fields[0] = huh.NewNote().Title(title)
+	for i, message := range messages {
+		fields[i+1] = huh.NewInput().
+			Title(message).
+			Value(&answers[i]).
+			Validate(validateNotEmpty())
+	}
+	form := huh.NewForm(
+		huh.NewGroup(fields...)).
+		WithTheme(style.GetTheme()).
+		WithAccessible(useAccessibleForm())
+
+	err := form.RunWithContext(ctx)
+	return answers, err
+}
+
 // AskForMFAMechanism presents a prompt to select MFA mechanism to use
-func AskForMFAMechanism(options []string) (string, error) {
+func AskForMFAMechanism(options []Option) (string, error) {
+	o := make([]huh.Option[string], len(options))
+	for i, option := range options {
+		o[i] = huh.NewOption(option.Label, option.Value)
+	}
 	return option(
-		huh.NewOptions(options...),
+		o,
 		"Select MFA Mechanism",
 		"Please select the multi factor authentication mechanism you want to use.",
 	)
@@ -194,7 +224,7 @@ func passwordInput(title string) (string, error) {
 		EchoMode(huh.EchoModeNone).
 		Title(title).
 		Value(&password).
-		Validate(huh.ValidateNotEmpty()),
+		Validate(validateNotEmpty()),
 	)).
 		WithTheme(style.GetTheme()).
 		WithAccessible(useAccessibleForm()).
@@ -208,7 +238,7 @@ func input(title string) (string, error) {
 		huh.NewInput().
 			Title(title).
 			Value(&userInput).
-			Validate(huh.ValidateNotEmpty()),
+			Validate(validateNotEmpty()),
 	)).
 		WithTheme(style.GetTheme()).
 		WithAccessible(useAccessibleForm()).
@@ -249,4 +279,13 @@ func confirm(message, description string) (bool, error) {
 
 func useAccessibleForm() bool {
 	return !term.IsTerminal(int(os.Stdout.Fd()))
+}
+
+func validateNotEmpty() func(s string) error {
+	return func(s string) error {
+		if len(strings.TrimSpace(s)) == 0 {
+			return fmt.Errorf("input cannot be empty")
+		}
+		return nil
+	}
 }

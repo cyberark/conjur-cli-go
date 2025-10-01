@@ -1,0 +1,61 @@
+{
+  "success": true,
+  "Result": {
+    "ClientHints": {
+      "PersistDefault": true,
+      "AllowPersist": true,
+      "AllowForgotPassword": true,
+      "EndpointAuthenticationEnabled": false
+    },
+    "Version": "1.0",
+    "SessionId": "session_id",
+    "EventDescription": null,
+    "RetryWaitingTime": 30,
+    "SecurityImageName": null,
+    "AllowLoginMfaCache": false,
+    "Challenges": [
+      {
+        "Mechanisms": [
+          {
+            "AnswerType": "Text",
+            "MultipartMechanism": {
+              "PromptSelectMech": "Security Questions",
+              "MechanismParts": [
+                {
+                  "Uuid": "id1",
+                  "QuestionText": "Q1",
+                  "PromptMechChosen": "Answer security question 'Q1':"
+                },
+                {
+                  "Uuid": "id2",
+                  "QuestionText": "Q2",
+                  "PromptMechChosen": "Answer security question 'Q2':"
+                },
+                {
+                  "Uuid": "id3",
+                  "QuestionText": "Q3",
+                  "PromptMechChosen": "Answer security question 'Q3':"
+                }
+              ]
+            },
+            "Name": "SQ",
+            "Question": "Q1?",
+            "PromptMechChosen": "Answer security question 'Q1?':",
+            "PromptSelectMech": "Security Question",
+            "MechanismId": "sq_mechanism_id",
+            "Enrolled": true
+          }
+        ]
+      }
+    ],
+    "Summary": "NewPackage",
+    "TenantId": "ABD5189"
+  },
+  "Message": null,
+  "MessageID": null,
+  "Exception": null,
+  "ErrorID": null,
+  "ErrorCode": null,
+  "IsSoftError": false,
+  "InnerExceptions": null
+}

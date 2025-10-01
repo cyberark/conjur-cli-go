@@ -1,12 +1,12 @@
 {
   "success": true,
   "Result": {
-    "IdpRedirectUrl": "https://abq5235.id.integration-cyberark.cloud/run?appkey=5692fd72-307b-4d65-a497-609cd8275eee&customerId=ABQ5235&SAMLRequest=hZLLbtswEEV%2fReCiO8oyLUo2a7lQbBQ1kKZu7HbRTcHHOCEskQpJOfXfV48ESFDA3Q7vnbk8M0vP66phZRsezT08teBD9KeujGfDQ4FaZ5jlXntmeA2eBcn25ddbRuKENc4GK22F3liuO7j34IK2BkXbTVSg31KkaZYLioUgCU5lRjCf0ymm%2bUwQkVEy5xRFP8H5ztQZuiad1fsWtsYHbkJfSwjByQIn88OUsumc0SROkuQXijbdd7ThYfQ%2bhtB4Nplw8UTJjMZaxdoEeHCDAMuLAMfdKZaVbdXEteYTb5oTXAqaLchR5QTPklzgVGUU83SR4yxZSDUnOQWAD7xuPsrWB1uD26qivPneD0HRztmzVuDuOhgF2ireBH0GFH22TsLAvYsWXNuVylc6a2t82%2fXZgztrCT%2fub%2f%2bJn%2f4nfn0ZRg%2f7udFGafMQXd%2bNGFWefTkcdnj3bX9AUR8ETLhulKOIWRG4NqDQatlfAhvW5Fbru2LdZyvdia1fALERT7qcvFUux2PsSW03O1tpeekx1fxKgGk8HSpa4eMgZa3xDUh91F2SqKwq%2b7x2wAO8UJ6sxqHvj371Fw%3d%3d&RelayState=cb4467b5-bb20-4c62-a851-573b2b6528a5&SigAlg=http%3a%2f%2fwww.w3.org%2f2000%2f09%2fxmldsig%23rsa-sha1&Signature=QxTTFk%2f1fSgYCfEew1kW%2brg%2fbDHeHzvNX9JoYQIWJ1q3lMmEhk1VMSTlE48wx3qj2zQEYJ0bxeOzaapZpNna%2b%2fNAqjF3eQU1N70O3qVlEdw4%2bGJcNOABSHvjrotmv5TcVsZv0GPsyrxYDGAflXT03eLRBcoK5YKuN8L3WFZdjTVId3217jc6GiHcJFVG%2fuNu3xKU7NpJfe5m0GpGIK9e9FLmyoM%2bLCruygxC5MSHcIoU5o3G%2fQfD7pT2yyAekQvutuSM7EKZkh2mYdK3fw2pMnHYALcVJHzF0SvzXq%2ftyiKztm1QKhUMSTbw9fq7TddcGkrsdh0FVgxkpDznTArg1A%3d%3d",
+    "IdpRedirectUrl": "invalid://url.com",
     "IdpRedirectShortUrl": "for_test_only://blabla.com",
-    "IdpShortUrlId": "DsHKHpyfZVKu",
-    "SessionId": "Ek1ZBvbiPYE4GSN93t4xBGKVzUMAJK5Fpj-87VqxpcU1",
+    "IdpShortUrlId": "short_id",
+    "SessionId": "session_id",
     "IdpOobAuthPinRequired": true,
-    "IdpLoginSessionId": "lileTEcF0UOBN0viru2gfGqxkdAILx2xTg2IS4suWM41",
+    "IdpLoginSessionId": "idp_session_id",
     "TenantId": "ABQ5234"
   },
   "Message": null,

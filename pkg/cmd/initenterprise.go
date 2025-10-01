@@ -216,8 +216,8 @@ func newInitEnterpriseCommand(funcs initCmdFuncs) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     string(conjurapi.EnvironmentSH),
 		Aliases: []string{"CE", "open-source", "oss", "OSS", "enterprise"},
-		Short:   "Initialize the Secrets Manager CLI with a Secrets Manager server",
-		Long: `Initialize the Secrets Manager CLI with a Secrets Manager server.
+		Short:   "Initialize the Secrets Manager CLI with a Secrets Manager Self-Hosted or Conjur OSS server",
+		Long: `Initialize the Secrets Manager CLI with a Secrets Manager Self-Hosted or Conjur OSS server.
 
 The init command creates a configuration file (.conjurrc) that contains the details for connecting to Secrets Manager. This file is located under the user's root directory.`,
 		SilenceUsage: true,
