@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/cyberark/conjur-cli-go/pkg/cmd/style"
 	"image/png"
 	"strings"
+
+	"github.com/cyberark/conjur-cli-go/pkg/cmd/style"
 
 	"github.com/makiuchi-d/gozxing"
 	"github.com/makiuchi-d/gozxing/qrcode"

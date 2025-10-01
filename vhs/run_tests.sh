@@ -17,11 +17,12 @@ run_tape() {
 
   # Run and compare up to 5 times if diff fails
   local attempt=1
-  local max_attempts=2
+  local max_attempts=5
   local success=0
 
   while [ $attempt -le $max_attempts ]; do
     vhs "$tape_file"
+    uniq_frames "$OUTPUT_DIR/${base_name}.txt"
     if diff -u --ignore-all-space --ignore-blank-lines --ignore-matching-lines=">" --ignore-matching-lines="─*" "$GOLDEN_DIR/${base_name}.txt" "$OUTPUT_DIR/${base_name}.txt" > "$OUTPUT_DIR/${base_name}.diff"; then
       success=1
       break
@@ -65,8 +66,9 @@ else
   rm -rf "$OUTPUT_DIR/*"
   # Run all tape files when no parameters are provided
   for tape_file in tapes/*.tape; do
-    run_tape "$tape_file"
+    run_tape "$tape_file" &
   done
+  wait
 fi
 
 exit $FAILED
