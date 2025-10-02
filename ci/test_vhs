@@ -23,7 +23,7 @@ trap 'cleanup_and_dump_logs' EXIT
 
 function main() {
   echo "Starting Containers"
-  docker compose up --no-deps vhs-runner
+  docker compose up --no-deps --exit-code-from vhs-runner vhs-runner
 }
 
 main
