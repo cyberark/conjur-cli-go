@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   CNJR-11332
 - Enable identity security question flow with multiple questions answered at once
   CNJR-11333
+- Add timeout to identity MFA multiple security questions prompt
+  CNJR-11387
 
 ## [8.1.3] - 2025-09-12
 
