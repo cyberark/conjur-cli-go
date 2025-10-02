@@ -53,7 +53,7 @@ func AskForPrompt(ctx context.Context, message string, timeout time.Duration) (s
 }
 
 // AskForPrompts presents a series of prompts to retrieve custom messages from the user
-func AskForPrompts(ctx context.Context, title string, messages []string) ([]string, error) {
+func AskForPrompts(ctx context.Context, title string, messages []string, timeout time.Duration) ([]string, error) {
 	answers := make([]string, len(messages))
 	fields := make([]huh.Field, len(messages)+1)
 	fields[0] = huh.NewNote().Title(title)
@@ -68,7 +68,10 @@ func AskForPrompts(ctx context.Context, title string, messages []string) ([]stri
 		WithTheme(style.GetTheme()).
 		WithAccessible(useAccessibleForm())
 
-	err := form.RunWithContext(ctx)
+	//TODO: accessible mode ignores ctx
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	err := form.RunWithContext(ctxWithTimeout)
 	return answers, err
 }
 

@@ -507,6 +507,7 @@ func (ia *IdentityAuthenticator) handleSecurityQuestions(mechanism *mechanismRes
 		context.Background(),
 		mechanism.MultipartMechanism.PromptSelectMech,
 		questions,
+		ia.timeout,
 	)
 	if err != nil {
 		return nil, err
