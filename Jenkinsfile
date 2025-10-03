@@ -67,7 +67,7 @@ pipeline {
   options {
     timestamps()
     buildDiscarder(logRotator(numToKeepStr: '30'))
-    timeout(time: 30, unit: 'MINUTES')
+    timeout(time: 1, unit: 'HOURS')
   }
 
   environment {
