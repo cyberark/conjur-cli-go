@@ -10,7 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [9.1.0] - 2025-10-03
+## [9.1.0] - 2025-10-15
+
+### Added
+- Added ability to support localhost as redirect URI in oidc authenticators.
+  CNJR-11471
 
 ## [9.0.0] - 2025-09-04
 

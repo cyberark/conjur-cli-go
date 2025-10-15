@@ -48,14 +48,22 @@ var testCases = []struct {
 		redirectURI: "http://[::1]/callback",
 	},
 	{
+		name:        "Succeeds with localhost and port 8888",
+		redirectURI: "http://localhost:8888/callback",
+	},
+	{
+		name:        "Succeeds with localhost and default port",
+		redirectURI: "http://localhost/callback",
+	},
+	{
 		name:          "Fails if redirect_uri path is wrong",
 		redirectURI:   "http://127.0.0.1:9999/incorrect_callback",
-		expectedError: "redirect_uri must be http://127.0.0.1[:port]/callback",
+		expectedError: "redirect_uri must be http://localhost[:port]/callback or http://127.0.0.1[:port]/callback or http://[::1][:port]/callback",
 	},
 	{
 		name:          "Fails if redirect_uri port is not an integer",
 		redirectURI:   "http://127.0.0.1:invalid/callback",
-		expectedError: "redirect_uri must be http://127.0.0.1[:port]/callback",
+		expectedError: "redirect_uri must be http://localhost[:port]/callback or http://127.0.0.1[:port]/callback or http://[::1][:port]/callback",
 	},
 	{
 		name:          "Fails if redirect_uri port is invalid",
