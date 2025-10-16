@@ -139,9 +139,9 @@ func generateState() string {
 }
 
 func parseAndValidateRedirectUri(redirectURI string) (string, int, error) {
-	// Use regex to validate redirect_uri is in the format http://127.0.0.1[:port]/callback or http://[::1][:port]/callback
-	if !regexp.MustCompile(`^http://(?:127\.0\.0\.1|\[::1\])(?::[0-9]+)?/callback$`).MatchString(redirectURI) {
-		return "", 0, fmt.Errorf("redirect_uri must be http://127.0.0.1[:port]/callback or http://[::1][:port]/callback")
+	// Use regex to validate redirect_uri is in the format http://localhost[:port]/callback or http://127.0.0.1[:port]/callback or http://[::1][:port]/callback
+	if !regexp.MustCompile(`^http://(?:localhost|127\.0\.0\.1|\[::1\])(?::[0-9]+)?/callback$`).MatchString(redirectURI) {
+		return "", 0, fmt.Errorf("redirect_uri must be http://localhost[:port]/callback or http://127.0.0.1[:port]/callback or http://[::1][:port]/callback")
 	}
 
 	uri, err := url.Parse(redirectURI)
