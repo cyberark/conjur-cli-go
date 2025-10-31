@@ -13,16 +13,9 @@ builds:
     binary: conjur
     env:
       - CGO_ENABLED=0
-    # Tag 'netgo' is a Go build tag that ensures a pure Go networking stack
-    # in the resulting binary instead of using the default host's stack to
-    # ensure a fully static artifact that has no dependencies.
-    # However, netgo on Windows has a bug that prevents it from using the
-    # machine's hosts file for DNS resolution. Therefore this tag must be
-    # omitted on Windows until the bug is fixed. See
-    # https://github.com/golang/go/issues/57757 and internal ticket
-    # CNJR-904 for more information.
+      - GOFIPS140=latest
     flags:
-      - -tags={{ if ne .Os "windows" }}netgo{{ end }}
+      - -tags=netgo
       - -a
     goos:
       - linux
@@ -40,9 +33,6 @@ builds:
       - -X "github.com/cyberark/conjur-cli-go/pkg/version.buildYear={{ .Env.BUILD_YEAR }}"
     hooks:
       post:
-        # Copy the separately-built FIPS binaries into the GoReleaser build directory
-        - cmd: sh -c "cp -Rf {{ dir .Path }}/../../fips/* {{ dir .Path }}/../"
-          output: true
         # Copy the binary out into the <dist> path, and give the copy the name we want
         # in the release <extra_files>.
         # e.g. Suppose a windows amd64 build generates a binary at

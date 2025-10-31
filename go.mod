@@ -1,6 +1,6 @@
 module github.com/cyberark/conjur-cli-go
 
-go 1.24.2
+go 1.25.3
 
 // Use the replace below for local development with conjur-api-go
 // replace github.com/cyberark/conjur-api-go => ./conjur-api-go
