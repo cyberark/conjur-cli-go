@@ -37,8 +37,9 @@ services:
     restart: on-failure
 
   cli-dev:
-    image: golang:1.24
+    image: golang:1.25
     environment:
+      - GOFIPS140=latest
       - OKTA_USERNAME=${OKTA_USERNAME:-user}
       - OKTA_PASSWORD=${OKTA_PASSWORD:-password}
       - IDENTITY_USERNAME=${IDENTITY_USERNAME:-user}

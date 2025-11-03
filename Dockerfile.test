@@ -1,6 +1,8 @@
-FROM golang:1.24-alpine
+FROM golang:1.25-alpine
 LABEL org.opencontainers.image.authors="CyberArk Software Ltd."
 LABEL id="conjur-cli-go-test-runner"
+
+ENV GOFIPS140=latest
 
 # On CyberArk dev laptops, golang module dependencies are downloaded with a
 # corporate proxy in the middle. For these connections to succeed we need to
