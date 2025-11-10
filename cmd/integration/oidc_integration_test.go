@@ -174,30 +174,31 @@ func TestOIDCIntegration(t *testing.T) {
 			},
 			envVars: []string{},
 		},
-		{
-			description: "conjur cli user authenticates with okta",
-			oidcConnection: oidcConnection{
-				providerURI:  os.Getenv("OKTA_PROVIDER_URI") + "oauth2/default",
-				clientID:     os.Getenv("OKTA_CLIENT_ID"),
-				clientSecret: os.Getenv("OKTA_CLIENT_SECRET"),
-			},
-			oidcCredentials: oidcCredentials{
-				username: os.Getenv("OKTA_USERNAME"),
-				password: os.Getenv("OKTA_PASSWORD"),
-			},
-			authnOidcConfig: authnOidcConfig{
-				serviceID:    "okta",
-				claimMapping: "preferred_username",
-				policyUser:   os.Getenv("OKTA_USERNAME"),
-			},
-			envVars: []string{
-				"OKTA_PROVIDER_URI",
-				"OKTA_CLIENT_ID",
-				"OKTA_CLIENT_SECRET",
-				"OKTA_USERNAME",
-				"OKTA_PASSWORD",
-			},
-		},
+        // Skip Okta tests while we fix our CI Okta sandbox
+		// {
+		// 	description: "conjur cli user authenticates with okta",
+		// 	oidcConnection: oidcConnection{
+		// 		providerURI:  os.Getenv("OKTA_PROVIDER_URI") + "oauth2/default",
+		// 		clientID:     os.Getenv("OKTA_CLIENT_ID"),
+		// 		clientSecret: os.Getenv("OKTA_CLIENT_SECRET"),
+		// 	},
+		// 	oidcCredentials: oidcCredentials{
+		// 		username: os.Getenv("OKTA_USERNAME"),
+		// 		password: os.Getenv("OKTA_PASSWORD"),
+		// 	},
+		// 	authnOidcConfig: authnOidcConfig{
+		// 		serviceID:    "okta",
+		// 		claimMapping: "preferred_username",
+		// 		policyUser:   os.Getenv("OKTA_USERNAME"),
+		// 	},
+		// 	envVars: []string{
+		// 		"OKTA_PROVIDER_URI",
+		// 		"OKTA_CLIENT_ID",
+		// 		"OKTA_CLIENT_SECRET",
+		// 		"OKTA_USERNAME",
+		// 		"OKTA_PASSWORD",
+		// 	},
+		// },
 		{
 			description: "conjur cli user authenticates with identity",
 			oidcConnection: oidcConnection{
