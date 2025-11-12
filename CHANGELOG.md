@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [9.1.0] - 2025-10-31
+## [9.1.0] - 2025-11-10
 
 ### Added
 - Added ability to support localhost as redirect URI in oidc authenticators.
@@ -264,7 +264,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.3...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v9.0.0...HEAD
+[9.1.0]: https://github.com/cyberark/conjur-cli-go/compare/v9.0.0...v9.1.0
+[9.0.0]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.3...v9.0.0
 [8.1.3]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.2...v8.1.3
 [8.1.2]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.1...v8.1.2
 [8.1.1]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.0...v8.1.1
