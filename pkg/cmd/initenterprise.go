@@ -145,7 +145,7 @@ func runInitEnterpriseCommand(cmd *cobra.Command, funcs initCmdFuncs) error {
 		ServiceID:    cmdFlagVals.serviceID,
 		JWTFilePath:  cmdFlagVals.jwtFilePath,
 		JWTHostID:    cmdFlagVals.jwtHostID,
-		Environment:  env(cmd.CalledAs()),
+		Environment:  env(cmd),
 	}
 
 	// If using JWT auth, we need to ensure that the JWT file exists and
@@ -201,7 +201,11 @@ func runInitEnterpriseCommand(cmd *cobra.Command, funcs initCmdFuncs) error {
 	return nil
 }
 
-func env(name string) conjurapi.EnvironmentType {
+func env(cmd *cobra.Command) conjurapi.EnvironmentType {
+	name := cmd.Annotations["env"]
+	if len(name) == 0 {
+		name = cmd.CalledAs()
+	}
 	switch name {
 	case string(conjurapi.EnvironmentSH), "CE", "enterprise":
 		return conjurapi.EnvironmentSH

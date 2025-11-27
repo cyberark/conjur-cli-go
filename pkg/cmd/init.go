@@ -3,15 +3,16 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
 	"github.com/spf13/cobra"
-	"net/url"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 type initCmdFuncs struct {
@@ -57,6 +58,7 @@ func newInitCommand() *cobra.Command {
 			if len(env) == 0 {
 				return fmt.Errorf("missing the env name")
 			}
+			cmd.Annotations = map[string]string{"env": env}
 			// find the subcommand
 			subCmd, _, err := cmd.Traverse([]string{env})
 			if err != nil {

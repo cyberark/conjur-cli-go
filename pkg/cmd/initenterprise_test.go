@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/spf13/cobra"
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/stretchr/testify/assert"
@@ -561,6 +562,7 @@ func generateSelfSignedCert() error {
 func Test_env(t *testing.T) {
 	tests := []struct {
 		name string
+		env  string
 		want conjurapi.EnvironmentType
 	}{{
 		name: "self-hosted",
@@ -580,10 +582,35 @@ func Test_env(t *testing.T) {
 	}, {
 		name: "OSS",
 		want: conjurapi.EnvironmentOSS,
+	}, {
+		name: "init",
+		env:  "enterprise",
+		want: conjurapi.EnvironmentSH,
+	}, {
+		name: "init",
+		env:  "self-hosted",
+		want: conjurapi.EnvironmentSH,
+	}, {
+		name: "init",
+		env:  "open-source",
+		want: conjurapi.EnvironmentOSS,
+	}, {
+		name: "init",
+		env:  "oss",
+		want: conjurapi.EnvironmentOSS,
+	}, {
+		name: "init",
+		env:  "",
+		want: conjurapi.EnvironmentSH,
 	}}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, env(tt.name), "env(%v)", tt.name)
+		t.Run(tt.name+" "+tt.env, func(t *testing.T) {
+			cmd := &cobra.Command{}
+			cmd.Annotations = map[string]string{"env": tt.env}
+			cmd.Use = tt.name
+			// calling Execute will allow stetting proper CalledAs value
+			_ = cmd.Execute()
+			assert.Equalf(t, tt.want, env(cmd), "env(%v)", tt.name)
 		})
 	}
 }
