@@ -79,7 +79,7 @@ func TestPolicyValidationIntegration(t *testing.T) {
 
 		stdOut, stdErr, err := cli.Run("policy", "load", "-b", "root", "--dry-run", "-f", policyFile)
 		assertPolicyValidateInvalidCmd(t, err, stdOut, stdErr)
-		assert.Contains(t, stdOut, "did not find expected whitespace or line break")
+		assert.Contains(t, stdOut, "Invalid YAML")
 	})
 
 	t.Run("validate a policy containing a Conjur policy error", func(t *testing.T) {

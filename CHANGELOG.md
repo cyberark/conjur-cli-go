@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [9.1.1] - 2025-12-12
+
+### Security
+- Update Golang to 1.25.5 to address CVE-2025-61729
+
 ## [9.1.0] - 2025-11-13
 
 ### Added
