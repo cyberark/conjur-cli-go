@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
-## [9.1.1] - 2025-12-12
+## [9.1.1] - 2026-01-12
 
 ### Security
 - Update Golang to 1.25.5 to address CVE-2025-61729
@@ -272,7 +272,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Placeholder version to capture the reset of the repository
 
-[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v9.0.0...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-cli-go/compare/v9.1.1...HEAD
+[9.1.1]: https://github.com/cyberark/conjur-cli-go/compare/v9.1.0...v9.1.1
 [9.1.0]: https://github.com/cyberark/conjur-cli-go/compare/v9.0.0...v9.1.0
 [9.0.0]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.3...v9.0.0
 [8.1.3]: https://github.com/cyberark/conjur-cli-go/compare/v8.1.2...v8.1.3

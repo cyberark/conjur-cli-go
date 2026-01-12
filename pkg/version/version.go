@@ -15,7 +15,7 @@ var Version = "unset"
 // this variable.
 var Tag = "unset"
 
-var buildYear = "2025"
+var buildYear = "2026"
 
 // DisclaimerText field
 var disclaimerText = fmt.Sprintf("Copyright (c) %v CyberArk Software Ltd. All rights reserved.\n<www.cyberark.com>", buildYear)
