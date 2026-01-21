@@ -1,0 +1,4 @@
+- !host
+    id: my-host
+    annotations:
+      authn/api-key: true

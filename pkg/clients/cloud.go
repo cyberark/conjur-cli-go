@@ -15,18 +15,21 @@ import (
 )
 
 func CloudLogin(conjurClient ConjurClient, username string, password string) (ConjurClient, error) {
-	if strings.HasPrefix(username, "/host/") {
+	if strings.HasPrefix(username, "host/") {
 		return cloudHostLogin(conjurClient, username, password)
 	}
 	return cloudIdentityLogin(conjurClient, username, password)
 }
 
 func cloudHostLogin(conjurClient ConjurClient, username string, password string) (ConjurClient, error) {
-	authenticatePair, err := LoginWithPromptFallback(conjurClient, username, password)
+	config := conjurClient.GetConfig()
+
+	username, password, err := prompts.MaybeAskForCredentials(username, password)
 	if err != nil {
 		return nil, err
 	}
-	return conjurapi.NewClientFromKey(conjurClient.GetConfig(), *authenticatePair)
+
+	return conjurapi.NewClientFromCloudHost(config, username, password)
 }
 
 func cloudIdentityLogin(client ConjurClient, username, password string) (ConjurClient, error) {
