@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
 )
 
 var initCmdTestCases = []struct {
@@ -64,6 +66,54 @@ var initCmdTestCases = []struct {
 		args: []string{"init", "--env", "cloud", "-u=http://host"},
 		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
 			assert.Contains(t, stdout, "Error: Secrets Manager SaaS URL must use HTTPS")
+		},
+	}, {
+		name: "init saas without proxy",
+		args: []string{
+			"init",
+			"saas",
+			"-u=https://tenant.secretsmgr.cyberark.cloud/api",
+			"--self-signed",
+		},
+
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
+			data, _ := os.ReadFile(conjurrcInTmpDir)
+			tempDir := strings.Replace(conjurrcInTmpDir, "/.conjurrc", "", 1)
+
+			expectedConjurrc := `account: conjur
+appliance_url: https://tenant.secretsmgr.cyberark.cloud/api
+cert_file: ` + tempDir + `/conjur-server.pem
+authn_type: cloud
+service_id: cyberark
+environment: saas
+cc_timeout: 300000000000
+`
+			assert.Equal(t, expectedConjurrc, string(data))
+		},
+	}, {
+		name: "init saas with proxy",
+		args: []string{
+			"init",
+			"saas",
+			"-u=https://tenant.secretsmgr.cyberark.cloud/api",
+			"-p=http://tinyproxy:8888",
+			"--self-signed",
+		},
+
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
+			data, _ := os.ReadFile(conjurrcInTmpDir)
+			tempDir := strings.Replace(conjurrcInTmpDir, "/.conjurrc", "", 1)
+
+			expectedConjurrc := `account: conjur
+appliance_url: https://tenant.secretsmgr.cyberark.cloud/api
+cert_file: ` + tempDir + `/conjur-server.pem
+authn_type: cloud
+service_id: cyberark
+environment: saas
+proxy: http://tinyproxy:8888
+cc_timeout: 300000000000
+`
+			assert.Equal(t, expectedConjurrc, string(data))
 		},
 	},
 }

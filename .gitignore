@@ -26,3 +26,8 @@ ci/conf/tls/*.crt
 ci/conf/tls/*.key
 
 vhs/output
+
+.idea
+test/wiremock/localhost.crt
+test/wiremock/localhost.key
+test/wiremock/localhost.pfx
