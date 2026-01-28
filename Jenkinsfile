@@ -189,7 +189,10 @@ pipeline {
                 INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "./bin/build_container_images"
 
                 // Archive release artifacts
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts artifacts: 'dist/goreleaser/'
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts(
+                  artifacts: 'dist/goreleaser/**/*.{tar.gz,zip,deb,rpm,exe,sha256,txt,json,yml,yaml}',
+                  allowEmptyArchive: true
+                )
               }
             }
           }

@@ -11,6 +11,7 @@ RUNNER_NAME="conjur-cli-go-test-runner"
 WIREMOCK_KEYSTORE_PASSWORD="$(openssl rand -base64 12)"
 
 function main() {
+  retrieve_cyberark_ca_cert
   prepare_wire_mock_config
   build_docker_ut_image
   run_unit_tests
@@ -60,30 +61,30 @@ function run_unit_tests() {
   docker network create ip4net
   echo "Starting WireMock container..."
   docker run -d \
-             --name wiremock \
-             --network ip4net \
-             -p 8080:8080 \
-              -p 443:443 \
-              -v "$PWD/test/wiremock:/home/wiremock:rw" \
-              wiremock/wiremock \
-              --verbose \
-              --port 8080 \
-              --https-port 443 \
-              --https-keystore /home/wiremock/localhost.pfx \
-              --keystore-type PKCS12 \
-              --keystore-password "${WIREMOCK_KEYSTORE_PASSWORD}" \
-              --key-manager-password "${WIREMOCK_KEYSTORE_PASSWORD}"
+            --name wiremock \
+            --network ip4net \
+            -p 8080:8080 \
+            -p 443:443 \
+            -v "$PWD/test/wiremock:/home/wiremock:rw" \
+            wiremock/wiremock \
+            --verbose \
+            --port 8080 \
+            --https-port 443 \
+            --https-keystore /home/wiremock/localhost.pfx \
+            --keystore-type PKCS12 \
+            --keystore-password "${WIREMOCK_KEYSTORE_PASSWORD}" \
+            --key-manager-password "${WIREMOCK_KEYSTORE_PASSWORD}"
 
   WIREMOCK_IP="$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' wiremock)"
   echo "WireMock IP: ${WIREMOCK_IP}"
 
   docker run -d \
-    --name tinyproxy \
-    --network ip4net \
-    --add-host "${WIREMOCK_HOST}:${WIREMOCK_IP}" \
-    --add-host "${WIREMOCK_SECRETSMGR_HOST}:${WIREMOCK_IP}" \
-    -p 8888:8888 \
-    vimagick/tinyproxy
+            --name tinyproxy \
+            --network ip4net \
+            --add-host "${WIREMOCK_HOST}:${WIREMOCK_IP}" \
+            --add-host "${WIREMOCK_SECRETSMGR_HOST}:${WIREMOCK_IP}" \
+            -p 8888:8888 \
+            vimagick/tinyproxy
 
   echo "Running unit tests..."
   set +e
