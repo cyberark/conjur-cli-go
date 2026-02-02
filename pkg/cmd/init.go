@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
@@ -110,23 +112,33 @@ func fetchCertIfNeeded(config *conjurapi.Config, insecure, selfSigned, forceFile
 	}
 
 	// Get TLS certificate from Conjur server
-	url, err := url.Parse(config.ApplianceURL)
+	applianceUrl, err := url.Parse(config.ApplianceURL)
 	if err != nil {
 		return err
 	}
 
 	// Only fetch certificate if using HTTPS
-	if url.Scheme != "https" {
+	if applianceUrl.Scheme != "https" {
 		if insecure {
 			return nil
 		}
-		return fmt.Errorf("Cannot fetch certificate from non-HTTPS URL %s", url)
+		return fmt.Errorf("Cannot fetch certificate from non-HTTPS URL %s", applianceUrl)
 	}
 
-	cert, err := utils.GetServerCert(url.Host)
-	if err != nil {
-		errStr := fmt.Sprintf("Unable to retrieve and validate certificate from %s: %s", url.Host, err)
-		return errors.New(errStr)
+	var cert utils.ServerCert
+	if len(config.Proxy) > 0 {
+		cert, err = utils.GetServerCertViaHTTPProxy(
+			context.Background(),
+			config.Proxy,
+			applianceUrl.Host,
+			time.Duration(config.GetHttpTimeout())*time.Second,
+		)
+	} else {
+		cert, err = utils.GetServerCert(applianceUrl.Host)
+		if err != nil {
+			errStr := fmt.Sprintf("Unable to retrieve and validate certificate from %s: %s", applianceUrl.Host, err)
+			return errors.New(errStr)
+		}
 	}
 
 	var persistCert bool
@@ -144,8 +156,8 @@ func fetchCertIfNeeded(config *conjurapi.Config, insecure, selfSigned, forceFile
 	// Initialize combined certificate content
 	combinedCert := cert.Cert
 	// Check if the host contains ".secretsmgr" which indicates CC and fetch certificate from the identity host
-	if strings.Contains(url.Host, ".secretsmgr") {
-		combinedCert, err = appendConjurCloudCert(url, selfSigned, combinedCert)
+	if strings.Contains(applianceUrl.Host, ".secretsmgr") {
+		combinedCert, err = appendConjurCloudCert(applianceUrl, selfSigned, combinedCert)
 		if err != nil {
 			return err
 		}
