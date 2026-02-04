@@ -30,7 +30,7 @@ builds:
       - -w
       - -X "github.com/cyberark/conjur-cli-go/pkg/version.Tag={{ .ShortCommit }}"
       - -X "github.com/cyberark/conjur-cli-go/pkg/version.Version={{ .Env.VERSION }}"
-      - -X "github.com/cyberark/conjur-cli-go/pkg/version.buildYear={{ .Env.BUILD_YEAR }}"
+      - -X "github.com/cyberark/conjur-cli-go/pkg/version.BuildYear={{ .Env.BUILD_YEAR }}"
     hooks:
       post:
         # Copy the binary out into the <dist> path, and give the copy the name we want
