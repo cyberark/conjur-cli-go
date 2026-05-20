@@ -34,7 +34,7 @@ func TestMaybeDebugLoggingForClient(t *testing.T) {
 
 	for _, tc := range debugTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			client, _ := conjurapi.NewClientFromKey(conjurapi.Config{Account: "conjur", ApplianceURL: "http://conjur.com"}, authn.LoginPair{"username", "password"})
+			client, _ := conjurapi.NewClientFromKey(conjurapi.Config{Account: "conjur", ApplianceURL: "http://conjur.com"}, authn.LoginPair{"username", "password"}, TelemetryData)
 			client.SetHttpClient(&http.Client{})
 			cmd := &cobra.Command{}
 			MaybeDebugLoggingForClient(tc.debug, cmd, client)

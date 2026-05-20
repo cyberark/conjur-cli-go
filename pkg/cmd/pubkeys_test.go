@@ -83,6 +83,19 @@ ssh-rsa test-key laptop
 		},
 	},
 	{
+		name: "missing pubkeys endpoint returns friendly error when conjur-api-go already translated the 404",
+		args: []string{"pubkeys", "alice"},
+		pubKeys: func(t *testing.T, kind string, identifier string) ([]byte, error) {
+			// conjur-api-go translates the raw 404 into this message before the CLI sees it
+			return nil, fmt.Errorf("public keys endpoint is not available on this server (got 404): the server may not support this feature")
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Error(t, err)
+			assert.Empty(t, stdout)
+			assert.Contains(t, stderr, "Error: public keys endpoint is not available on this server: the server may not support this feature\n")
+		},
+	},
+	{
 		name:               "client factory error",
 		args:               []string{"pubkeys", "alice"},
 		clientFactoryError: fmt.Errorf("%s", "client factory error"),

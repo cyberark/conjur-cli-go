@@ -25,7 +25,9 @@ func isPublicKeysEndpointMissing(err error) bool {
 	}
 
 	errMsg := err.Error()
-	return strings.Contains(errMsg, "404 Not Found") || strings.Contains(errMsg, "No route matches")
+	return strings.Contains(errMsg, "404 Not Found") ||
+		strings.Contains(errMsg, "No route matches") ||
+		strings.Contains(errMsg, "public keys endpoint is not available on this server")
 }
 
 func publicKeysEndpointUnavailableError() error {

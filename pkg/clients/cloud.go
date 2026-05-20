@@ -60,7 +60,7 @@ func cloudHostLogin(conjurClient ConjurClient, username string, password string)
 		return nil, err
 	}
 
-	return conjurapi.NewClientFromCloudHost(config, username, password)
+	return conjurapi.NewClientFromCloudHost(config, username, password, TelemetryData)
 }
 
 func cloudIdentityLogin(client ConjurClient, username, password string) (ConjurClient, error) {
@@ -77,7 +77,7 @@ func cloudIdentityLogin(client ConjurClient, username, password string) (ConjurC
 		return nil, err
 	}
 
-	client, err = conjurapi.NewClientFromOidcToken(client.GetConfig(), authToken)
+	client, err = conjurapi.NewClientFromOidcToken(client.GetConfig(), authToken, TelemetryData)
 	if err != nil {
 		return nil, err
 	}
