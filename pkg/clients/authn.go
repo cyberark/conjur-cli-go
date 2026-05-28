@@ -20,7 +20,7 @@ func Login(conjurClient ConjurClient) (ConjurClient, error) {
 		return nil, err
 	}
 
-	return conjurapi.NewClientFromKey(conjurClient.GetConfig(), *authenticatePair)
+	return conjurapi.NewClientFromKey(conjurClient.GetConfig(), *authenticatePair, TelemetryData)
 }
 
 // LoginWithPromptFallback attempts to login to Conjur using the username and password provided.
@@ -65,7 +65,7 @@ func oidcLogin(conjurClient ConjurClient, oidcPromptHandler func(string) error) 
 		return nil, err
 	}
 
-	conjurClient, err = conjurapi.NewClientFromOidcCode(config, code, oidcProvider.Nonce, oidcProvider.CodeVerifier)
+	conjurClient, err = conjurapi.NewClientFromOidcCode(config, code, oidcProvider.Nonce, oidcProvider.CodeVerifier, TelemetryData)
 	if err != nil {
 		return nil, err
 	}

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/conjur-cli-go/pkg/version"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
@@ -87,3 +88,18 @@ func TestGetTimeout(t *testing.T) {
 		})
 	}
 }
+
+func TestTelemetryVersion(t *testing.T) {
+	t.Run("TelemetryData uses TelemetryVersion as integration version", func(t *testing.T) {
+		telemetry := conjurapi.NewTelemetry("", "", version.TelemetryVersion, "", "")
+		assert.Equal(t, version.TelemetryVersion, telemetry.IntegrationVersion)
+	})
+
+	t.Run("TelemetryVersion is Version-Tag format", func(t *testing.T) {
+		// TelemetryVersion is computed at init time as "Version-Tag".
+		// With default unset values it equals "unset-unset".
+		expected := fmt.Sprintf("%s-%s", version.Version, version.Tag)
+		assert.Equal(t, expected, version.TelemetryVersion)
+	})
+}
+

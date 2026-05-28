@@ -93,7 +93,7 @@ Examples:
 			}
 
 			// TODO: I should be able to create a client and unauthenticated client
-			conjurClient, err := conjurapi.NewClient(config)
+						conjurClient, err := conjurapi.NewClient(config, clients.TelemetryData)
 			if err != nil {
 				return err
 			}
@@ -110,7 +110,7 @@ Examples:
 				// We have to recreate the client with the JWT method so it
 				// attaches a JWTAuthenticator to the client otherwise
 				// conjurClient.GetAuthenticator() will return nil
-				conjurClient, err = conjurapi.NewClientFromJwt(config)
+							conjurClient, err = conjurapi.NewClientFromJwt(config, clients.TelemetryData)
 				if err != nil {
 					return err
 				}

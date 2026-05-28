@@ -204,7 +204,20 @@ pipeline {
 
                 // Archive release artifacts
                 INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts(
-                  artifacts: 'dist/goreleaser/**/*.{tar.gz,zip,deb,rpm,exe,sha256,txt,json,yml,yaml}',
+                  artifacts: [
+                    'dist/conjur',
+                    'dist/goreleaser/binaries/**',
+                    'dist/goreleaser/**/*.tar.gz',
+                    'dist/goreleaser/**/*.zip',
+                    'dist/goreleaser/**/*.deb',
+                    'dist/goreleaser/**/*.rpm',
+                    'dist/goreleaser/**/*.exe',
+                    'dist/goreleaser/**/*.sha256',
+                    'dist/goreleaser/**/*.txt',
+                    'dist/goreleaser/**/*.json',
+                    'dist/goreleaser/**/*.yml',
+                    'dist/goreleaser/**/*.yaml'
+                  ].join(','),
                   allowEmptyArchive: true
                 )
               }

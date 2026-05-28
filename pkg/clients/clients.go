@@ -8,8 +8,11 @@ import (
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 
+	"github.com/cyberark/conjur-cli-go/pkg/version"
 	"github.com/spf13/cobra"
 )
+
+var TelemetryData = conjurapi.NewTelemetry("Idira™ Secrets Manager CLI", "", version.TelemetryVersion, "Idira", "")
 
 // ConjurClient is an interface that represents a Conjur client
 type ConjurClient interface {
@@ -117,14 +120,14 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 	}
 
 	var client ConjurClient
-	client, err = conjurapi.NewClientFromEnvironment(config)
+	client, err = conjurapi.NewClientFromEnvironment(config, TelemetryData)
 	if err != nil {
 		return nil, err
 	}
 	decorateConjurClient(client)
 
 	if client.GetAuthenticator() == nil {
-		client, err = conjurapi.NewClient(config)
+		client, err = conjurapi.NewClient(config, TelemetryData)
 		if err != nil {
 			return nil, err
 		}
