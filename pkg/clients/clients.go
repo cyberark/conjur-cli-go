@@ -53,6 +53,15 @@ type ConjurClient interface {
 	PublicKeys(kind string, identifier string) ([]byte, error)
 	EnableAuthenticator(authenticatorType string, serviceID string, enabled bool) error
 
+	LdapCreateGroupMapping(serviceID, groupName string, roles []string) (*conjurapi.LdapGroupMappingResponse, error)
+	LdapShowGroupMapping(serviceID, groupName string) (*conjurapi.LdapGroupMappingResponse, error)
+	LdapListGroupMappings(serviceID string) (*conjurapi.LdapMappingListResponse, error)
+	LdapDeleteGroupMapping(serviceID, groupName string) error
+	LdapCreateUserMapping(serviceID, username string, roles []string) (*conjurapi.LdapUserMappingResponse, error)
+	LdapShowUserMapping(serviceID, username string) (*conjurapi.LdapUserMappingResponse, error)
+	LdapListUserMappings(serviceID string) (*conjurapi.LdapMappingListResponse, error)
+	LdapDeleteUserMapping(serviceID, username string) error
+
 	Issuer(issuerID string) (issuer conjurapi.Issuer, err error)
 	Issuers() (issuers []conjurapi.Issuer, err error)
 	DeleteIssuer(issuerID string, keepSecrets bool) error

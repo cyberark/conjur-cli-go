@@ -10,6 +10,7 @@
 
     authenticate [--flags]                     Obtain an access token for the currently logged-in user
     authenticator [command] [--flags]          Manage Idira Secrets Manager authenticators
+    authn-ldap [command] [--flags]             Manage LDAP authentication group and user mappings
     check <resource-id> <privilege> [--flags]  Check a role's privilege on a resource
     completion [command]                       Generate the autocompletion script for the specified shell
     help [command]                             Help about any command
