@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var TelemetryData = conjurapi.NewTelemetry("Idira™ Secrets Manager CLI", "", version.TelemetryVersion, "Idira", "")
+var TelemetryData = conjurapi.NewTelemetry("Idira Secrets Manager CLI", "idira-secretsmanager", version.TelemetryVersion, "Idira", "")
 
 // ConjurClient is an interface that represents a Conjur client
 type ConjurClient interface {

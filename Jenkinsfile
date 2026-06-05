@@ -269,7 +269,7 @@ pipeline {
                   try {
                     INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'summon -f ./secrets.yml -e ci ./test_integration'
                   } finally {
-                    INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts artifacts: 'cleanup.log'
+                    INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts artifacts: 'ci/cleanup.log'
                   }
                 }
               }
