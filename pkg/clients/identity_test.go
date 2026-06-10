@@ -51,6 +51,7 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 		expectedToken string
 		expectedError error
 		timeout       time.Duration
+		insecureLogin bool
 		beforeTest    func(t *testing.T)
 		responses     map[string]string
 	}{
@@ -301,6 +302,78 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 				mockResponse(wiremockClient, "/Security/AdvanceAuthentication", "not a JSON response", http.StatusOK)
 			},
 		},
+		// Insecure login (no-PIN) test cases — mirrors the original pre-PIN waitForExternalAction flow
+		{
+			name:          "External action MFA without PIN - rejected when insecureLogin flag not set",
+			expectedError: errors.New("oob auth pin required for login with external identity provider; use --allow-insecure-login to skip pin verification (insecure)"),
+			insecureLogin: false,
+			beforeTest: func(t *testing.T) {
+				startAuthResponse, err := os.ReadFile("test/identity_mock/start_auth_external_no_pin.json")
+				assert.NoError(t, err)
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+			},
+		},
+		{
+			name:          "Successful authentication (External Action MFA without PIN)",
+			expectedToken: "valid-token",
+			insecureLogin: true,
+			beforeTest: func(t *testing.T) {
+				startAuthResponse, err := os.ReadFile("test/identity_mock/start_auth_external_no_pin.json")
+				assert.NoError(t, err)
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				OOBSuccessResponse, err := os.ReadFile("test/identity_mock/oob_status_success.json")
+				assert.NoError(t, err)
+				mockResponse(wiremockClient, "/Security/OobAuthStatus", string(OOBSuccessResponse), http.StatusOK)
+			},
+		},
+		{
+			name:          "External action MFA without PIN - OobAuthStatus request error",
+			expectedError: errors.New("received non-200 response: 500"),
+			insecureLogin: true,
+			beforeTest: func(t *testing.T) {
+				startAuthResponse, err := os.ReadFile("test/identity_mock/start_auth_external_no_pin.json")
+				assert.NoError(t, err)
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				mockResponse(wiremockClient, "/Security/OobAuthStatus", "500 internal server error", http.StatusInternalServerError)
+			},
+		},
+		{
+			name:          "External action MFA without PIN - authentication failure",
+			expectedError: errors.New("authentication failed"),
+			insecureLogin: true,
+			beforeTest: func(t *testing.T) {
+				startAuthResponse, err := os.ReadFile("test/identity_mock/start_auth_external_no_pin.json")
+				assert.NoError(t, err)
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				OOBFailureResponse, err := os.ReadFile("test/identity_mock/oob_status_failure.json")
+				assert.NoError(t, err)
+				mockResponse(wiremockClient, "/Security/OobAuthStatus", string(OOBFailureResponse), http.StatusOK)
+			},
+		},
+		{
+			name:          "External action MFA without PIN - JSON parsing failed",
+			expectedError: errors.New("failed to parse response: invalid character 'o' in literal null (expecting 'u')"),
+			insecureLogin: true,
+			beforeTest: func(t *testing.T) {
+				startAuthResponse, err := os.ReadFile("test/identity_mock/start_auth_external_no_pin.json")
+				assert.NoError(t, err)
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				mockResponse(wiremockClient, "/Security/OobAuthStatus", "not a JSON response", http.StatusOK)
+			},
+		},
+		{
+			name:          "External action MFA without PIN - timeout",
+			expectedError: errors.New("Timed out waiting for external authentication."),
+			insecureLogin: true,
+			timeout:       1 * time.Second,
+			beforeTest: func(t *testing.T) {
+				startAuthResponse, err := os.ReadFile("test/identity_mock/start_auth_external_no_pin.json")
+				assert.NoError(t, err)
+				mockResponse(wiremockClient, "/Security/StartAuthentication", string(startAuthResponse), http.StatusOK)
+				OOBPendingResponse := `{"Result":{"State":"pending"}}`
+				mockResponse(wiremockClient, "/Security/OobAuthStatus", OOBPendingResponse, http.StatusOK)
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -313,8 +386,9 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 			}
 
 			authenticator := &IdentityAuthenticator{
-				identityURL: wiremockURL,
-				timeout:     timeout,
+				identityURL:   wiremockURL,
+				timeout:       timeout,
+				insecureLogin: tc.insecureLogin,
 			}
 
 			// Set up the test case

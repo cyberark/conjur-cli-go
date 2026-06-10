@@ -45,11 +45,11 @@ const (
 	tenantDiscoveryMainEndpoint    = "main"
 )
 
-func CloudLogin(conjurClient ConjurClient, username string, password string) (ConjurClient, error) {
+func CloudLogin(conjurClient ConjurClient, username string, password string, insecureLogin bool) (ConjurClient, error) {
 	if strings.HasPrefix(username, "host/") {
 		return cloudHostLogin(conjurClient, username, password)
 	}
-	return cloudIdentityLogin(conjurClient, username, password)
+	return cloudIdentityLogin(conjurClient, username, password, insecureLogin)
 }
 
 func cloudHostLogin(conjurClient ConjurClient, username string, password string) (ConjurClient, error) {
@@ -63,7 +63,7 @@ func cloudHostLogin(conjurClient ConjurClient, username string, password string)
 	return conjurapi.NewClientFromCloudHost(config, username, password, TelemetryData)
 }
 
-func cloudIdentityLogin(client ConjurClient, username, password string) (ConjurClient, error) {
+func cloudIdentityLogin(client ConjurClient, username, password string, insecureLogin bool) (ConjurClient, error) {
 	identityURL, tenantID, err := identityURL(client)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func cloudIdentityLogin(client ConjurClient, username, password string) (ConjurC
 	if err != nil {
 		return nil, err
 	}
-	authToken, err := tokenFromIdentity(client, identityURL, tenantID, username, password)
+	authToken, err := tokenFromIdentity(client, identityURL, tenantID, username, password, insecureLogin)
 	if err != nil {
 		return nil, err
 	}
@@ -113,8 +113,8 @@ func cloudIdentityLogin(client ConjurClient, username, password string) (ConjurC
 	return client, nil
 }
 
-func tokenFromIdentity(client ConjurClient, url string, tenantID string, username string, password string) (string, error) {
-	ia := NewIdentityAuthenticator(client, url, tenantID)
+func tokenFromIdentity(client ConjurClient, url string, tenantID string, username string, password string, insecureLogin bool) (string, error) {
+	ia := NewIdentityAuthenticator(client, url, tenantID, insecureLogin)
 	return ia.GetToken(username, password)
 }
 

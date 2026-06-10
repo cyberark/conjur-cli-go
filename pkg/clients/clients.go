@@ -139,7 +139,7 @@ func AuthenticatedConjurClientForCommand(cmd *cobra.Command) (ConjurClient, erro
 		case "oidc":
 			client, err = OidcLogin(client, "", "")
 		case "cloud":
-			client, err = CloudLogin(client, "", "")
+			client, err = CloudLogin(client, "", "", false)
 		case "jwt":
 			// Will use the token in the config
 		default:
