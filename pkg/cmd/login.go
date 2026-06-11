@@ -53,8 +53,8 @@ func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 	}
 
 	var insecureLogin bool
-	if f := cmd.Flags().Lookup("allow-insecure-login"); f != nil {
-		insecureLogin, err = cmd.Flags().GetBool("allow-insecure-login")
+	if f := cmd.Flags().Lookup("insecure-bypass-idp-pin"); f != nil {
+		insecureLogin, err = cmd.Flags().GetBool("insecure-bypass-idp-pin")
 		if err != nil {
 			return loginCmdFlagValues{}, err
 		}
@@ -135,7 +135,7 @@ Examples:
 				// If the user is using the cloud authn type, we need to
 				// authenticate with the cloud login method.
 				if cmdFlagVals.insecureLogin {
-					cmd.PrintErrln("Warning: --allow-insecure-login skips PIN verification. " +
+					cmd.PrintErrln("Warning: PIN verification was skipped. " +
 						"This is insecure and should not be used in production.")
 				}
 				_, err := funcs.CloudLogin(conjurClient, cmdFlagVals.identity, cmdFlagVals.password, cmdFlagVals.insecureLogin)
@@ -158,7 +158,8 @@ Examples:
 	cmd.Flags().StringP("password", "p", "", "Password or API key for the specified identity.")
 
 	if config.IsSaaS() {
-		cmd.Flags().Bool("allow-insecure-login", false, "Skip PIN verification for external identity provider login (insecure)")
+		cmd.Flags().Bool("insecure-bypass-idp-pin", false, "Skip PIN verification for external identity provider login (insecure)")
+		_ = cmd.Flags().MarkHidden("insecure-bypass-idp-pin")
 	}
 
 	return cmd

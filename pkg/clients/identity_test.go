@@ -305,7 +305,7 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 		// Insecure login (no-PIN) test cases — mirrors the original pre-PIN waitForExternalAction flow
 		{
 			name:          "External action MFA without PIN - rejected when insecureLogin flag not set",
-			expectedError: errors.New("oob auth pin required for login with external identity provider; use --allow-insecure-login to skip pin verification (insecure)"),
+			expectedError: errors.New("oob auth pin required for login with external identity provider"),
 			insecureLogin: false,
 			beforeTest: func(t *testing.T) {
 				startAuthResponse, err := os.ReadFile("test/identity_mock/start_auth_external_no_pin.json")

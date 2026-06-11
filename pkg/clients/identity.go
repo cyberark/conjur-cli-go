@@ -160,8 +160,7 @@ func (ia *IdentityAuthenticator) GetToken(username, password string) (string, er
 	if len(startResp.Result.IdpRedirectShortURL) > 0 && len(startResp.Result.IdpLoginSessionID) > 0 {
 		if !startResp.Result.IdpOobAuthPinRequired {
 			if !ia.insecureLogin {
-				return "", fmt.Errorf("oob auth pin required for login with external identity provider; " +
-					"use --allow-insecure-login to skip pin verification (insecure)")
+				return "", fmt.Errorf("oob auth pin required for login with external identity provider")
 			}
 			log.Printf("Warning: PIN verification is disabled. This is insecure and should not be used in production.")
 			ia.sessionID = startResp.Result.IdpLoginSessionID

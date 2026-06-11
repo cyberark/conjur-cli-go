@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "Result": {
+    "IdpRedirectUrl": "invalid://url.com",
+    "IdpRedirectShortUrl": "for_test_only://mock-idp.example.com",
+    "IdpShortUrlId": "short_id",
+    "SessionId": "session_id",
+    "IdpOobAuthPinRequired": false,
+    "IdpLoginSessionId": "idp_session_id",
+    "TenantId": "ABQ5234"
+  },
+  "Message": null,
+  "MessageID": null,
+  "Exception": null,
+  "ErrorID": null,
+  "ErrorCode": null,
+  "IsSoftError": false,
+  "InnerExceptions": null
+}

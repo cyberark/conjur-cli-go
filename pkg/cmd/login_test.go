@@ -197,8 +197,8 @@ var loginTestCases = []struct {
 		},
 	},
 	{
-		name:         "login with cloud and allow-insecure-login flag",
-		args:         []string{"login", "-i", "alice@example.com", "-p", "secret", "--allow-insecure-login"},
+		name:         "login with cloud and insecure-bypass-idp-pin flag",
+		args:         []string{"login", "-i", "alice@example.com", "-p", "secret", "--insecure-bypass-idp-pin"},
 		conjurConfig: cloudConjurConfig,
 		cloudLogin: func(t *testing.T, client clients.ConjurClient, username string, password string, insecureLogin bool) (clients.ConjurClient, error) {
 			assert.True(t, insecureLogin)
@@ -206,20 +206,20 @@ var loginTestCases = []struct {
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.NoError(t, err)
-			assert.Contains(t, stderr, "Warning: --allow-insecure-login skips PIN verification")
+			assert.Contains(t, stderr, "Warning: PIN verification was skipped.")
 			assert.Contains(t, stdout, "Logged in")
 		},
 	},
 	{
-		name:         "allow-insecure-login flag not available for non-cloud",
-		args:         []string{"login", "--allow-insecure-login"},
+		name:         "insecure-bypass-idp-pin flag not available for non-cloud",
+		args:         []string{"login", "--insecure-bypass-idp-pin"},
 		conjurConfig: defaultConjurConfig,
 		loginWithPromptFallback: func(t *testing.T, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error) {
 			return &authn.LoginPair{}, nil
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Error(t, err)
-			assert.Contains(t, err.Error(), "unknown flag: --allow-insecure-login")
+			assert.Contains(t, err.Error(), "unknown flag: --insecure-bypass-idp-pin")
 		},
 	},
 }
