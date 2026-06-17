@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/huh"
+	"charm.land/huh/v2"
+	tea "charm.land/bubbletea/v2"
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/cmd/style"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
@@ -46,7 +46,7 @@ func AskForPrompt(ctx context.Context, message string, timeout time.Duration) (s
 	if errors.Is(ctx.Err(), context.Canceled) {
 		// if context was canceled it means that the challenge was satisfied without user input
 		// and the best method to cleanup is to make huh thinks user canceled the input
-		form.Update(tea.KeyMsg{Type: tea.KeyCtrlC})
+		form.Update(tea.KeyPressMsg{Mod: tea.ModCtrl, Code: 'c'})
 		return "", nil
 	}
 	return strings.TrimSpace(userInput), err

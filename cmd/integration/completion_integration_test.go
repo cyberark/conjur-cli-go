@@ -17,6 +17,6 @@ func TestCompletionIntegrationCloud(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("completion")
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
-		assert.Contains(t, stdErr, "unknown command \"completion\" for \"conjur\"\n")
+		assert.Contains(t, stdErr, "Unknown command \"completion\" for \"conjur\"")
 	})
 }

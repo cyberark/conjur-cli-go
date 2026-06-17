@@ -32,7 +32,7 @@ func TestAuthenticatorIntegration(t *testing.T) {
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
 		assert.NotEmpty(t, stdErr)
-		assert.Contains(t, stdErr, "invalid authenticator ID format: invalid-authenticator-id, expected format is 'authenticator_type/service_id'\n")
+		assert.Contains(t, stdErr, "Invalid authenticator ID format: invalid-authenticator-id, expected format is 'authenticator_type/service_id'")
 	})
 
 	t.Run("disable an authenticator with invalid ID", func(t *testing.T) {
@@ -40,7 +40,7 @@ func TestAuthenticatorIntegration(t *testing.T) {
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
 		assert.NotEmpty(t, stdErr)
-		assert.Contains(t, stdErr, "invalid authenticator ID format: invalid-authenticator-id, expected format is 'authenticator_type/service_id'\n")
+		assert.Contains(t, stdErr, "Invalid authenticator ID format: invalid-authenticator-id, expected format is 'authenticator_type/service_id'")
 	})
 
 	t.Run("enable an non-existent authenticator", func(t *testing.T) {
