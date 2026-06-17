@@ -2,6 +2,9 @@ package style
 
 import (
 	"context"
+	"errors"
+	"io"
+	"strings"
 
 	"charm.land/fang/v2"
 	"charm.land/lipgloss/v2"
@@ -22,11 +25,22 @@ func huhColorScheme(lightDark lipgloss.LightDarkFunc) fang.ColorScheme {
 	}
 }
 
+// errorHandler wraps fang's DefaultErrorHandler, stripping a trailing dot from
+// the error message so that fang's own appended dot doesn't produce "..".
+func errorHandler(w io.Writer, styles fang.Styles, err error) {
+	msg := strings.TrimRight(err.Error(), ".")
+	if msg != err.Error() {
+		err = errors.New(msg)
+	}
+	fang.DefaultErrorHandler(w, styles, err)
+}
+
 func Execute(cmd *cobra.Command) error {
 	return fang.Execute(
 		context.Background(),
 		cmd,
 		fang.WithoutVersion(),
 		fang.WithColorSchemeFunc(huhColorScheme),
+		fang.WithErrorHandler(errorHandler),
 	)
 }
