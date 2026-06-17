@@ -16,7 +16,7 @@ type loginCmdFuncs struct {
 	LoginWithPromptFallback     func(client clients.ConjurClient, username string, password string) (*authn.LoginPair, error)
 	OidcLogin                   func(conjurClient clients.ConjurClient, username string, password string) (clients.ConjurClient, error)
 	JWTAuthenticate             func(conjurClient clients.ConjurClient) error
-	CloudLogin                  func(conjurClient clients.ConjurClient, username string, password string) (clients.ConjurClient, error)
+	CloudLogin                  func(conjurClient clients.ConjurClient, username string, password string, insecureLogin bool) (clients.ConjurClient, error)
 }
 
 var defaultLoginCmdFuncs = loginCmdFuncs{
@@ -28,9 +28,10 @@ var defaultLoginCmdFuncs = loginCmdFuncs{
 }
 
 type loginCmdFlagValues struct {
-	identity string
-	password string
-	debug    bool
+	identity      string
+	password      string
+	debug         bool
+	insecureLogin bool
 }
 
 func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
@@ -47,19 +48,27 @@ func getLoginCmdFlagValues(cmd *cobra.Command) (loginCmdFlagValues, error) {
 	}
 
 	debug, err := cmd.Flags().GetBool("debug")
-
 	if err != nil {
 		return loginCmdFlagValues{}, err
 	}
 
+	var insecureLogin bool
+	if f := cmd.Flags().Lookup("insecure-bypass-idp-pin"); f != nil {
+		insecureLogin, err = cmd.Flags().GetBool("insecure-bypass-idp-pin")
+		if err != nil {
+			return loginCmdFlagValues{}, err
+		}
+	}
+
 	return loginCmdFlagValues{
-		identity: identity,
-		password: password,
-		debug:    debug,
+		identity:      identity,
+		password:      password,
+		debug:         debug,
+		insecureLogin: insecureLogin,
 	}, nil
 }
 
-func newLoginCmd(funcs loginCmdFuncs) *cobra.Command {
+func newLoginCmd(funcs loginCmdFuncs, config conjurapi.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Authenticate with Idira Secrets Manager using the provided identity and password",
@@ -93,7 +102,7 @@ Examples:
 			}
 
 			// TODO: I should be able to create a client and unauthenticated client
-						conjurClient, err := conjurapi.NewClient(config, clients.TelemetryData)
+			conjurClient, err := conjurapi.NewClient(config, clients.TelemetryData)
 			if err != nil {
 				return err
 			}
@@ -110,7 +119,7 @@ Examples:
 				// We have to recreate the client with the JWT method so it
 				// attaches a JWTAuthenticator to the client otherwise
 				// conjurClient.GetAuthenticator() will return nil
-							conjurClient, err = conjurapi.NewClientFromJwt(config, clients.TelemetryData)
+				conjurClient, err = conjurapi.NewClientFromJwt(config, clients.TelemetryData)
 				if err != nil {
 					return err
 				}
@@ -125,7 +134,11 @@ Examples:
 			} else if config.AuthnType == "cloud" {
 				// If the user is using the cloud authn type, we need to
 				// authenticate with the cloud login method.
-				_, err := funcs.CloudLogin(conjurClient, cmdFlagVals.identity, cmdFlagVals.password)
+				if cmdFlagVals.insecureLogin {
+					cmd.PrintErrln("Warning: PIN verification was skipped. " +
+						"This is insecure and should not be used in production.")
+				}
+				_, err := funcs.CloudLogin(conjurClient, cmdFlagVals.identity, cmdFlagVals.password, cmdFlagVals.insecureLogin)
 				if err != nil {
 					return fmt.Errorf("Unable to authenticate with Idira Secrets Manager, SaaS: %s", err)
 				}
@@ -144,10 +157,15 @@ Examples:
 	cmd.Flags().StringP("id", "i", "", "The identity to authenticate with. For hosts: 'host/<full path>'.")
 	cmd.Flags().StringP("password", "p", "", "Password or API key for the specified identity.")
 
+	if config.IsSaaS() {
+		cmd.Flags().Bool("insecure-bypass-idp-pin", false, "Skip PIN verification for external identity provider login (insecure)")
+		_ = cmd.Flags().MarkHidden("insecure-bypass-idp-pin")
+	}
+
 	return cmd
 }
 
 func init() {
-	loginCmd := newLoginCmd(defaultLoginCmdFuncs)
+	loginCmd := newLoginCmd(defaultLoginCmdFuncs, clients.LoadConfigOrDefault())
 	rootCmd.AddCommand(loginCmd)
 }

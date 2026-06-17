@@ -125,25 +125,27 @@ type authStatusOOBResp struct {
 
 // IdentityAuthenticator struct
 type IdentityAuthenticator struct {
-	identityURL string
-	tenantID    string
-	client      ConjurClient
-	sessionID   string
-	timeout     time.Duration
+	identityURL   string
+	tenantID      string
+	client        ConjurClient
+	sessionID     string
+	timeout       time.Duration
+	insecureLogin bool
 }
 
 // NewIdentityAuthenticator creates a new instance of IdentityAuthenticator
-func NewIdentityAuthenticator(client ConjurClient, identityURL, tenantID string) *IdentityAuthenticator {
+func NewIdentityAuthenticator(client ConjurClient, identityURL, tenantID string, insecureLogin bool) *IdentityAuthenticator {
 	timeout := time.Duration(client.GetConfig().ConjurCloudTimeout)
 	if timeout == 0 {
 		timeout = defaultTimeout
 	}
 
 	return &IdentityAuthenticator{
-		identityURL: identityURL,
-		tenantID:    tenantID,
-		client:      client,
-		timeout:     timeout,
+		identityURL:   identityURL,
+		tenantID:      tenantID,
+		client:        client,
+		timeout:       timeout,
+		insecureLogin: insecureLogin,
 	}
 }
 
@@ -156,8 +158,13 @@ func (ia *IdentityAuthenticator) GetToken(username, password string) (string, er
 		return "", fmt.Errorf("authentication failed: %s", startResp.Message)
 	}
 	if len(startResp.Result.IdpRedirectShortURL) > 0 && len(startResp.Result.IdpLoginSessionID) > 0 {
-		if startResp.Result.IdpOobAuthPinRequired == false {
-			return "", fmt.Errorf("oob auth pin required for login with external identity provider")
+		if !startResp.Result.IdpOobAuthPinRequired {
+			if !ia.insecureLogin {
+				return "", fmt.Errorf("oob auth pin required for login with external identity provider")
+			}
+			log.Printf("Warning: PIN verification is disabled. This is insecure and should not be used in production.")
+			ia.sessionID = startResp.Result.IdpLoginSessionID
+			return ia.waitForExternalAction(startResp.Result.IdpRedirectShortURL, startResp.Result.IdpLoginSessionID)
 		}
 		ia.sessionID = startResp.Result.IdpLoginSessionID
 		return ia.loginWithPIN(startResp.Result.IdpRedirectShortURL)
