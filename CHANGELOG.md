@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [9.2.2] - 2026-06-17
+
+### Changed
+- Update dependencies to the latest versions. CNJR-14094
+
 ## [9.2.1] - 2026-05-26
 
 ### Fixed

@@ -3,14 +3,14 @@ package style
 import (
 	"context"
 
-	"github.com/charmbracelet/fang"
-	"github.com/charmbracelet/lipgloss/v2"
+	"charm.land/fang/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/spf13/cobra"
 )
 
 func huhColorScheme(lightDark lipgloss.LightDarkFunc) fang.ColorScheme {
 	base := lightDark(lipgloss.Black, lipgloss.White)
-	t := GetTheme()
+	t := GetTheme()(base == lipgloss.Black)
 	return fang.ColorScheme{
 		Base:         base,
 		Description:  base,

@@ -56,6 +56,6 @@ func TestUserIntegrationCloud(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("user")
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
-		assert.Contains(t, stdErr, "unknown command \"user\" for \"conjur\"\n")
+		assert.Contains(t, stdErr, "Unknown command \"user\" for \"conjur\"")
 	})
 }

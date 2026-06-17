@@ -18,7 +18,7 @@ func TestPubkeysIntegration(t *testing.T) {
 
 		if err != nil {
 			assert.Empty(t, stdOut)
-				assert.Contains(t, stdErr, "public keys endpoint is not available on this server")
+			assert.Contains(t, stdErr, "Public keys endpoint is not available on this server")
 			return
 		}
 
@@ -35,6 +35,6 @@ func TestPubkeysIntegrationCloud(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("pubkeys", "alice")
 		assert.Error(t, err)
 		assert.Empty(t, stdOut)
-		assert.Contains(t, stdErr, "unknown command \"pubkeys\" for \"conjur\"\n")
+		assert.Contains(t, stdErr, "Unknown command \"pubkeys\" for \"conjur\"")
 	})
 }
