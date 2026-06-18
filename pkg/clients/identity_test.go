@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"os"
 	"strings"
@@ -433,6 +434,78 @@ func TestIdentityAuthenticator_GetToken(t *testing.T) {
 			assert.Equal(t, tc.expectedToken, token)
 		})
 	}
+}
+
+func TestIdentityAuthenticator_OobAuthStatus_ForwardsCookies(t *testing.T) {
+	const sessionCookie = "shard-session"
+	const sessionCookieValue = "abc123"
+	oobStatusCalled := false
+	cookieForwarded := false
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/Security/StartAuthentication":
+			http.SetCookie(w, &http.Cookie{Name: sessionCookie, Value: sessionCookieValue})
+			w.Header().Set("Content-Type", "application/json")
+			startResp, _ := os.ReadFile("test/identity_mock/start_auth_external_no_pin.json")
+			_, _ = w.Write(startResp)
+		case "/Security/OobAuthStatus":
+			oobStatusCalled = true
+			c, err := r.Cookie(sessionCookie)
+			cookieForwarded = err == nil && c.Value == sessionCookieValue
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"Result":{"State":"success","Token":"valid-token"}}`))
+		}
+	}))
+	defer srv.Close()
+
+	jar, _ := cookiejar.New(nil)
+	authenticator := &IdentityAuthenticator{
+		identityURL:     srv.URL,
+		timeout:         defaultTimeout,
+		insecureLogin:   true,
+		cookieJarClient: &http.Client{Jar: jar},
+	}
+
+	token, err := authenticator.GetToken(username, password)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "valid-token", token)
+	assert.True(t, oobStatusCalled, "OobAuthStatus should have been called")
+	assert.True(t, cookieForwarded, "cookie set by StartAuthentication should be forwarded to OobAuthStatus")
+}
+
+func TestIdentityAuthenticator_AdvanceAuthentication_DoesNotForwardCookies(t *testing.T) {
+	const sessionCookie = "shard-session"
+	const sessionCookieValue = "abc123"
+	cookieSentOnAdvance := false
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/Security/StartAuthentication":
+			http.SetCookie(w, &http.Cookie{Name: sessionCookie, Value: sessionCookieValue})
+			startResp, _ := os.ReadFile("test/identity_mock/start_auth_pass_only.json")
+			_, _ = w.Write(startResp)
+		case "/Security/AdvanceAuthentication":
+			c, err := r.Cookie(sessionCookie)
+			cookieSentOnAdvance = err == nil && c.Value == sessionCookieValue
+			advanceResp, _ := os.ReadFile("test/identity_mock/advance_oob_success.json")
+			_, _ = w.Write(advanceResp)
+		}
+	}))
+	defer srv.Close()
+
+	jar, _ := cookiejar.New(nil)
+	authenticator := &IdentityAuthenticator{
+		identityURL:     srv.URL,
+		timeout:         defaultTimeout,
+		cookieJarClient: &http.Client{Jar: jar},
+	}
+
+	_, _ = authenticator.GetToken(username, password)
+
+	assert.False(t, cookieSentOnAdvance, "cookie from StartAuthentication should not be forwarded to AdvanceAuthentication")
 }
 
 func Test_promptMechChosen(t *testing.T) {

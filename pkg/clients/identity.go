@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/cookiejar"
 	"runtime"
 	"strings"
 	"time"
@@ -125,12 +126,13 @@ type authStatusOOBResp struct {
 
 // IdentityAuthenticator struct
 type IdentityAuthenticator struct {
-	identityURL   string
-	tenantID      string
-	client        ConjurClient
-	sessionID     string
-	timeout       time.Duration
-	insecureLogin bool
+	identityURL     string
+	tenantID        string
+	client          ConjurClient
+	cookieJarClient *http.Client
+	sessionID       string
+	timeout         time.Duration
+	insecureLogin   bool
 }
 
 // NewIdentityAuthenticator creates a new instance of IdentityAuthenticator
@@ -140,12 +142,21 @@ func NewIdentityAuthenticator(client ConjurClient, identityURL, tenantID string,
 		timeout = defaultTimeout
 	}
 
+	jar, _ := cookiejar.New(nil)
+	baseClient := client.GetHttpClient()
+	cookieJarClient := &http.Client{
+		Transport: baseClient.Transport,
+		Timeout:   baseClient.Timeout,
+		Jar:       jar,
+	}
+
 	return &IdentityAuthenticator{
-		identityURL:   identityURL,
-		tenantID:      tenantID,
-		client:        client,
-		timeout:       timeout,
-		insecureLogin: insecureLogin,
+		identityURL:     identityURL,
+		tenantID:        tenantID,
+		client:          client,
+		cookieJarClient: cookieJarClient,
+		timeout:         timeout,
+		insecureLogin:   insecureLogin,
 	}
 }
 
@@ -392,7 +403,7 @@ func (ia *IdentityAuthenticator) callIdentityStartAuth(userName string) ([]byte,
 		return nil, fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	return ia.invokeEndpoint(http.MethodPost, fmt.Sprintf("%s/Security/StartAuthentication", ia.identityURL), payloadBytes)
+	return ia.invokeEndpointWithCookieJar(http.MethodPost, fmt.Sprintf("%s/Security/StartAuthentication", ia.identityURL), payloadBytes)
 }
 
 func (ia *IdentityAuthenticator) getAuthStatusToken(sessionID string) (string, error) {
@@ -406,7 +417,7 @@ func (ia *IdentityAuthenticator) getAuthStatusToken(sessionID string) (string, e
 		return "", fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	response, err := ia.invokeEndpoint(http.MethodPost, fmt.Sprintf("%s/Security/OobAuthStatus", ia.identityURL), payloadBytes)
+	response, err := ia.invokeEndpointWithCookieJar(http.MethodPost, fmt.Sprintf("%s/Security/OobAuthStatus", ia.identityURL), payloadBytes)
 	if err != nil {
 		return "", err
 	}
@@ -427,6 +438,22 @@ func (ia *IdentityAuthenticator) getAuthStatusToken(sessionID string) (string, e
 }
 
 func (ia *IdentityAuthenticator) invokeEndpoint(method, url string, payload []byte) ([]byte, error) {
+	client := http.DefaultClient
+	if ia.client != nil && ia.client.GetHttpClient() != nil {
+		client = ia.client.GetHttpClient()
+	}
+	return ia.invokeEndpointWithClient(method, url, payload, client)
+}
+
+func (ia *IdentityAuthenticator) invokeEndpointWithCookieJar(method, url string, payload []byte) ([]byte, error) {
+	client := ia.cookieJarClient
+	if client == nil {
+		client = http.DefaultClient
+	}
+	return ia.invokeEndpointWithClient(method, url, payload, client)
+}
+
+func (ia *IdentityAuthenticator) invokeEndpointWithClient(method, url string, payload []byte, client *http.Client) ([]byte, error) {
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
@@ -436,10 +463,6 @@ func (ia *IdentityAuthenticator) invokeEndpoint(method, url string, payload []by
 	req.Header.Set("OobIdPAuth", "true")
 	req.Header.Set("User-Agent", userAgent())
 
-	client := http.DefaultClient
-	if ia.client != nil && ia.client.GetHttpClient() != nil {
-		client = ia.client.GetHttpClient()
-	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send HTTP request: %w", err)
