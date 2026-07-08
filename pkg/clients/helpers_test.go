@@ -101,6 +101,26 @@ func (f *fakeConjurClient) CreateIssuer(issuer conjurapi.Issuer) (created conjur
 func (f *fakeConjurClient) UpdateIssuer(issuerID string, issuerUpdate conjurapi.IssuerUpdate) (updated conjurapi.Issuer, err error) {
 	return conjurapi.Issuer{}, nil
 }
+func (f *fakeConjurClient) LdapCreateGroupMapping(serviceID, groupName string, roles []string) (*conjurapi.LdapGroupMappingResponse, error) {
+	return nil, nil
+}
+func (f *fakeConjurClient) LdapShowGroupMapping(serviceID, groupName string) (*conjurapi.LdapGroupMappingResponse, error) {
+	return nil, nil
+}
+func (f *fakeConjurClient) LdapListGroupMappings(serviceID string) (*conjurapi.LdapMappingListResponse, error) {
+	return nil, nil
+}
+func (f *fakeConjurClient) LdapDeleteGroupMapping(serviceID, groupName string) error { return nil }
+func (f *fakeConjurClient) LdapCreateUserMapping(serviceID, username string, roles []string) (*conjurapi.LdapUserMappingResponse, error) {
+	return nil, nil
+}
+func (f *fakeConjurClient) LdapShowUserMapping(serviceID, username string) (*conjurapi.LdapUserMappingResponse, error) {
+	return nil, nil
+}
+func (f *fakeConjurClient) LdapListUserMappings(serviceID string) (*conjurapi.LdapMappingListResponse, error) {
+	return nil, nil
+}
+func (f *fakeConjurClient) LdapDeleteUserMapping(serviceID, username string) error { return nil }
 
 // rewriteTransport redirects requests to a test server, preserving path and query.
 type rewriteTransport struct {
