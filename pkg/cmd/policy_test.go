@@ -427,7 +427,10 @@ func sharedLoadPolicyCmdTestCases(
 }
 
 func TestPolicyCmd(t *testing.T) {
-	t.Parallel()
+	// Force an empty Environment (as conjur-api-go leaves it when ApplianceURL
+	// is unset) so this test doesn't depend on the ambient ~/.conjurrc of the
+	// machine running it.
+	t.Setenv("CONJURRC", t.TempDir()+"/nonexistent-conjurrc")
 
 	var allTests []policyCmdTestCase
 	for _, cases := range [][]policyCmdTestCase{
