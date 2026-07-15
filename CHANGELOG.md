@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [9.2.4] - 2026-08-15
+
+### Fixed
+- Properly handle host login with Secrets-Manager SaaS using credentials in environment variables. CNJR-14365
+
 ## [9.2.3] - 2026-06-18
 
 ### Changed
