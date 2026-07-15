@@ -79,7 +79,7 @@ Examples:
 
 func init() {
 	config := clients.LoadConfigOrDefault()
-	if config.IsSelfHosted() || config.IsConjurOSS() {
+	if !config.IsSaaS() {
 		checkCmd := newCheckCmd(checkClientFactory)
 		rootCmd.AddCommand(checkCmd)
 	}
