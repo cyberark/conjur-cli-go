@@ -14,10 +14,21 @@ func TestIssuerIntegration(t *testing.T) {
 	cli := newConjurTestCLI(t)
 	cli.InitAndLoginAsAdmin(t)
 
+	// Create Conjur variables to hold AWS credentials, as required by the
+	// server API which no longer accepts inline credential values.
+	cli.LoadPolicy(t, `
+- !variable aws-credentials/access_key_id
+- !variable aws-credentials/secret_access_key
+`)
+	_, _, err := cli.Run("variable", "set", "-i", "aws-credentials/access_key_id", "-v", "AKIAIOSFODNN7EXAMPLE")
+	require.NoError(t, err)
+	_, _, err = cli.Run("variable", "set", "-i", "aws-credentials/secret_access_key", "-v", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+	require.NoError(t, err)
+
 	t.Run("Create issuer", func(t *testing.T) {
 		data := `{
-      "access_key_id": "AKIAIOSFODNN7EXAMPLE",
-      "secret_access_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+      "access_key_id_secret_ref": {"id": "aws-credentials/access_key_id"},
+      "secret_access_key_secret_ref": {"id": "aws-credentials/secret_access_key"}
     }`
 
 		stdOut, _, err := cli.Run(
@@ -31,15 +42,15 @@ func TestIssuerIntegration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Contains(t, stdOut, `"id": "test-id"`)
 		assert.Contains(t, stdOut, `"max_ttl": 3000`)
-		assert.Contains(t, stdOut, `"access_key_id": "AKIAIOSFODNN7EXAMPLE"`)
-		assert.Contains(t, stdOut, `"secret_access_key": "*****"`)
+		assert.Contains(t, stdOut, `"access_key_id_secret_ref"`)
+		assert.Contains(t, stdOut, `"secret_access_key_secret_ref"`)
 	})
 
-	// Test case ensure's server error messages are passed to cli error output
+	// Test case ensures server error messages are passed to cli error output
 	t.Run("Create issuer with bad id characters", func(t *testing.T) {
 		data := `{
-      "access_key_id": "AKIAIOSFODNN7EXAMPLE",
-      "secret_access_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+      "access_key_id_secret_ref": {"id": "aws-credentials/access_key_id"},
+      "secret_access_key_secret_ref": {"id": "aws-credentials/secret_access_key"}
     }`
 
 		_, stdErr, _ := cli.Run(
@@ -61,8 +72,8 @@ func TestIssuerIntegration(t *testing.T) {
 
 		assert.Contains(t, stdOut, `"id": "test-id"`)
 		assert.Contains(t, stdOut, `"max_ttl": 3000`)
-		assert.Contains(t, stdOut, `"access_key_id": "AKIAIOSFODNN7EXAMPLE"`)
-		assert.Contains(t, stdOut, `"secret_access_key": "*****"`)
+		assert.Contains(t, stdOut, `"access_key_id_secret_ref"`)
+		assert.Contains(t, stdOut, `"secret_access_key_secret_ref"`)
 	})
 
 	t.Run("Get Issuer", func(t *testing.T) {
@@ -74,8 +85,8 @@ func TestIssuerIntegration(t *testing.T) {
 
 		assert.Contains(t, stdOut, `"id": "test-id"`)
 		assert.Contains(t, stdOut, `"max_ttl": 3000`)
-		assert.Contains(t, stdOut, `"access_key_id": "AKIAIOSFODNN7EXAMPLE"`)
-		assert.Contains(t, stdOut, `"secret_access_key": "*****"`)
+		assert.Contains(t, stdOut, `"access_key_id_secret_ref"`)
+		assert.Contains(t, stdOut, `"secret_access_key_secret_ref"`)
 	})
 
 	t.Run("Update Issuer", func(t *testing.T) {
