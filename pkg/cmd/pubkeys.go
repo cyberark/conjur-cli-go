@@ -75,7 +75,7 @@ Examples:
 
 func init() {
 	config := clients.LoadConfigOrDefault()
-	if config.IsSelfHosted() || config.IsConjurOSS() {
+	if !config.IsSaaS() {
 		pubKeysCmd := newPubKeysCommand(pubKeysClientFactory)
 		rootCmd.AddCommand(pubKeysCmd)
 	}

@@ -412,7 +412,7 @@ service instances.`,
 func init() {
 	config := clients.LoadConfigOrDefault()
 	authnLdapCmd := newAuthnLdapCommand(ldapGroupClientFactory, ldapUserClientFactory)
-	if config.IsSelfHosted() || config.IsConjurOSS() {
+	if !config.IsSaaS() {
 		rootCmd.AddCommand(authnLdapCmd)
 	}
 }

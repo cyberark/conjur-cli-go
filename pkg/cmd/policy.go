@@ -22,7 +22,7 @@ func loadPolicyCommandRunner(
 		var err error
 
 		config := clients.LoadConfigOrDefault()
-		if config.IsSelfHosted() || config.IsConjurOSS() {
+		if !config.IsSaaS() {
 			dryrun, err = cmd.Flags().GetBool("dry-run")
 		}
 
@@ -234,7 +234,7 @@ func newPolicyCommand(clientFactory policyClientFactoryFunc) *cobra.Command {
 
 	config := clients.LoadConfigOrDefault()
 
-	if config.IsSelfHosted() || config.IsConjurOSS() {
+	if !config.IsSaaS() {
 		policyCmd.AddCommand(newPolicyFetchCommand(clientFactory))
 	}
 
@@ -257,7 +257,7 @@ Examples:
 		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePost),
 	}
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
-	if config.IsSelfHosted() || config.IsConjurOSS() {
+	if !config.IsSaaS() {
 		cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
 	}
 
@@ -299,7 +299,7 @@ Examples:
 	}
 
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
-	if config.IsSelfHosted() || config.IsConjurOSS() {
+	if !config.IsSaaS() {
 		cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
 	}
 
@@ -321,7 +321,7 @@ Examples:
 	}
 
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
-	if config.IsSelfHosted() || config.IsConjurOSS() {
+	if !config.IsSaaS() {
 		cmd.PersistentFlags().BoolP("dry-run", "", false, "Dry run mode (input policy will be validated without applying the changes)")
 	}
 
