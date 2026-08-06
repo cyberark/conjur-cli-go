@@ -11,6 +11,8 @@ services:
       DATABASE_URL: postgres://postgres@pg/postgres
       CONJUR_DATA_KEY: Bd4+A1QnELGC1Fb5/KauFlVez981OoYblbyfNOCavuQ=
       CONJUR_AUTHENTICATORS: authn,authn-ldap/test-service,authn-oidc/keycloak,authn-oidc/okta,authn-jwt/keycloak,authn-oidc/identity
+      CONJUR_AUTHN_HTTP_ALLOWLIST: ${CONJUR_AUTHN_HTTP_ALLOWLIST:-keycloak,okta,identity}
+      CONJUR_AUTHN_ALLOWED_IP_RANGES: ${CONJUR_AUTHN_ALLOWED_IP_RANGES:-0.0.0.0/0,::/0}
       CONJUR_FEATURE_PKCE_SUPPORT_ENABLED: 'true'
       LDAP_URI: ldap://ldap-server:389
       LDAP_BASE: dc=conjur,dc=net
