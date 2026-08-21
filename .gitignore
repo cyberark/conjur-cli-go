@@ -31,3 +31,4 @@ vhs/output
 test/wiremock/localhost.crt
 test/wiremock/localhost.key
 test/wiremock/localhost.pfx
+.worktrees/

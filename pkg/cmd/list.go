@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"errors"
+	"fmt"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/cyberark/conjur-cli-go/pkg/output"
+	"github.com/cyberark/conjur-cli-go/pkg/pagination"
 	"github.com/spf13/cobra"
 )
 
@@ -42,6 +45,10 @@ func getResourceFilterObject(cmd *cobra.Command) (*conjurapi.ResourceFilter, err
 		return nil, err
 	}
 
+	if limit < -1 {
+		return nil, fmt.Errorf("--limit must be -1 (unlimited), 0, or a positive integer")
+	}
+
 	return &conjurapi.ResourceFilter{
 		Kind:   kind,
 		Search: search,
@@ -49,6 +56,40 @@ func getResourceFilterObject(cmd *cobra.Command) (*conjurapi.ResourceFilter, err
 		Offset: offset,
 		Role:   role,
 	}, nil
+}
+
+// fetchResources resolves the desired --limit into a pagination.Options
+// and fetches all matching resources, auto-paginating above the server's
+// per-request limit. truncated is true when the implicit default cap
+// (rather than an explicit --limit) truncated the results; the caller is
+// responsible for warning about it once the result has been printed.
+func fetchResources(cmd *cobra.Command, client listClient, rf *conjurapi.ResourceFilter, pageSize int) ([]map[string]interface{}, bool, error) {
+	maxResults := 10 * pageSize
+	explicitLimit := cmd.Flags().Changed("limit")
+	if explicitLimit {
+		maxResults = rf.Limit
+	}
+
+	baseOffset := rf.Offset
+
+	fetchPage := func(offset, limit int) ([]map[string]interface{}, error) {
+		pageFilter := *rf
+		pageFilter.Offset = baseOffset + offset
+		pageFilter.Limit = limit
+		return client.Resources(&pageFilter)
+	}
+
+	ctx := cmd.Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	resources, truncated, err := pagination.Fetch(ctx, fetchPage, pagination.Options{MaxResults: maxResults, PageSize: pageSize}, nil)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return resources, truncated && !explicitLimit, nil
 }
 
 func newListCmd(clientFactory listClientFactoryFunc, roleClientFactory roleClientFactoryFunc, resourceClientFactory resourceClientFactoryFunc) *cobra.Command {
@@ -70,6 +111,15 @@ Examples:
 - List resources for role : conjur list -r dev:group:somegroup`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Validate --limit (and parse the rest of the resource filter)
+			// before doing any client/auth work, and uniformly for both the
+			// --count and normal listing paths (fetchResources is only
+			// reached on the latter).
+			rf, err := getResourceFilterObject(cmd)
+			if err != nil {
+				return err
+			}
+
 			client, err := clientFactory(cmd)
 			if err != nil {
 				return err
@@ -108,11 +158,6 @@ Examples:
 			}
 			// END COMPATIBILITY WITH PYTHON CLI
 
-			rf, err := getResourceFilterObject(cmd)
-			if err != nil {
-				return err
-			}
-
 			count, err := cmd.Flags().GetBool("count")
 			if err != nil {
 				return err
@@ -127,7 +172,12 @@ Examples:
 				return output.PlainJSONOrUnix(cmd, count)
 			}
 
-			resources, err := client.Resources(rf)
+			pageSize, err := pagination.ResolvePageSize(cmd, pagination.DefaultPageSize)
+			if err != nil {
+				return err
+			}
+
+			resources, truncated, err := fetchResources(cmd, client, rf, pageSize)
 			if err != nil {
 				return err
 			}
@@ -152,13 +202,18 @@ Examples:
 				return err
 			}
 
+			if truncated {
+				_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Result may be truncated at %d items. Pass --limit -1 for unlimited results — this can take significantly longer.\n", 10*pageSize)
+			}
+
 			return nil
 		},
 	}
 
 	cmd.Flags().StringP("kind", "k", "", "Filters the resources by the specified `kind`, which must one of these: user | host | layer | group | policy | variable | webservice | host_factory")
 	cmd.Flags().StringP("search", "s", "", "Filters returned resources according to the specified text. Results are weighted as follows, from highest to lowest priority: resource's identifier, annotations, and kind")
-	cmd.Flags().IntP("limit", "l", 0, "Sets the maximum number of returned resources")
+	cmd.Flags().IntP("limit", "l", 0, "Sets the maximum number of returned resources. -1 means unlimited. Results above the server's per-request limit are fetched automatically in multiple requests. If omitted, defaults to 10000.")
+	pagination.AddPageSizeFlag(cmd, pagination.DefaultPageSize)
 	cmd.Flags().IntP("offset", "o", 0, "Skips the specified number of resources from the first resource of a zero-based resource array")
 	cmd.Flags().StringP("role", "r", "", "Retrieves the resources that the specified role is entitled to see. You must specify the role's full ID: {account}:{kind}:{identifier}. For example: --role myorg:user:alice")
 	cmd.Flags().BoolP("inspect", "i", false, "Lists the metadata for resources")
