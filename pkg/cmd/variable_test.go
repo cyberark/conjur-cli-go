@@ -166,6 +166,52 @@ var variableCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "get single secret default output unwrapped",
+		args: []string{"variable", "get", "-i", "secret"},
+		getBatch: func(t *testing.T, ids []string) (map[string][]byte, error) {
+			return map[string][]byte{"dev:variable:secret": []byte("s3cr3t")}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Equal(t, "s3cr3t\n", stdout)
+		},
+	},
+	{
+		name: "get single secret explicit output json wraps value",
+		args: []string{"variable", "get", "-i", "secret", "--output", "json"},
+		getBatch: func(t *testing.T, ids []string) (map[string][]byte, error) {
+			return map[string][]byte{"dev:variable:secret": []byte("s3cr3t")}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, `"value": "s3cr3t"`)
+		},
+	},
+	{
+		name: "get single secret explicit output plain unwrapped",
+		args: []string{"variable", "get", "-i", "secret", "--output", "plain"},
+		getBatch: func(t *testing.T, ids []string) (map[string][]byte, error) {
+			return map[string][]byte{"dev:variable:secret": []byte("s3cr3t")}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Equal(t, "s3cr3t\n", stdout)
+		},
+	},
+	{
+		name: "get batch secrets always structured",
+		args: []string{"variable", "get", "-i", "secret,secret2"},
+		getBatch: func(t *testing.T, ids []string) (map[string][]byte, error) {
+			return map[string][]byte{
+				"dev:variable:secret":  []byte("val1"),
+				"dev:variable:secret2": []byte("val2"),
+			}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, `"secret": "val1"`)
+			assert.Contains(t, stdout, `"secret2": "val2"`)
+			assert.Contains(t, stdout, "{\n    \"secret", "batch output preserves its pre-existing 4-space indent")
+		},
+	},
+	{
 		name: "set subcommand",
 		args: []string{"variable", "set", "-i", "meow", "-v", "moo"},
 		set: func(t *testing.T, path, value string) error {
@@ -177,6 +223,17 @@ var variableCmdTestCases = []struct {
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "Value added")
+		},
+	},
+	{
+		name: "set subcommand with output json",
+		args: []string{"variable", "set", "-i", "meow", "-v", "moo", "--output", "json"},
+		set: func(t *testing.T, path, value string) error {
+			return nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.JSONEq(t, `{"id":"meow","status":"set"}`, stdout)
 		},
 	},
 	{

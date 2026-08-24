@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -49,8 +50,10 @@ Examples:
 				return err
 			}
 
-			cmd.Printf("Authenticator %s is enabled\n", ID)
-			return nil
+			return output.Plain(cmd, map[string]any{"authenticator": ID, "status": "enabled"}, func() error {
+				cmd.Printf("Authenticator %s is enabled\n", ID)
+				return nil
+			})
 		},
 	}
 
@@ -89,8 +92,10 @@ Examples:
 				return err
 			}
 
-			cmd.Printf("Authenticator %s is disabled\n", ID)
-			return nil
+			return output.Plain(cmd, map[string]any{"authenticator": ID, "status": "disabled"}, func() error {
+				cmd.Printf("Authenticator %s is disabled\n", ID)
+				return nil
+			})
 		},
 	}
 

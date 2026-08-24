@@ -6,9 +6,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Add a global `--output` flag (`json`, `yaml`, `plain`, `custom-columns=...`, `go-template=...`) supported
+  across the CLI. When no `--output` is given and stdout is a terminal, results are rendered in an
+  interactive table/detail view instead of plain text.
+
 ### Changed
-- Nothing should go in this section, please add to the latest unreleased version
-  (and update the corresponding date), or add a new version.
+- `authn-ldap groups list` / `authn-ldap users list` with `--output json` now print a bare JSON array
+  instead of `{"keys": [...]}`.
+
+### Removed
+- Remove `resource exists --json` and `role exists --json` in favor of the new global `--output json` flag.
+- Remove `authn-ldap`'s local `-o`/`--output table|json` flag in favor of the new global `--output` flag.
+- Remove `policy fetch`'s local `-o` shorthand in favor of the new global `--output` flag.
 
 ## [9.3.1] - 2026-08-21
 

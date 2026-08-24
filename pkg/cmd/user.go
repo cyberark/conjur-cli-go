@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 
 	"github.com/spf13/cobra"
@@ -70,9 +71,9 @@ Examples:
 				return err
 			}
 
-			cmd.Println(string(newAPIKey))
-
-			return nil
+			return output.Plain(cmd, map[string]any{"value": string(newAPIKey)}, func() error {
+				return output.PlainBare(cmd, string(newAPIKey))
+			})
 		},
 	}
 

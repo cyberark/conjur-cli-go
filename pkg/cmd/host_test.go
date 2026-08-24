@@ -85,6 +85,38 @@ var rotateHostAPIKeyCmdTestCases = []struct {
 			assert.Contains(t, stderr, "Error: client factory error\n")
 		},
 	},
+	{
+		name: "rotate-api-key explicit output json",
+		args: []string{"host", "rotate-api-key", "--id", "ci-staging", "--output", "json"},
+		rotateHostAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
+			assert.Equal(t, "ci-staging", hostID)
+			return []byte("newkey123"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, `"value": "newkey123"`)
+		},
+	},
+	{
+		name: "rotate-api-key default output unwrapped",
+		args: []string{"host", "rotate-api-key", "--id", "ci-staging"},
+		rotateHostAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
+			return []byte("newkey123"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Equal(t, "newkey123\n", stdout)
+		},
+	},
+	{
+		name: "rotate-api-key explicit output plain unwrapped",
+		args: []string{"host", "rotate-api-key", "--id", "ci-staging", "--output", "plain"},
+		rotateHostAPIKey: func(t *testing.T, hostID string) ([]byte, error) {
+			return []byte("newkey123"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Equal(t, "newkey123\n", stdout)
+		},
+	},
 }
 
 func TestRotateHostAPIKeyCmd(t *testing.T) {

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/spf13/cobra"
 )
 
@@ -33,14 +33,13 @@ func newRoleExistsCmd(clientFactory roleClientFactoryFunc) *cobra.Command {
 		Use:   "exists <role-id>",
 		Short: "Check if a role exists",
 		Long: `Check if a role exists
-		
-This command requires a [role-id] and includes an optional [--json] 
-flag to return a JSON-formatted result.
-		
+
+This command requires a [role-id].
+
 Examples:
 
 - conjur role exists dev:host:somehost
-- conjur role exists --json dev:layer:somelayer`,
+- conjur role exists dev:layer:somelayer`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
@@ -49,11 +48,6 @@ Examples:
 			}
 
 			roleID := args[0]
-
-			jsonFlag, err := cmd.Flags().GetBool("json")
-			if err != nil {
-				return err
-			}
 
 			client, err := clientFactory(cmd)
 			if err != nil {
@@ -65,27 +59,11 @@ Examples:
 				return err
 			}
 
-			if jsonFlag {
-				data := map[string]interface{}{
-					"exists": result,
-				}
-
-				prettyData, err := utils.PrettyPrintToJSON(data)
-				if err != nil {
-					return err
-				}
-
-				cmd.Println(prettyData)
-
-			} else {
-				cmd.Println(result)
-			}
-
-			return nil
+			return output.Plain(cmd, map[string]interface{}{"exists": result}, func() error {
+				return output.PlainBare(cmd, result)
+			})
 		},
 	}
-
-	cmd.Flags().Bool("json", false, "Output a JSON response with field 'exists'")
 
 	return cmd
 }
@@ -120,14 +98,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 }
@@ -182,14 +153,7 @@ Examples:
 				}
 			}
 
-			prettyResult, _ := utils.PrettyPrintToJSON(members)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, members)
 		},
 	}
 
@@ -228,14 +192,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, _ := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 }

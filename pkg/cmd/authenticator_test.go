@@ -94,6 +94,16 @@ func sharedAuthenticatorCmdTestCases(
 			},
 		},
 		{
+			name: fmt.Sprintf("%s subcommand with output json", subcommand),
+			args: []string{"authenticator", subcommand, "-i", "authn-iam/prod", "--output", "json"},
+			enableAuthenticator: func(t *testing.T, authenticatorType string, serviceID string, enabled bool) error {
+				return nil
+			},
+			assert: func(t *testing.T, stdout, stderr string, err error) {
+				assert.JSONEq(t, fmt.Sprintf(`{"authenticator":"authn-iam/prod","status":"%sd"}`, subcommand), stdout)
+			},
+		},
+		{
 			name: fmt.Sprintf("%s subcommand response error", subcommand),
 			args: []string{"authenticator", subcommand, "-i", "authn-iam/prod"},
 			enableAuthenticator: func(t *testing.T, authenticatorType string, serviceID string, enabled bool) error {

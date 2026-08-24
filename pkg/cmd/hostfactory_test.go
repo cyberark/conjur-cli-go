@@ -263,6 +263,16 @@ var hostfactoryCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "tokens create explicit custom-columns",
+		args: []string{"hostfactory", "tokens", "create", "--hostfactory-id", "dev:host_factory:factory", "--output", "custom-columns=TOKEN:.token"},
+		create: func(t *testing.T, duration string, hostFactory string, cidr []string, count int) ([]conjurapi.HostFactoryTokenResponse, error) {
+			return []conjurapi.HostFactoryTokenResponse{{Token: "abc123"}}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "abc123")
+		},
+	},
+	{
 		name: "token create missing flag",
 		args: []string{"hostfactory", "tokens", "create"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
@@ -277,6 +287,17 @@ var hostfactoryCmdTestCases = []struct {
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "")
+		},
+	},
+	{
+		name: "token revoke command success with output json",
+		args: []string{"hostfactory", "tokens", "revoke", "-t", "revoked_token", "--output", "json"},
+		revoke: func(t *testing.T, token string) error {
+			return nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.JSONEq(t, `{"status":"revoked","token":"revoked_token"}`, stdout)
 		},
 	},
 	// BEGIN COMPATIBILITY WITH PYTHON CLI

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/spf13/cobra"
 )
 
@@ -77,20 +78,24 @@ func printMultilineResults(cmd *cobra.Command, secrets map[string][]byte) error 
 	}
 
 	if len(formattedSecrets) > 1 {
-		// Marshal the map to JSON
-		jsonData, err := json.MarshalIndent(formattedSecrets, "", "    ")
-		if err != nil {
-			return err
-		}
-
-		cmd.Println(string(jsonData))
-	} else {
-		for _, v := range secrets {
-			cmd.Println(string(v))
-		}
+		return output.Plain(cmd, formattedSecrets, func() error {
+			jsonData, err := json.MarshalIndent(formattedSecrets, "", "    ")
+			if err != nil {
+				return err
+			}
+			cmd.Println(string(jsonData))
+			return nil
+		})
 	}
 
-	return nil
+	var single string
+	for _, v := range formattedSecrets {
+		single = v
+	}
+
+	return output.Plain(cmd, map[string]any{"value": single}, func() error {
+		return output.PlainBare(cmd, single)
+	})
 }
 
 func newVariableGetCmd(clientFactory variableGetClientFactoryFunc) *cobra.Command {
@@ -207,8 +212,10 @@ Examples:
 				return err
 			}
 
-			cmd.Println("Value added")
-			return nil
+			return output.Plain(cmd, map[string]any{"id": id, "status": "set"}, func() error {
+				cmd.Println("Value added")
+				return nil
+			})
 		},
 	}
 }

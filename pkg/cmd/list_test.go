@@ -152,10 +152,7 @@ var listCmdTestCases = []struct {
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stdout, "Flag --members-of has been deprecated, Use 'role members' instead")
-			assert.Contains(t, stdout, `[
-  "dev:user:bob"
-]
-`)
+			assert.Contains(t, stdout, "[\n  \"dev:user:bob\"\n]\n")
 		},
 	},
 	{
@@ -170,10 +167,7 @@ var listCmdTestCases = []struct {
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
 			assert.Contains(t, stdout, "Flag --permitted-roles has been deprecated, Use 'resource permitted-roles' instead")
 			assert.Contains(t, stdout, "Flag --privilege has been deprecated, Use 'resource permitted-roles' instead")
-			assert.Contains(t, stdout, `[
-  "dev:user:bob"
-]
-`)
+			assert.Contains(t, stdout, "[\n  \"dev:user:bob\"\n]\n")
 		},
 	},
 	// END COMPATIBILITY WITH PYTHON CLI
@@ -253,6 +247,46 @@ var listCmdTestCases = []struct {
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Contains(t, stderr, "Error: an error\n")
+		},
+	},
+	{
+		name: "list count explicit output json",
+		args: []string{"list", "-c", "--output", "json"},
+		resourcesCount: func(t *testing.T, filter *conjurapi.ResourceFilter) (*conjurapi.ResourcesCount, error) {
+			return &conjurapi.ResourcesCount{Count: 3}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, `"count": 3`)
+		},
+	},
+	{
+		name: "list inspect explicit output json",
+		args: []string{"list", "--inspect", "--output", "json"},
+		listResources: func(t *testing.T, filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error) {
+			return clientResponse, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Equal(t, stdout, clientResponseStr)
+		},
+	},
+	{
+		name: "list default explicit output json",
+		args: []string{"list", "--output", "json"},
+		listResources: func(t *testing.T, filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error) {
+			return clientResponse, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Equal(t, stdout, clientResponseIDsStr)
+		},
+	},
+	{
+		name: "list inspect explicit custom-columns",
+		args: []string{"list", "--inspect", "--output", "custom-columns=ID:.id"},
+		listResources: func(t *testing.T, filter *conjurapi.ResourceFilter) ([]map[string]interface{}, error) {
+			return []map[string]interface{}{{"id": "dev:variable:foo"}}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Equal(t, "ID\ndev:variable:foo\n", stdout)
 		},
 	},
 }

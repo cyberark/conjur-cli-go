@@ -10,7 +10,6 @@ Enter a number between 1 and 3: 2
 .
 
 
-
   The init command creates a configuration file (.conjurrc) that contains the details for connec
 ting to Idira Secrets
   Manager. This file is located under the user's root directory.
@@ -29,3 +28,19 @@ rovided by this option)
     --cert-file       File to write the server's certificate to (/root/conjur-server.pem)
     -f --file         File to write the configuration to. You must set the CONJURRC environment
 variable to the same value for this file to be used for further commands. (/root/.conjurrc)
+    --force           Force overwrite of existing configuration file
+    --force-netrc     Use a file-based credential storage rather than OS-native keystore (for co
+mpatibility with Summon)
+    -i --insecure     Allow non-HTTPS connections (insecure)
+    --jwt-file        Path to the JWT file if using authn-jwt
+    --jwt-host-id     Host ID for authn-jwt (not required if JWT contains host ID)
+    -s --self-signed  Allow self-signed certificates (insecure)
+    --service-id      Service ID if using alternative authentication type
+    -u --url          Url of the Idira Secrets Manager service. Will prompt if omitted.
+
+>
+
+
+
+
+

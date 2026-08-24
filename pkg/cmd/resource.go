@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/spf13/cobra"
 )
 
@@ -45,11 +45,6 @@ Examples:
 
 			resourceID := args[0]
 
-			jsonFlag, err := cmd.Flags().GetBool("json")
-			if err != nil {
-				return err
-			}
-
 			client, err := clientFactory(cmd)
 			if err != nil {
 				return err
@@ -60,27 +55,11 @@ Examples:
 				return err
 			}
 
-			if jsonFlag {
-				data := map[string]interface{}{
-					"exists": result,
-				}
-
-				prettyData, err := utils.PrettyPrintToJSON(data)
-				if err != nil {
-					return err
-				}
-
-				cmd.Println(prettyData)
-
-			} else {
-				cmd.Println(result)
-			}
-
-			return nil
+			return output.Plain(cmd, map[string]interface{}{"exists": result}, func() error {
+				return output.PlainBare(cmd, result)
+			})
 		},
 	}
-
-	cmd.Flags().Bool("json", false, "Output a JSON response with field 'exists'")
 
 	return cmd
 }
@@ -115,14 +94,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 }
@@ -157,14 +129,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 }

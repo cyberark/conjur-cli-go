@@ -3,7 +3,7 @@ Output output/root.txt
 
 Set WindowBar Colorful
 Set Width 1750
-Set Height 1500
+Set Height 1900
 
 Type "conjur"
 

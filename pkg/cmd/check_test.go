@@ -79,6 +79,17 @@ var checkCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "check with output json",
+		args: []string{"check", "dev:variable:secret", "read", "--output", "json"},
+		checkPermission: func(t *testing.T, resourceID string, privilege string) (bool, error) {
+			return true, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.JSONEq(t, `{"allowed":true}`, stdout)
+		},
+	},
+	{
 		name: "check returns false for default admin role",
 		args: []string{"check", "dev:variable:secret", "write"},
 		checkPermission: func(t *testing.T, resourceID string, privilege string) (bool, error) {

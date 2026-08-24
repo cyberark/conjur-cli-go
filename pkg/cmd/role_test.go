@@ -59,8 +59,8 @@ var roleExistsCmdTestCases = []roleCmdTestCase{
 		},
 	},
 	{
-		name: "role exists missing role-id with json flag",
-		args: []string{"exists", "--json"},
+		name: "role exists missing role-id with output json flag",
+		args: []string{"exists", "--output", "json"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
 			assert.Contains(t, stdout, "HELP LONG")
 		},
@@ -92,7 +92,7 @@ var roleExistsCmdTestCases = []roleCmdTestCase{
 	},
 	{
 		name: "role exists returns json true",
-		args: []string{"exists", "--json", "meow"},
+		args: []string{"exists", "--output", "json", "meow"},
 
 		roleExists: func(t *testing.T, roleID string) (bool, error) {
 			assert.Equal(t, "meow", roleID)
@@ -105,7 +105,7 @@ var roleExistsCmdTestCases = []roleCmdTestCase{
 	},
 	{
 		name: "role exists returns json false",
-		args: []string{"exists", "--json", "meow"},
+		args: []string{"exists", "--output", "json", "meow"},
 
 		roleExists: func(t *testing.T, roleID string) (bool, error) {
 			assert.Equal(t, "meow", roleID)
@@ -231,7 +231,7 @@ var roleMembersCmdTestCases = []roleCmdTestCase{
 		},
 	},
 	{
-		name: "role members return verbose members in pretty format",
+		name: "role members return verbose members as pretty JSON",
 		args: []string{"members", "-v", "meow"},
 		roleMembers: func(t *testing.T, roleID string) (members []map[string]interface{}, err error) {
 			assert.Equal(t, "meow", roleID)
@@ -243,7 +243,7 @@ var roleMembersCmdTestCases = []roleCmdTestCase{
 		},
 	},
 	{
-		name: "role members return members in pretty format",
+		name: "role members return members as pretty JSON",
 		args: []string{"members", "meow"},
 		roleMembers: func(t *testing.T, roleID string) (members []map[string]interface{}, err error) {
 			assert.Equal(t, "meow", roleID)
@@ -302,7 +302,7 @@ var roleMembershipsCmdTestCases = []roleCmdTestCase{
 		},
 	},
 	{
-		name: "role memberships return memberships in pretty format",
+		name: "role memberships return memberships as pretty JSON",
 		args: []string{"memberships", "meow"},
 		roleMembershipsAll: func(t *testing.T, roleID string) (memberships []string, err error) {
 			assert.Equal(t, "meow", roleID)

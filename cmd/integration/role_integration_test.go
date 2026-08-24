@@ -42,7 +42,7 @@ func TestRoleIntegration(t *testing.T) {
 	})
 
 	t.Run("role exists with json", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("role", "exists", "--json", cli.account+":host:bob")
+		stdOut, stdErr, err := cli.Run("role", "exists", "--output", "json", cli.account+":host:bob")
 		assert.NoError(t, err)
 		assert.Empty(t, stdErr)
 		assert.Equal(t, "{\n  \"exists\": true\n}\n", stdOut)

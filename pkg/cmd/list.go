@@ -5,7 +5,7 @@ import (
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/spf13/cobra"
 )
 
@@ -124,14 +124,7 @@ Examples:
 					return err
 				}
 
-				prettyResult, err := utils.PrettyPrintToJSON(count)
-				if err != nil {
-					return err
-				}
-
-				cmd.Println(prettyResult)
-
-				return nil
+				return output.PlainJSONOrUnix(cmd, count)
 			}
 
 			resources, err := client.Resources(rf)
@@ -144,25 +137,20 @@ Examples:
 				return err
 			}
 
-			var prettyResult string
-
+			var data any
 			if inspect {
-				prettyResult, err = utils.PrettyPrintToJSON(resources)
+				data = resources
 			} else {
 				resourceIDs := make([]string, 0)
-
 				for _, element := range resources {
 					resourceIDs = append(resourceIDs, element["id"].(string))
 				}
-
-				prettyResult, err = utils.PrettyPrintToJSON(resourceIDs)
+				data = resourceIDs
 			}
 
-			if err != nil {
+			if err := output.PlainJSONOrUnix(cmd, data); err != nil {
 				return err
 			}
-
-			cmd.Println(prettyResult)
 
 			return nil
 		},

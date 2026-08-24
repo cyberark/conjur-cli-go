@@ -46,6 +46,7 @@ ssh-rsa test-key laptop
 
 `
 			assert.Contains(t, stdout, expectedOut)
+			assert.Contains(t, stdout, `Command "pubkeys" is deprecated`)
 		},
 	},
 	{
@@ -66,7 +67,7 @@ ssh-rsa test-key laptop
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Error(t, err)
-			assert.Empty(t, stdout)
+			assert.Contains(t, stdout, `Command "pubkeys" is deprecated`)
 			assert.Contains(t, stderr, "Error: public keys endpoint is not available on this server: the server may not support this feature\n")
 		},
 	},
@@ -78,7 +79,7 @@ ssh-rsa test-key laptop
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Error(t, err)
-			assert.Empty(t, stdout)
+			assert.Contains(t, stdout, `Command "pubkeys" is deprecated`)
 			assert.Contains(t, stderr, "Error: public keys endpoint is not available on this server: the server may not support this feature\n")
 		},
 	},
@@ -91,7 +92,7 @@ ssh-rsa test-key laptop
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Error(t, err)
-			assert.Empty(t, stdout)
+			assert.Contains(t, stdout, `Command "pubkeys" is deprecated`)
 			assert.Contains(t, stderr, "Error: public keys endpoint is not available on this server: the server may not support this feature\n")
 		},
 	},

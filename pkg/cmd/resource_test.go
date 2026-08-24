@@ -53,8 +53,8 @@ var resourceExistsCmdTestCases = []resourceCmdTestCase{
 		},
 	},
 	{
-		name: "resource exists missing resource-id with json flag",
-		args: []string{"exists", "--json"},
+		name: "resource exists missing resource-id with output json flag",
+		args: []string{"exists", "--output", "json"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
 			assert.Contains(t, stdout, "HELP LONG")
 		},
@@ -85,7 +85,7 @@ var resourceExistsCmdTestCases = []resourceCmdTestCase{
 	},
 	{
 		name: "resource exists returns json true",
-		args: []string{"exists", "--json", "meow"},
+		args: []string{"exists", "--output", "json", "meow"},
 		resourceExists: func(t *testing.T, roleID string) (bool, error) {
 			assert.Equal(t, "meow", roleID)
 
@@ -97,7 +97,7 @@ var resourceExistsCmdTestCases = []resourceCmdTestCase{
 	},
 	{
 		name: "resource exists returns json false",
-		args: []string{"exists", "--json", "meow"},
+		args: []string{"exists", "--output", "json", "meow"},
 		resourceExists: func(t *testing.T, roleID string) (bool, error) {
 			assert.Equal(t, "meow", roleID)
 
@@ -150,7 +150,7 @@ var resourcePermittedRolesCmdTestCases = []resourceCmdTestCase{
 		},
 	},
 	{
-		name: "resource permitted-roles return roles found in pretty format",
+		name: "resource permitted-roles return roles found as pretty JSON",
 		args: []string{"permitted-roles", "meow", "moo"},
 		permittedRoles: func(t *testing.T, resourceID, privilege string) ([]string, error) {
 			assert.Equal(t, "meow", resourceID)

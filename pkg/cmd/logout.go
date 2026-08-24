@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 
 	"github.com/spf13/cobra"
 )
@@ -25,9 +26,10 @@ func newLogoutCmd(loadConfig configLoaderFn) *cobra.Command {
 				return err
 			}
 
-			cmd.Println("Logged out")
-
-			return nil
+			return output.Plain(cmd, map[string]any{"status": "logged_out"}, func() error {
+				cmd.Println("Logged out")
+				return nil
+			})
 		},
 	}
 	return cmd

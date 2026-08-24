@@ -7,7 +7,7 @@ key.txt
 coverage.xml
 cleanup.log
 
-output/
+/output/
 dist/
 dev/tmp
 build_ca_certificate

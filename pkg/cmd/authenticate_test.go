@@ -56,6 +56,40 @@ var authenticateCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "json response with --output yaml",
+		args: []string{"authenticate", "--output", "yaml"},
+		internalAuthenticate: func() ([]byte, error) {
+			return []byte(`{"user":"test"}`), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Equal(t, "user: test\n", stdout)
+		},
+	},
+	{
+		name: "json response with --output table",
+		args: []string{"authenticate", "--output", "table"},
+		internalAuthenticate: func() ([]byte, error) {
+			return []byte(`{"user":"test"}`), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Contains(t, stdout, "USER")
+			assert.Contains(t, stdout, "test")
+		},
+	},
+	{
+		name: "header format rejects --output",
+		args: []string{"authenticate", "-H", "--output", "json"},
+		internalAuthenticate: func() ([]byte, error) {
+			return []byte(`{"user":"test"}`), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stderr, "Error: --output cannot be combined with --header")
+			assert.Empty(t, stdout)
+		},
+	},
+	{
 		name: "header format: json response",
 		args: []string{"authenticate", "-H"},
 		internalAuthenticate: func() ([]byte, error) {

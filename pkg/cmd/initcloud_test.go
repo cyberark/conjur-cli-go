@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var initCloudCmdTestCases = []struct {
@@ -48,6 +50,17 @@ cc_timeout: 300000000000
 			assert.Equal(t, expectedConjurrc, string(data))
 			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
 			assert.Contains(t, stdout, "Wrote certificate to")
+		},
+	},
+	{
+		name: "writes conjurrc with output json",
+		args: []string{"init", "cloud", "-u=https://tenant.secretsmgr.cyberark.cloud", "--ca-cert=conjur-server.pem", "--output", "json"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
+			var result map[string]any
+			require.NoError(t, json.Unmarshal([]byte(stdout), &result))
+			assert.Equal(t, "initialized", result["status"])
+			assert.Equal(t, conjurrcInTmpDir, result["conjurrc_path"])
+			assert.NotEmpty(t, result["cert_path"])
 		},
 	},
 	{

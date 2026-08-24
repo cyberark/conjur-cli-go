@@ -431,6 +431,14 @@ var deleteCmdTestCases = []struct {
 			assert.Contains(t, stdout, output)
 		},
 	},
+	{
+		name: "issuer is deleted with output json",
+		args: []string{"delete", "--id", "test-issuer", "--output", "json"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.JSONEq(t, `{"id":"test-issuer","status":"deleted"}`, stdout)
+		},
+	},
 }
 
 func TestDeleteIssuerCmd(t *testing.T) {
@@ -618,6 +626,19 @@ var getIssuerCmdTestCases = []struct {
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			output := "{\n  \"id\": \"test-issuer\",\n  \"type\": \"\",\n  \"max_ttl\": 0,\n  \"data\": null\n}\n"
 			assert.Contains(t, stdout, output)
+		},
+	},
+	{
+		name: "issuer retrieved as yaml",
+		args: []string{"get", "--id", "test-issuer", "--output", "yaml"},
+		issuer: api.Issuer{
+			ID:   "test-issuer",
+			Type: "aws",
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.Contains(t, stdout, "id: test-issuer")
+			assert.Contains(t, stdout, "type: aws")
+			assert.NotContains(t, stdout, "\"id\": \"test-issuer\"")
 		},
 	},
 }

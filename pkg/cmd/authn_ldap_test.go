@@ -39,11 +39,11 @@ func (m mockLdapGroupClient) LdapDeleteGroupMapping(serviceID, groupName string)
 // --- User mock ---
 
 type mockLdapUserClient struct {
-	t                  *testing.T
-	createUserMapping  func(*testing.T, string, string, []string) (*conjurapi.LdapUserMappingResponse, error)
-	showUserMapping    func(*testing.T, string, string) (*conjurapi.LdapUserMappingResponse, error)
-	listUserMappings   func(*testing.T, string) (*conjurapi.LdapMappingListResponse, error)
-	deleteUserMapping  func(*testing.T, string, string) error
+	t                 *testing.T
+	createUserMapping func(*testing.T, string, string, []string) (*conjurapi.LdapUserMappingResponse, error)
+	showUserMapping   func(*testing.T, string, string) (*conjurapi.LdapUserMappingResponse, error)
+	listUserMappings  func(*testing.T, string) (*conjurapi.LdapMappingListResponse, error)
+	deleteUserMapping func(*testing.T, string, string) error
 }
 
 func (m mockLdapUserClient) LdapCreateUserMapping(serviceID, username string, roles []string) (*conjurapi.LdapUserMappingResponse, error) {
@@ -77,7 +77,7 @@ type ldapGroupCmdTestCase struct {
 
 var ldapGroupCmdTestCases = []ldapGroupCmdTestCase{
 	{
-		name: "groups create success table",
+		name: "groups create success plain",
 		args: []string{"authn-ldap", "--id", "ad-prod", "groups", "create", "devs", "--roles", "dev-role"},
 		createGroupMapping: func(t *testing.T, serviceID, groupName string, roles []string) (*conjurapi.LdapGroupMappingResponse, error) {
 			assert.Equal(t, "ad-prod", serviceID)
@@ -88,6 +88,9 @@ var ldapGroupCmdTestCases = []ldapGroupCmdTestCase{
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.NoError(t, err)
 			assert.Empty(t, stderr)
+			assert.Contains(t, stdout, "Key")
+			assert.Contains(t, stdout, "Value")
+			assert.Contains(t, stdout, "ldap_group")
 			assert.Contains(t, stdout, "devs")
 			assert.Contains(t, stdout, "dev-role")
 		},
@@ -137,6 +140,9 @@ var ldapGroupCmdTestCases = []ldapGroupCmdTestCase{
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.NoError(t, err)
+			assert.Contains(t, stdout, "Key")
+			assert.Contains(t, stdout, "Value")
+			assert.Contains(t, stdout, "ldap_group")
 			assert.Contains(t, stdout, "admins")
 			assert.Contains(t, stdout, "admin-role")
 		},
@@ -153,7 +159,7 @@ var ldapGroupCmdTestCases = []ldapGroupCmdTestCase{
 		},
 	},
 	{
-		name: "groups list success table",
+		name: "groups list success plain",
 		args: []string{"authn-ldap", "--id", "ad-prod", "groups", "list"},
 		listGroupMappings: func(t *testing.T, serviceID string) (*conjurapi.LdapMappingListResponse, error) {
 			assert.Equal(t, "ad-prod", serviceID)
@@ -161,8 +167,7 @@ var ldapGroupCmdTestCases = []ldapGroupCmdTestCase{
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.NoError(t, err)
-			assert.Contains(t, stdout, "admins")
-			assert.Contains(t, stdout, "devs")
+			assert.Equal(t, "admins\ndevs\n", stdout)
 		},
 	},
 	{
@@ -203,6 +208,17 @@ var ldapGroupCmdTestCases = []ldapGroupCmdTestCase{
 		},
 	},
 	{
+		name: "groups delete success with output json",
+		args: []string{"authn-ldap", "--id", "ad-prod", "--output", "json", "groups", "delete", "admins"},
+		deleteGroupMapping: func(t *testing.T, serviceID, groupName string) error {
+			return nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.JSONEq(t, `{"group":"admins","status":"deleted"}`, stdout)
+		},
+	},
+	{
 		name: "groups delete API error",
 		args: []string{"authn-ldap", "--id", "ad-prod", "groups", "delete", "admins"},
 		deleteGroupMapping: func(t *testing.T, serviceID, groupName string) error {
@@ -218,7 +234,7 @@ var ldapGroupCmdTestCases = []ldapGroupCmdTestCase{
 		args: []string{"authn-ldap", "--id", "ad-prod", "--output", "xml", "groups", "list"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Error(t, err)
-			assert.Contains(t, err.Error(), "invalid output format")
+			assert.Contains(t, stderr, "unrecognized output format")
 		},
 	},
 	{
@@ -274,7 +290,7 @@ type ldapUserCmdTestCase struct {
 
 var ldapUserCmdTestCases = []ldapUserCmdTestCase{
 	{
-		name: "users create success table",
+		name: "users create success plain",
 		args: []string{"authn-ldap", "--id", "ad-prod", "users", "create", "jan.k", "--roles", "special-role"},
 		createUserMapping: func(t *testing.T, serviceID, username string, roles []string) (*conjurapi.LdapUserMappingResponse, error) {
 			assert.Equal(t, "ad-prod", serviceID)
@@ -285,6 +301,8 @@ var ldapUserCmdTestCases = []ldapUserCmdTestCase{
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.NoError(t, err)
 			assert.Empty(t, stderr)
+			assert.Contains(t, stdout, "Key")
+			assert.Contains(t, stdout, "Value")
 			assert.Contains(t, stdout, "jan.k")
 			assert.Contains(t, stdout, "special-role")
 		},
@@ -334,6 +352,8 @@ var ldapUserCmdTestCases = []ldapUserCmdTestCase{
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.NoError(t, err)
+			assert.Contains(t, stdout, "Key")
+			assert.Contains(t, stdout, "Value")
 			assert.Contains(t, stdout, "jan.k")
 			assert.Contains(t, stdout, "special-role")
 		},
@@ -350,7 +370,7 @@ var ldapUserCmdTestCases = []ldapUserCmdTestCase{
 		},
 	},
 	{
-		name: "users list success table",
+		name: "users list success plain",
 		args: []string{"authn-ldap", "--id", "ad-prod", "users", "list"},
 		listUserMappings: func(t *testing.T, serviceID string) (*conjurapi.LdapMappingListResponse, error) {
 			assert.Equal(t, "ad-prod", serviceID)
@@ -358,8 +378,7 @@ var ldapUserCmdTestCases = []ldapUserCmdTestCase{
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.NoError(t, err)
-			assert.Contains(t, stdout, "jan.k")
-			assert.Contains(t, stdout, "admin.user")
+			assert.Equal(t, "jan.k\nadmin.user\n", stdout)
 		},
 	},
 	{
@@ -400,6 +419,17 @@ var ldapUserCmdTestCases = []ldapUserCmdTestCase{
 		},
 	},
 	{
+		name: "users delete success with output json",
+		args: []string{"authn-ldap", "--id", "ad-prod", "--output", "json", "users", "delete", "jan.k"},
+		deleteUserMapping: func(t *testing.T, serviceID, username string) error {
+			return nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.JSONEq(t, `{"status":"deleted","username":"jan.k"}`, stdout)
+		},
+	},
+	{
 		name: "users delete API error",
 		args: []string{"authn-ldap", "--id", "ad-prod", "users", "delete", "jan.k"},
 		deleteUserMapping: func(t *testing.T, serviceID, username string) error {
@@ -415,7 +445,7 @@ var ldapUserCmdTestCases = []ldapUserCmdTestCase{
 		args: []string{"authn-ldap", "--id", "ad-prod", "--output", "xml", "users", "list"},
 		assert: func(t *testing.T, stdout, stderr string, err error) {
 			assert.Error(t, err)
-			assert.Contains(t, err.Error(), "invalid output format")
+			assert.Contains(t, stderr, "unrecognized output format")
 		},
 	},
 	{

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -9,6 +8,7 @@ import (
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 )
 
 type createTokenClientFactoryFunc func(*cobra.Command) (createTokenClient, error)
@@ -72,12 +72,8 @@ Example:
 			if err != nil {
 				return err
 			}
-			indentedResponse, err := json.MarshalIndent(hostCreateResponse, "", "  ")
-			if err != nil {
-				return err
-			}
-			cmd.Println(string(indentedResponse))
-			return nil
+
+			return output.PlainJSONOrUnix(cmd, hostCreateResponse)
 		},
 	}
 
@@ -188,9 +184,8 @@ Examples:
 			if err != nil {
 				return err
 			}
-			indentedResponse, err := json.MarshalIndent(tokenCreateResponse, "", "  ")
-			cmd.Println(string(indentedResponse))
-			return err
+
+			return output.PlainJSONOrUnix(cmd, tokenCreateResponse)
 		},
 	}
 
@@ -251,9 +246,10 @@ Example:
 				return err
 			}
 
-			cmd.Println("Token has been revoked.")
-
-			return err
+			return output.Plain(cmd, map[string]any{"token": token, "status": "revoked"}, func() error {
+				cmd.Println("Token has been revoked.")
+				return nil
+			})
 		},
 	}
 

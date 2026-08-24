@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
+
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 
 	"github.com/spf13/cobra"
 )
@@ -28,19 +30,21 @@ func newWhoamiCommand(clientFactory whoamiClientFactoryFunc) *cobra.Command {
 				return err
 			}
 
-			userData, err := client.WhoAmI()
+			raw, err := client.WhoAmI()
 			if err != nil {
 				return err
 			}
 
-			userData, err = utils.PrettyPrintJSON(userData)
-			if err != nil {
+			var userData any
+			if err := json.Unmarshal(raw, &userData); err != nil {
 				return err
 			}
 
-			cmd.Println(string(userData))
-
-			return nil
+			// Default (non-TTY, no --output) resolves to FormatPlain, which
+			// output.Render deliberately does not handle generically (each
+			// command's plain shape differs). whoami's plain shape is the
+			// same pretty-JSON text it always printed.
+			return output.PlainJSONOrUnix(cmd, userData)
 		},
 	}
 }

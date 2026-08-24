@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/spf13/cobra"
 )
 
@@ -66,9 +67,10 @@ Examples:
 				return err
 			}
 
-			cmd.Println(result)
-
-			return nil
+			return output.Plain(cmd, map[string]any{"allowed": result}, func() error {
+				cmd.Println(result)
+				return nil
+			})
 		},
 	}
 

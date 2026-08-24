@@ -111,9 +111,34 @@ var policyCmdTestCases = []policyCmdTestCase{
 	},
 	{
 		name: "fetch subcommand invalid output type",
-		args: []string{"policy", "fetch", "-b", "meow", "-o", "xml"},
+		args: []string{"policy", "fetch", "-b", "meow", "--output", "xml"},
 		assert: func(t *testing.T, stdout, stderr string, err error, pathToTmpDir string) {
-			assert.Contains(t, stderr, "Error: output format must be 'yaml' or 'json'\n")
+			assert.Contains(t, stderr, "Error: unrecognized output format")
+		},
+	},
+	{
+		name: "fetch rejects custom-columns",
+		args: []string{"policy", "fetch", "-b", "staging", "--output", "custom-columns=A:.a"},
+		assert: func(t *testing.T, stdout, stderr string, err error, pathToTmpDir string) {
+			assert.Contains(t, stderr, "is not supported for this command")
+		},
+	},
+	{
+		name: "fetch --file forces non-interactive yaml regardless of --output",
+		args: []string{"policy", "fetch", "-b", "staging", "--file", "/tmp/doesnotexist/out.yml"},
+		fetchPolicy: func(
+			t *testing.T,
+			policyBranch string,
+			returnJSON bool,
+			policyTreeDepth uint,
+			sizeLimit uint,
+		) ([]byte, error) {
+			assert.False(t, returnJSON)
+			return []byte("root: !policy\n"), nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error, pathToTmpDir string) {
+			// directory doesn't exist — validateFilePath catches it before any interactive concern
+			assert.Error(t, err)
 		},
 	},
 	{
@@ -183,7 +208,7 @@ var policyCmdTestCases = []policyCmdTestCase{
 	},
 	{
 		name: "fetch subcommand with good JSON response",
-		args: []string{"policy", "fetch", "-b", "meow", "-o", "json"},
+		args: []string{"policy", "fetch", "-b", "meow", "--output", "json"},
 		fetchPolicy: func(
 			t *testing.T,
 			policyBranch string,
@@ -234,6 +259,28 @@ var policyCmdTestCases = []policyCmdTestCase{
 		},
 		assert: func(t *testing.T, stdout, stderr string, err error, pathToTmpDir string) {
 			assert.Contains(t, stderr, "Error: some error")
+		},
+	},
+	{
+		name: "load explicit output json",
+		args: []string{"policy", "load", "-b", "meow", "-f", "$TMPFILE", "--output", "json"},
+		beforeTest: func(t *testing.T, pathToTmpfile string) {
+			err := os.WriteFile(pathToTmpfile, []byte("policy file content"), 0644)
+			assert.NoError(t, err)
+		},
+		loadPolicy: func(
+			t *testing.T,
+			mode conjurapi.PolicyMode,
+			policyBranch string,
+			policySrc io.Reader,
+		) (*conjurapi.PolicyResponse, error) {
+			return &conjurapi.PolicyResponse{
+				Version: 1234,
+			}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error, pathToTmpDir string) {
+			assert.NoError(t, err)
+			assert.Contains(t, stdout, `"version": 1234`)
 		},
 	},
 }
@@ -421,6 +468,34 @@ func sharedLoadPolicyCmdTestCases(
 				assert.Contains(t, stdout, "message")
 				assert.Contains(t, stdout, "Invalid YAML")
 				assert.Contains(t, stderr, "Dry run policy 'meow'")
+			},
+		},
+		{
+			name: fmt.Sprintf("%s subcommand dryrun preserves server field order in default plain output", subcommand),
+			args: []string{"policy", subcommand, "-b", "meow", "--dry-run", "-f", "-"},
+			dryRunPolicy: func(
+				t *testing.T,
+				mode conjurapi.PolicyMode,
+				policyBranch string,
+				policySrc io.Reader,
+			) (*conjurapi.DryRunPolicyResponse, error) {
+				return &conjurapi.DryRunPolicyResponse{
+					Status: "Invalid YAML",
+					Errors: []conjurapi.DryRunError{
+						{Message: "some error"},
+					},
+				}, nil
+			},
+			assert: func(t *testing.T, stdout, stderr string, err error, pathToTmpDir string) {
+				// json.Marshal always sorts map keys alphabetically, so
+				// this would fail if the default plain path round-tripped
+				// the response through a generic map instead of printing
+				// the original, order-preserving bytes.
+				statusIdx := strings.Index(stdout, "\"status\"")
+				errorsIdx := strings.Index(stdout, "\"errors\"")
+				if statusIdx == -1 || errorsIdx == -1 || statusIdx > errorsIdx {
+					t.Fatalf("expected \"status\" to appear before \"errors\" in stdout, got %q", stdout)
+				}
 			},
 		},
 	}

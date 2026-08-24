@@ -28,7 +28,7 @@ func TestResourceIntegration(t *testing.T) {
 	})
 
 	t.Run("resource exists with json", func(t *testing.T) {
-		stdOut, stdErr, err := cli.Run("resource", "exists", "--json", cli.account+":variable:meow")
+		stdOut, stdErr, err := cli.Run("resource", "exists", "--output", "json", cli.account+":variable:meow")
 		assert.NoError(t, err)
 		assert.Empty(t, stdErr)
 		assert.Equal(t, "{\n  \"exists\": true\n}\n", stdOut)

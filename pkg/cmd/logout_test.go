@@ -34,6 +34,16 @@ var logoutTestCases = []struct {
 		},
 	},
 	{
+		name:   "logout with output json",
+		args:   []string{"logout", "--output", "json"},
+		config: conjurapi.Config{},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Empty(t, stderr)
+			assert.JSONEq(t, `{"status":"logged_out"}`, stdout)
+		},
+	},
+	{
 		name:      "logout with config error",
 		args:      []string{"logout"},
 		config:    conjurapi.Config{},

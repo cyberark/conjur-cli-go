@@ -98,6 +98,19 @@ var loginTestCases = []struct {
 		},
 	},
 	{
+		name:         "login with output json",
+		args:         []string{"login", "-i", "alice", "-p", "secret", "--output", "json"},
+		conjurConfig: defaultConjurConfig,
+		loginWithPromptFallback: func(t *testing.T, client clients.ConjurClient, username string, password string) (*authn.LoginPair, error) {
+			return &authn.LoginPair{}, nil
+		},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.NoError(t, err)
+			assert.Empty(t, stderr)
+			assert.JSONEq(t, `{"status":"logged_in"}`, stdout)
+		},
+	},
+	{
 		name:         "login returns error",
 		args:         []string{"login", "-i", "alice", "-p", "secret"},
 		conjurConfig: defaultConjurConfig,
