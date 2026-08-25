@@ -289,6 +289,17 @@ pipeline {
             }
           }
         }
+
+        stage('Scan with govulncheck') {
+          steps {
+            script {
+              INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'go install golang.org/x/vuln/cmd/govulncheck@latest'
+              catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh '$(go env GOPATH)/bin/govulncheck -mode=binary ./pristine-checkout/dist/goreleaser/binaries/conjur_linux_amd64_v1'
+              }
+            }
+          }
+        }
       }
     }
 
