@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Nothing should go in this section, please add to the latest unreleased version
   (and update the corresponding date), or add a new version.
 
+## [9.3.1] - 2026-08-21
+
+### Security
+- Bump Go to 1.26.7
+- Bump `golang.org/x/text` to v0.39.0 to resolve CVE-2026-56852
+
 ## [9.3.0] - 2026-08-15
 
 ### Added
