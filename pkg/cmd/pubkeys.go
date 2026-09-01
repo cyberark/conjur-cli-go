@@ -45,9 +45,9 @@ Examples:
 		Deprecated:   "the public keys endpoint has been removed from the server; this command has no effect and will be removed in a future release.",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "username")
+			if err != nil {
+				return err
 			}
 
 			username := args[0]

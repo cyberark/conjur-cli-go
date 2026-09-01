@@ -41,28 +41,28 @@ var checkCmdTestCases = []struct {
 		name: "check no args",
 		args: []string{"check"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 2 arg(s), received 0")
 		},
 	},
 	{
 		name: "check missing resourceID",
 		args: []string{"check", "write"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 2 arg(s), received 1")
 		},
 	},
 	{
 		name: "check missing privilege",
 		args: []string{"check", "dev:variable:somevariable"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 2 arg(s), received 1")
 		},
 	},
 	{
 		name: "check with role flag and missing params",
 		args: []string{"check", "-r", "dev:user:alice"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 2 arg(s), received 0")
 		},
 	},
 	{

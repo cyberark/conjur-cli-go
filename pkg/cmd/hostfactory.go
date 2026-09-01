@@ -55,6 +55,9 @@ func newHostsCreateCmd(clientFactory createHostClientFactoryFunc) *cobra.Command
 Example:
 - conjur hostfactory hosts create --id TestHost --token 1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da
 `,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "token", "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			token, err := cmd.Flags().GetString("token")
 			if err != nil {
@@ -230,6 +233,9 @@ Example:
 - conjur hostfactory tokens revoke --token 1bfpyr3y41kb039ykpyf2hm87ez2dv9hdc3r5sh1n2h9z7j22mga2da
 `,
 
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "token")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			token, err := cmd.Flags().GetString("token")
 			if err != nil {

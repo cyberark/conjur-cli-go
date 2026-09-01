@@ -49,14 +49,14 @@ var resourceExistsCmdTestCases = []resourceCmdTestCase{
 		name: "resource exists missing resource-id",
 		args: []string{"exists"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 1 arg(s), received 0")
 		},
 	},
 	{
 		name: "resource exists missing resource-id with output json flag",
 		args: []string{"exists", "--output", "json"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 1 arg(s), received 0")
 		},
 	},
 	{
@@ -139,14 +139,14 @@ var resourcePermittedRolesCmdTestCases = []resourceCmdTestCase{
 		name: "resource permitted-roles missing resource-id",
 		args: []string{"permitted-roles", "execute"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 2 arg(s), received 1")
 		},
 	},
 	{
 		name: "resource permitted-roles missing privilege",
 		args: []string{"permitted-roles", "meow"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 2 arg(s), received 1")
 		},
 	},
 	{
@@ -207,7 +207,7 @@ var resourceShowCmdTestCases = []resourceCmdTestCase{
 		name: "resource show missing resource-id",
 		args: []string{"show"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 1 arg(s), received 0")
 		},
 	},
 	{

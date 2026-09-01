@@ -36,15 +36,12 @@ Examples:
 - conjur check -r user:someuser dev:variable:somevariable read
 - conjur check -r dev:user:someuser dev:variable:somevariable read`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var resourceID string
-			var privilege string
-
-			if len(args) < 2 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "resource-id", "privilege")
+			if err != nil {
+				return err
 			}
 
-			resourceID, privilege = args[0], args[1]
+			resourceID, privilege := args[0], args[1]
 
 			roleID, err := cmd.Flags().GetString("role")
 			if err != nil {

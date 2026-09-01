@@ -52,6 +52,9 @@ func newCreateIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 
 Examples:
  - conjur issuer create --id my-issuer --max-ttl 3000 --type aws --data '{"access_key_id": "my_key_id", "secret_access_key": "my_key_secret"}'`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id", "type", "max-ttl", "data")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
@@ -143,6 +146,9 @@ func newDeleteIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 		Long: `Delete an issuer
 Examples:
  - conjur issuer delete --id my-issuer`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
@@ -197,6 +203,9 @@ func newGetIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 		Long: `Retrieve information about an issuer
 Examples:
  - conjur issuer get --id my-issuer`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
@@ -262,6 +271,9 @@ You can update the issuer's maximum validity (max-ttl) and/or the data argument'
 Examples:
  - conjur issuer update --id my-issuer --data '{"access_key_id": "new_key_id", "secret_access_key": "new_key_secret"}'
  - conjur issuer update --id my-issuer --max-ttl 5000`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {

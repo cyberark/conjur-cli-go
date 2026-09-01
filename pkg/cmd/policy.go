@@ -285,7 +285,10 @@ func newPolicyLoadCommand(clientFactory policyClientFactoryFunc, config conjurap
 Examples:
 - conjur policy load -b staging -f /policy/staging.yml`,
 		SilenceUsage: true,
-		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePost),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "branch", "file")
+		},
+		RunE: loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePost),
 	}
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
 	if !config.IsSaaS() {
@@ -306,7 +309,10 @@ func newPolicyFetchCommand(clientFactory policyClientFactoryFunc) *cobra.Command
 Examples:
 - conjur policy fetch -b staging --output json`,
 		SilenceUsage: true,
-		RunE:         fetchPolicyCommandRunner(clientFactory),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "branch")
+		},
+		RunE: fetchPolicyCommandRunner(clientFactory),
 	}
 
 	cmd.PersistentFlags().UintP("depth", "D", 64, "The max depth of fetched policy")
@@ -325,7 +331,10 @@ func newPolicyUpdateCommand(clientFactory policyClientFactoryFunc, config conjur
 Examples:
 - conjur policy update -b staging -f /policy/staging.yml`,
 		SilenceUsage: true,
-		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePatch),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "branch", "file")
+		},
+		RunE: loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePatch),
 	}
 
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
@@ -347,7 +356,10 @@ func newPolicyReplaceCommand(clientFactory policyClientFactoryFunc, config conju
 Examples:
 - conjur policy replace -b staging -f /policy/staging.yml`,
 		SilenceUsage: true,
-		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePut),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "branch", "file")
+		},
+		RunE: loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePut),
 	}
 
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")

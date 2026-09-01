@@ -55,14 +55,14 @@ var roleExistsCmdTestCases = []roleCmdTestCase{
 		name: "role exists missing role-id",
 		args: []string{"exists"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 1 arg(s), received 0")
 		},
 	},
 	{
 		name: "role exists missing role-id with output json flag",
 		args: []string{"exists", "--output", "json"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 1 arg(s), received 0")
 		},
 	},
 	{
@@ -161,7 +161,7 @@ var roleShowCmdTestCases = []roleCmdTestCase{
 		name: "role show missing role-id",
 		args: []string{"show"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 1 arg(s), received 0")
 		},
 	},
 	{
@@ -220,14 +220,14 @@ var roleMembersCmdTestCases = []roleCmdTestCase{
 		name: "role members missing role-id",
 		args: []string{"members"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 1 arg(s), received 0")
 		},
 	},
 	{
 		name: "role members missing role-id with verbose flag",
 		args: []string{"members", "--verbose"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 1 arg(s), received 0")
 		},
 	},
 	{
@@ -298,7 +298,7 @@ var roleMembershipsCmdTestCases = []roleCmdTestCase{
 		name: "role memberships missing role-id",
 		args: []string{"memberships"},
 		assert: func(t *testing.T, stdout string, stderr string, err error) {
-			assert.Contains(t, stdout, "HELP LONG")
+			assert.ErrorContains(t, err, "accepts 1 arg(s), received 0")
 		},
 	},
 	{

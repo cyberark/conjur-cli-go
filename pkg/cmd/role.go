@@ -42,9 +42,9 @@ Examples:
 - conjur role exists dev:layer:somelayer`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "role-id")
+			if err != nil {
+				return err
 			}
 
 			roleID := args[0]
@@ -81,9 +81,9 @@ Examples:
 -   conjur role show dev:user:someuser
 -   conjur role show dev:group:somegroup`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "role-id")
+			if err != nil {
+				return err
 			}
 
 			roleID := args[0]
@@ -118,9 +118,9 @@ Examples:
 -   conjur role members --verbose dev:host:bob`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "role-id")
+			if err != nil {
+				return err
 			}
 
 			roleID := args[0]
@@ -175,9 +175,9 @@ Examples:
 -   conjur role memberships dev:layer:somelayer
 -   conjur role memberships dev:group:somegroup`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "role-id")
+			if err != nil {
+				return err
 			}
 
 			roleID := args[0]

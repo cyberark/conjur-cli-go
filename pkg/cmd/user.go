@@ -113,9 +113,10 @@ Examples:
 				return err
 			}
 
-			cmd.Println("Password changed")
-
-			return nil
+			return output.Plain(cmd, map[string]any{"status": "password_changed"}, func() error {
+				cmd.Println("Password changed")
+				return nil
+			})
 		},
 	}
 

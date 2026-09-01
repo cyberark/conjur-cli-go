@@ -38,9 +38,9 @@ Examples:
 - conjur resource exists dev:variable:somevariable
 - conjur resource exists dev:host:somehost`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "resource-id")
+			if err != nil {
+				return err
 			}
 
 			resourceID := args[0]
@@ -77,9 +77,9 @@ Examples:
 -   conjur resource permitted-roles dev:variable:somevariable execute
 -   conjur resource permitted-roles dev:user:someuser read`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 2 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "resource-id", "privilege")
+			if err != nil {
+				return err
 			}
 
 			resourceID, privilege := args[0], args[1]
@@ -112,9 +112,9 @@ Examples:
 -   conjur resource show dev:user:someuser
 -   conjur resource show dev:host:somehost`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "resource-id")
+			if err != nil {
+				return err
 			}
 
 			resourceID := args[0]

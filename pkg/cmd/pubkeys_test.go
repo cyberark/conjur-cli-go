@@ -32,6 +32,13 @@ var pubKeysCmdTestCases = []struct {
 		},
 	},
 	{
+		name: "missing username",
+		args: []string{"pubkeys"},
+		assert: func(t *testing.T, stdout, stderr string, err error) {
+			assert.ErrorContains(t, err, "accepts 1 arg(s), received 0")
+		},
+	},
+	{
 		name: "display user public keys",
 		args: []string{"pubkeys", "alice"},
 		pubKeys: func(t *testing.T, kind string, identifier string) ([]byte, error) {

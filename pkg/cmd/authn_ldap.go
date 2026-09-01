@@ -50,8 +50,14 @@ Examples:
 - conjur authn-ldap groups create admins --roles admin-role --id ad-prod
 - conjur authn-ldap groups create dev-team --roles dev-role,readonly --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id", "roles")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "group-name")
+			if err != nil {
+				return err
+			}
 			groupName := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")
@@ -96,8 +102,14 @@ func newLdapGroupsShowCmd(clientFactory ldapGroupMappingClientFactory) *cobra.Co
 Examples:
 - conjur authn-ldap groups show admins --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "group-name")
+			if err != nil {
+				return err
+			}
 			groupName := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")
@@ -131,6 +143,9 @@ func newLdapGroupsListCmd(clientFactory ldapGroupMappingClientFactory) *cobra.Co
 Examples:
 - conjur authn-ldap groups list --id ad-prod`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serviceID, err := cmd.Flags().GetString("id")
 			if err != nil {
@@ -164,8 +179,14 @@ Conjur roles from this LDAP group at login time.
 Examples:
 - conjur authn-ldap groups delete admins --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "group-name")
+			if err != nil {
+				return err
+			}
 			groupName := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")
@@ -204,8 +225,14 @@ Examples:
 - conjur authn-ldap users create jan.k --roles special-role --id ad-prod
 - conjur authn-ldap users create admin.user --roles admin-role,audit-role --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id", "roles")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "username")
+			if err != nil {
+				return err
+			}
 			username := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")
@@ -250,8 +277,14 @@ func newLdapUsersShowCmd(clientFactory ldapUserMappingClientFactory) *cobra.Comm
 Examples:
 - conjur authn-ldap users show jan.k --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "username")
+			if err != nil {
+				return err
+			}
 			username := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")
@@ -285,6 +318,9 @@ func newLdapUsersListCmd(clientFactory ldapUserMappingClientFactory) *cobra.Comm
 Examples:
 - conjur authn-ldap users list --id ad-prod`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serviceID, err := cmd.Flags().GetString("id")
 			if err != nil {
@@ -318,8 +354,14 @@ Conjur roles from this individual mapping at login time.
 Examples:
 - conjur authn-ldap users delete jan.k --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "username")
+			if err != nil {
+				return err
+			}
 			username := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")

@@ -29,6 +29,9 @@ Examples:
 - conjur authenticator enable -i authn-iam/prod
 - conjur authenticator enable --id authn-jwt/myVendor`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ID, err := cmd.Flags().GetString("id")
 			if err != nil {
@@ -71,6 +74,9 @@ Examples:
 - conjur authenticator disable -i authn-iam/prod
 - conjur authenticator disable --id authn-jwt/myVendor`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ID, err := cmd.Flags().GetString("id")
 			if err != nil {

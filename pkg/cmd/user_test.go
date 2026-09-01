@@ -209,6 +209,17 @@ var userChangePasswordCmdTestCases = []struct {
 			assert.Contains(t, stdout, "Error: client factory error")
 		},
 	},
+	{
+		name: "change password with output json",
+		args: []string{"user", "change-password", "-p", "SUp3r$3cr3t!!", "--output", "json"},
+		changeCurrentUserPassword: func(t *testing.T, newPassword string) ([]byte, error) {
+			return []byte(""), nil
+		},
+		assert: func(t *testing.T, stdout string, err error) {
+			assert.NoError(t, err)
+			assert.JSONEq(t, `{"status":"password_changed"}`, stdout)
+		},
+	},
 }
 
 func TestUserChangePasswordCmd(t *testing.T) {

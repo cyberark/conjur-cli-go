@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -43,7 +44,8 @@ func newVariableCmd(
 	variableSetCmd.Flags().StringP("id", "i", "", "(Required) Provide variable identifier")
 	variableSetCmd.MarkFlagRequired("id")
 	variableSetCmd.Flags().StringP("value", "v", "", "Set the value of the specified variable")
-	variableSetCmd.Flags().StringP("file", "f", "", "Set the value of the specified variable based on file contents")
+	variableSetCmd.Flags().StringP("file", "f", "", "Set the value of the specified variable based on file contents. Use \"-\" to read from stdin")
+	variableSetCmd.Flags().Bool("trim-whitespace", false, "Trim leading and trailing whitespace from the resolved value")
 
 	return variableCmd
 }
@@ -110,6 +112,9 @@ Examples:
 - conjur variable get -i secret -v 1
 		`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := cmd.Flags().GetStringSlice("id")
 			if err != nil {
@@ -168,11 +173,18 @@ func newVariableSetCmd(clientFactory variableSetClientFactoryFunc) *cobra.Comman
 		Short: "Set the value of an Idira Secrets Manager variable",
 		Long: `Set the value of an Idira Secrets Manager variable.
 
+If neither --value nor --file is given and --interactive is set, you will
+be prompted for the value. The prompt input is masked and not displayed.
+
 Examples:
 - conjur variable set -i secret -v value
 - conjur variable set -i secret -f file.txt
+- echo -n "value" | conjur variable set -i secret -f -
 		`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := cmd.Flags().GetString("id")
 			if err != nil {
@@ -189,17 +201,46 @@ Examples:
 				return err
 			}
 
+			if value == "" && file == "" {
+				interactive, err := interactivePromptingEnabled(cmd)
+				if err != nil {
+					return err
+				}
+				if interactive {
+					value, err = askForSecretValue(id)
+					if err != nil {
+						return err
+					}
+				}
+			}
+
 			// Validate that exactly one of --value or --file is provided
 			if (value == "" && file == "") || (value != "" && file != "") {
 				return fmt.Errorf("must specify exactly one of --value or --file")
 			}
 
 			if file != "" {
-				valueBytes, err := os.ReadFile(file)
-				if err != nil {
-					return fmt.Errorf("failed to read file %s: %w", file, err)
+				if file == "-" {
+					valueBytes, err := io.ReadAll(cmd.InOrStdin())
+					if err != nil {
+						return fmt.Errorf("failed to read value from stdin: %w", err)
+					}
+					value = string(valueBytes)
+				} else {
+					valueBytes, err := os.ReadFile(file)
+					if err != nil {
+						return fmt.Errorf("failed to read file %s: %w", file, err)
+					}
+					value = string(valueBytes)
 				}
-				value = string(valueBytes)
+			}
+
+			trimWhitespace, err := cmd.Flags().GetBool("trim-whitespace")
+			if err != nil {
+				return err
+			}
+			if trimWhitespace {
+				value = strings.TrimSpace(value)
 			}
 
 			client, err := clientFactory(cmd)

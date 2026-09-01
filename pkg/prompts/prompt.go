@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"charm.land/huh/v2"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/huh/v2"
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/cmd/style"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
@@ -22,6 +22,48 @@ import (
 type Option struct {
 	Label string
 	Value string
+}
+
+// isTerminal is a test-overridable seam for term.IsTerminal.
+var isTerminal = term.IsTerminal
+
+// PromptingAvailable reports whether it's safe to attempt an interactive
+// prompt: both stdin and stdout must be real terminals. Callers that want to
+// fill a missing required value via prompting (as opposed to the
+// unconditional "ask if empty" helpers like MaybeAskForUsername) must check
+// this first, so a piped/CI invocation fails fast instead of blocking on a
+// read that will never resolve.
+func PromptingAvailable() bool {
+	return isTerminal(int(os.Stdin.Fd())) && isTerminal(int(os.Stdout.Fd()))
+}
+
+// AskForValue prompts for a single value by name, e.g. a missing required
+// flag or positional argument. Callers must confirm PromptingAvailable()
+// before calling.
+func AskForValue(name string) (string, error) {
+	return input(fmt.Sprintf("Enter a value for %s:", name))
+}
+
+// AskForSecretValue is AskForValue, except the input is masked (not echoed
+// to the terminal), for prompting a secret value rather than an
+// identifier/flag name. Unlike other prompts, it never falls back to huh's
+// accessible (plain-text line) mode: that mode doesn't guarantee the input
+// stays masked, so if a real interactive terminal isn't available on both
+// stdin and stdout, this fails outright rather than risk echoing a secret.
+func AskForSecretValue(name string) (string, error) {
+	if !isTerminal(int(os.Stdin.Fd())) || !isTerminal(int(os.Stdout.Fd())) {
+		return "", fmt.Errorf("value for %s cannot be requested in non-interactive mode", name)
+	}
+	var value string
+	err := huh.NewForm(huh.NewGroup(huh.NewInput().
+		EchoMode(huh.EchoModeNone).
+		Title(fmt.Sprintf("Enter a value for %s (it will not be echoed):", name)).
+		Value(&value).
+		Validate(validateNotEmpty()),
+	)).
+		WithTheme(style.GetTheme()).
+		Run()
+	return strings.TrimSpace(value), err
 }
 
 // AskForPrompt presents a prompt to retrieve a custom message from the user
@@ -234,7 +276,7 @@ func environmentLabel(environmentType conjurapi.EnvironmentType) string {
 }
 
 func passwordInput(title string) (string, error) {
-	if !term.IsTerminal(int(os.Stdin.Fd())) {
+	if !isTerminal(int(os.Stdin.Fd())) {
 		return "", fmt.Errorf("user password cannot be requested in non-interactive mode")
 	}
 	var password string
@@ -296,7 +338,7 @@ func confirm(message, description string) (bool, error) {
 }
 
 func useAccessibleForm() bool {
-	return !term.IsTerminal(int(os.Stdout.Fd()))
+	return !isTerminal(int(os.Stdout.Fd()))
 }
 
 func validateNotEmpty() func(s string) error {
