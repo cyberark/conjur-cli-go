@@ -7,6 +7,7 @@ import (
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/cyberark/conjur-cli-go/pkg/prompts"
 
 	"github.com/spf13/cobra"
@@ -185,10 +186,6 @@ func runInitEnterpriseCommand(cmd *cobra.Command, funcs initCmdFuncs) error {
 	if err != nil {
 		return err
 	}
-	if config.SSLCertPath != "" {
-		cmd.Printf("Wrote certificate to %s\n", config.SSLCertPath)
-	}
-
 	err = writeConjurrc(
 		config,
 		cmdFlagVals.conjurrcFilePath,
@@ -198,8 +195,21 @@ func runInitEnterpriseCommand(cmd *cobra.Command, funcs initCmdFuncs) error {
 		return err
 	}
 
-	cmd.Printf("Wrote configuration to %s\n", cmdFlagVals.conjurrcFilePath)
-	return nil
+	result := map[string]any{
+		"status":        "initialized",
+		"conjurrc_path": cmdFlagVals.conjurrcFilePath,
+	}
+	if config.SSLCertPath != "" {
+		result["cert_path"] = config.SSLCertPath
+	}
+
+	return output.Plain(cmd, result, func() error {
+		if config.SSLCertPath != "" {
+			cmd.Printf("Wrote certificate to %s\n", config.SSLCertPath)
+		}
+		cmd.Printf("Wrote configuration to %s\n", cmdFlagVals.conjurrcFilePath)
+		return nil
+	})
 }
 
 func env(cmd *cobra.Command) conjurapi.EnvironmentType {

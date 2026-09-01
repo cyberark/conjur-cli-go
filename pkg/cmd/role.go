@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/spf13/cobra"
 )
 
@@ -33,27 +33,21 @@ func newRoleExistsCmd(clientFactory roleClientFactoryFunc) *cobra.Command {
 		Use:   "exists <role-id>",
 		Short: "Check if a role exists",
 		Long: `Check if a role exists
-		
-This command requires a [role-id] and includes an optional [--json] 
-flag to return a JSON-formatted result.
-		
+
+This command requires a [role-id].
+
 Examples:
 
 - conjur role exists dev:host:somehost
-- conjur role exists --json dev:layer:somelayer`,
+- conjur role exists dev:layer:somelayer`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
-			}
-
-			roleID := args[0]
-
-			jsonFlag, err := cmd.Flags().GetBool("json")
+			args, err := requirePositionalArgs(cmd, args, "role-id")
 			if err != nil {
 				return err
 			}
+
+			roleID := args[0]
 
 			client, err := clientFactory(cmd)
 			if err != nil {
@@ -65,27 +59,11 @@ Examples:
 				return err
 			}
 
-			if jsonFlag {
-				data := map[string]interface{}{
-					"exists": result,
-				}
-
-				prettyData, err := utils.PrettyPrintToJSON(data)
-				if err != nil {
-					return err
-				}
-
-				cmd.Println(prettyData)
-
-			} else {
-				cmd.Println(result)
-			}
-
-			return nil
+			return output.Plain(cmd, map[string]interface{}{"exists": result}, func() error {
+				return output.PlainBare(cmd, result)
+			})
 		},
 	}
-
-	cmd.Flags().Bool("json", false, "Output a JSON response with field 'exists'")
 
 	return cmd
 }
@@ -103,9 +81,9 @@ Examples:
 -   conjur role show dev:user:someuser
 -   conjur role show dev:group:somegroup`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "role-id")
+			if err != nil {
+				return err
 			}
 
 			roleID := args[0]
@@ -120,14 +98,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 }
@@ -147,9 +118,9 @@ Examples:
 -   conjur role members --verbose dev:host:bob`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "role-id")
+			if err != nil {
+				return err
 			}
 
 			roleID := args[0]
@@ -182,14 +153,7 @@ Examples:
 				}
 			}
 
-			prettyResult, _ := utils.PrettyPrintToJSON(members)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, members)
 		},
 	}
 
@@ -211,9 +175,9 @@ Examples:
 -   conjur role memberships dev:layer:somelayer
 -   conjur role memberships dev:group:somegroup`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "role-id")
+			if err != nil {
+				return err
 			}
 
 			roleID := args[0]
@@ -228,14 +192,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, _ := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 }

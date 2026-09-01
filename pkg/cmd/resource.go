@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/spf13/cobra"
 )
 
@@ -38,17 +38,12 @@ Examples:
 - conjur resource exists dev:variable:somevariable
 - conjur resource exists dev:host:somehost`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
-			}
-
-			resourceID := args[0]
-
-			jsonFlag, err := cmd.Flags().GetBool("json")
+			args, err := requirePositionalArgs(cmd, args, "resource-id")
 			if err != nil {
 				return err
 			}
+
+			resourceID := args[0]
 
 			client, err := clientFactory(cmd)
 			if err != nil {
@@ -60,27 +55,11 @@ Examples:
 				return err
 			}
 
-			if jsonFlag {
-				data := map[string]interface{}{
-					"exists": result,
-				}
-
-				prettyData, err := utils.PrettyPrintToJSON(data)
-				if err != nil {
-					return err
-				}
-
-				cmd.Println(prettyData)
-
-			} else {
-				cmd.Println(result)
-			}
-
-			return nil
+			return output.Plain(cmd, map[string]interface{}{"exists": result}, func() error {
+				return output.PlainBare(cmd, result)
+			})
 		},
 	}
-
-	cmd.Flags().Bool("json", false, "Output a JSON response with field 'exists'")
 
 	return cmd
 }
@@ -98,9 +77,9 @@ Examples:
 -   conjur resource permitted-roles dev:variable:somevariable execute
 -   conjur resource permitted-roles dev:user:someuser read`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 2 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "resource-id", "privilege")
+			if err != nil {
+				return err
 			}
 
 			resourceID, privilege := args[0], args[1]
@@ -115,14 +94,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 }
@@ -140,9 +112,9 @@ Examples:
 -   conjur resource show dev:user:someuser
 -   conjur resource show dev:host:somehost`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return nil
+			args, err := requirePositionalArgs(cmd, args, "resource-id")
+			if err != nil {
+				return err
 			}
 
 			resourceID := args[0]
@@ -157,14 +129,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 }

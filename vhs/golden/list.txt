@@ -20,9 +20,49 @@
 
   FLAGS
 
+    --columns          Shorthand for --output custom-columns=...; comma-separated field names re
+ad from each result's top-level JSON keys, e.g. --columns=id,kind. For nested paths, use --outpu
+t custom-columns=NAME:.path
     -c --count         When `true`, only the number of matched resources is returned (instead of
  an array listing resource properties)
     -d --debug         Debug logging enabled
     -h --help          Help for list
     -i --inspect       Lists the metadata for resources
+    --interactive      Shorthand for --output interactive
+    --json             Shorthand for --output json
     -k --kind          Filters the resources by the specified `kind`, which must one of these: u
+ser | host | layer | group | policy | variable | webservice | host_factory
+    -l --limit         Sets the maximum number of returned resources. -1 means unlimited. Result
+s above the server's per-request limit are fetched automatically in multiple requests. If omitte
+d, defaults to 10000.
+    -m --members-of    List members within a role
+    -o --offset        Skips the specified number of resources from the first resource of a zero
+-based resource array
+    --output           Output format: json, yaml, plain, table, interactive, custom-columns=...,
+ go-template=...
+    --permitted-roles  Retrieve roles that have privileges on a resource
+    --plain            Shorthand for --output plain
+    -p --privilege     Use with --permitted-roles to specify the privilege you are querying
+    -r --role          Retrieves the resources that the specified role is entitled to see. You m
+ust specify the role's full ID: {account}:{kind}:{identifier}. For example: --role myorg:user:al
+ice
+    -s --search        Filters returned resources according to the specified text. Results are w
+eighted as follows, from highest to lowest priority: resource's identifier, annotations, and kin
+d
+    --table            Shorthand for --output table
+    --template         Shorthand for --output go-template=...
+    --timeout          Http timeout duration, between 1s and 10m (1m0s)
+    --yaml             Shorthand for --output yaml
+
+>
+
+
+
+
+
+
+
+
+
+
+

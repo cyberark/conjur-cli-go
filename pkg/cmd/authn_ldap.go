@@ -9,6 +9,7 @@ import (
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/spf13/cobra"
 )
 
@@ -28,11 +29,6 @@ type ldapUserMappingClient interface {
 
 type ldapGroupMappingClientFactory func(*cobra.Command) (ldapGroupMappingClient, error)
 type ldapUserMappingClientFactory func(*cobra.Command) (ldapUserMappingClient, error)
-
-const (
-	ldapOutputTable = "table"
-	ldapOutputJSON  = "json"
-)
 
 func ldapGroupClientFactory(cmd *cobra.Command) (ldapGroupMappingClient, error) {
 	return clients.AuthenticatedConjurClientForCommand(cmd)
@@ -54,8 +50,14 @@ Examples:
 - conjur authn-ldap groups create admins --roles admin-role --id ad-prod
 - conjur authn-ldap groups create dev-team --roles dev-role,readonly --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id", "roles")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "group-name")
+			if err != nil {
+				return err
+			}
 			groupName := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")
@@ -79,7 +81,9 @@ Examples:
 				return fmt.Errorf("failed to create group mapping '%s': %w", groupName, err)
 			}
 
-			return printLdapResult(cmd, result)
+			return output.Plain(cmd, result, func() error {
+				return printLdapTable(cmd, result)
+			})
 		},
 	}
 
@@ -98,8 +102,14 @@ func newLdapGroupsShowCmd(clientFactory ldapGroupMappingClientFactory) *cobra.Co
 Examples:
 - conjur authn-ldap groups show admins --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "group-name")
+			if err != nil {
+				return err
+			}
 			groupName := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")
@@ -117,7 +127,9 @@ Examples:
 				return fmt.Errorf("failed to show group mapping '%s': %w", groupName, err)
 			}
 
-			return printLdapResult(cmd, result)
+			return output.Plain(cmd, result, func() error {
+				return printLdapTable(cmd, result)
+			})
 		},
 	}
 }
@@ -131,13 +143,11 @@ func newLdapGroupsListCmd(clientFactory ldapGroupMappingClientFactory) *cobra.Co
 Examples:
 - conjur authn-ldap groups list --id ad-prod`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serviceID, err := cmd.Flags().GetString("id")
-			if err != nil {
-				return err
-			}
-
-			output, err := getLdapOutputFormat(cmd)
 			if err != nil {
 				return err
 			}
@@ -152,14 +162,9 @@ Examples:
 				return fmt.Errorf("failed to list group mappings: %w", err)
 			}
 
-			if output == ldapOutputJSON {
-				return printJSON(cmd, result)
-			}
-
-			for _, key := range result.Keys {
-				cmd.Println(key)
-			}
-			return nil
+			return output.Plain(cmd, result, func() error {
+				return output.PlainOneLine(cmd, result.Keys)
+			})
 		},
 	}
 }
@@ -174,8 +179,14 @@ Conjur roles from this LDAP group at login time.
 Examples:
 - conjur authn-ldap groups delete admins --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "group-name")
+			if err != nil {
+				return err
+			}
 			groupName := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")
@@ -193,8 +204,10 @@ Examples:
 				return fmt.Errorf("failed to delete group mapping '%s': %w", groupName, err)
 			}
 
-			cmd.Printf("Success! LDAP group mapping '%s' deleted\n", groupName)
-			return nil
+			return output.Plain(cmd, map[string]any{"group": groupName, "status": "deleted"}, func() error {
+				cmd.Printf("Success! LDAP group mapping '%s' deleted\n", groupName)
+				return nil
+			})
 		},
 	}
 }
@@ -212,8 +225,14 @@ Examples:
 - conjur authn-ldap users create jan.k --roles special-role --id ad-prod
 - conjur authn-ldap users create admin.user --roles admin-role,audit-role --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id", "roles")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "username")
+			if err != nil {
+				return err
+			}
 			username := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")
@@ -237,7 +256,9 @@ Examples:
 				return fmt.Errorf("failed to create user mapping '%s': %w", username, err)
 			}
 
-			return printLdapResult(cmd, result)
+			return output.Plain(cmd, result, func() error {
+				return printLdapTable(cmd, result)
+			})
 		},
 	}
 
@@ -256,8 +277,14 @@ func newLdapUsersShowCmd(clientFactory ldapUserMappingClientFactory) *cobra.Comm
 Examples:
 - conjur authn-ldap users show jan.k --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "username")
+			if err != nil {
+				return err
+			}
 			username := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")
@@ -275,7 +302,9 @@ Examples:
 				return fmt.Errorf("failed to show user mapping '%s': %w", username, err)
 			}
 
-			return printLdapResult(cmd, result)
+			return output.Plain(cmd, result, func() error {
+				return printLdapTable(cmd, result)
+			})
 		},
 	}
 }
@@ -289,13 +318,11 @@ func newLdapUsersListCmd(clientFactory ldapUserMappingClientFactory) *cobra.Comm
 Examples:
 - conjur authn-ldap users list --id ad-prod`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serviceID, err := cmd.Flags().GetString("id")
-			if err != nil {
-				return err
-			}
-
-			output, err := getLdapOutputFormat(cmd)
 			if err != nil {
 				return err
 			}
@@ -310,14 +337,9 @@ Examples:
 				return fmt.Errorf("failed to list user mappings: %w", err)
 			}
 
-			if output == ldapOutputJSON {
-				return printJSON(cmd, result)
-			}
-
-			for _, key := range result.Keys {
-				cmd.Println(key)
-			}
-			return nil
+			return output.Plain(cmd, result, func() error {
+				return output.PlainOneLine(cmd, result.Keys)
+			})
 		},
 	}
 }
@@ -332,8 +354,14 @@ Conjur roles from this individual mapping at login time.
 Examples:
 - conjur authn-ldap users delete jan.k --id ad-prod`,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			args, err := requirePositionalArgs(cmd, args, "username")
+			if err != nil {
+				return err
+			}
 			username := args[0]
 
 			serviceID, err := cmd.Flags().GetString("id")
@@ -351,8 +379,10 @@ Examples:
 				return fmt.Errorf("failed to delete user mapping '%s': %w", username, err)
 			}
 
-			cmd.Printf("Success! LDAP user mapping '%s' deleted\n", username)
-			return nil
+			return output.Plain(cmd, map[string]any{"username": username, "status": "deleted"}, func() error {
+				cmd.Printf("Success! LDAP user mapping '%s' deleted\n", username)
+				return nil
+			})
 		},
 	}
 }
@@ -401,7 +431,6 @@ service instances.`,
 
 	authnLdapCmd.PersistentFlags().StringP("id", "i", "", "(Required) LDAP authenticator service ID (e.g. ad-prod)")
 	authnLdapCmd.MarkPersistentFlagRequired("id")
-	authnLdapCmd.PersistentFlags().StringP("output", "o", ldapOutputTable, "Output format (table or json)")
 
 	authnLdapCmd.AddCommand(newLdapGroupsCommand(groupFactory))
 	authnLdapCmd.AddCommand(newLdapUsersCommand(userFactory))
@@ -426,42 +455,6 @@ func splitRoles(rolesStr string) []string {
 		}
 	}
 	return roles
-}
-
-func printJSON(cmd *cobra.Command, v interface{}) error {
-	data, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to format response: %w", err)
-	}
-	cmd.Println(string(data))
-	return nil
-}
-
-func getLdapOutputFormat(cmd *cobra.Command) (string, error) {
-	output, err := cmd.Flags().GetString("output")
-	if err != nil {
-		return "", err
-	}
-
-	switch output {
-	case ldapOutputTable, ldapOutputJSON:
-		return output, nil
-	default:
-		return "", fmt.Errorf("invalid output format %q: supported values are %q and %q", output, ldapOutputTable, ldapOutputJSON)
-	}
-}
-
-func printLdapResult(cmd *cobra.Command, v interface{}) error {
-	output, err := getLdapOutputFormat(cmd)
-	if err != nil {
-		return err
-	}
-
-	if output == ldapOutputJSON {
-		return printJSON(cmd, v)
-	}
-
-	return printLdapTable(cmd, v)
 }
 
 func printLdapTable(cmd *cobra.Command, v interface{}) error {

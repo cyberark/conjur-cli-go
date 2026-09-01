@@ -7,7 +7,7 @@ key.txt
 coverage.xml
 cleanup.log
 
-output/
+/output/
 dist/
 dev/tmp
 build_ca_certificate
@@ -31,3 +31,4 @@ vhs/output
 test/wiremock/localhost.crt
 test/wiremock/localhost.key
 test/wiremock/localhost.pfx
+.worktrees/

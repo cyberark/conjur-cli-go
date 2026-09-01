@@ -17,13 +17,13 @@ func TestPubkeysIntegration(t *testing.T) {
 		stdOut, stdErr, err := cli.Run("pubkeys", "alice")
 
 		if err != nil {
-			assert.Empty(t, stdOut)
+			assert.Contains(t, stdOut, "Command \"pubkeys\" is deprecated")
 			assert.Contains(t, stdErr, "Public keys endpoint is not available on this server")
 			return
 		}
 
 		assert.Empty(t, stdErr)
-		assert.Equal(t, "\n\n", stdOut)
+		assert.Contains(t, stdOut, "Command \"pubkeys\" is deprecated")
 	})
 }
 

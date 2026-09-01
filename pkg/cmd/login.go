@@ -7,6 +7,7 @@ import (
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-api-go/conjurapi/authn"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 
 	"github.com/spf13/cobra"
 )
@@ -149,8 +150,10 @@ Examples:
 				return err
 			}
 
-			cmd.Println("Logged in")
-			return nil
+			return output.Plain(cmd, map[string]any{"status": "logged_in"}, func() error {
+				cmd.Println("Logged in")
+				return nil
+			})
 		},
 	}
 

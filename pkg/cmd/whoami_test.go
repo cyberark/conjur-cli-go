@@ -88,3 +88,16 @@ func TestWhoamiCmd(t *testing.T) {
 		})
 	}
 }
+
+func TestWhoamiCmdCustomColumns(t *testing.T) {
+	testWhoamiClientFactory := func(cmd *cobra.Command) (whoamiClient, error) {
+		return mockWhoamiClient{whoami: func() ([]byte, error) {
+			return []byte(`{"account":"dev","username":"admin"}`), nil
+		}}, nil
+	}
+	cmd := newWhoamiCommand(testWhoamiClientFactory)
+	stdout, _, err := executeCommandForTest(t, cmd, "whoami", "--output", "custom-columns=USER:.username")
+	assert.NoError(t, err)
+	assert.Contains(t, stdout, "USER")
+	assert.Contains(t, stdout, "admin")
+}

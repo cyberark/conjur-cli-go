@@ -9,6 +9,7 @@ import (
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -60,14 +61,20 @@ func loadPolicyCommandRunner(
 			return err
 		}
 
-		if prettyData, err := utils.PrettyPrintJSON(data); err == nil {
-			data = prettyData
+		var parsed any
+		if err := json.Unmarshal(data, &parsed); err != nil {
+			return err
 		}
 
 		cmd.PrintErrf("%s policy '%s'\n", cmdMessage(dryrun), branch)
-		cmd.Println(string(data))
 
-		return nil
+		return output.PlainOrUnix(cmd, parsed, func() error {
+			if prettyData, err := utils.PrettyPrintJSON(data); err == nil {
+				data = prettyData
+			}
+			cmd.Println(string(data))
+			return nil
+		})
 	}
 }
 
@@ -85,18 +92,26 @@ func fetchPolicyCommandRunner(
 			return err
 		}
 
-		output, err := cmd.Flags().GetString("output")
+		format, isInteractive, err := output.FromContext(cmd)
 		if err != nil {
 			return err
 		}
-
-		// validate output arg
-		if output != "yaml" && output != "json" {
-			return errors.New("output format must be 'yaml' or 'json'")
+		if err := output.RequireFormat(format, output.FormatJSON, output.FormatYAML, output.FormatPlain); !isInteractive && err != nil {
+			return err
 		}
-		var returnJSON bool
-		if output == "json" {
-			returnJSON = true
+
+		// --file writes to disk, not the terminal: force non-interactive
+		// yaml (today's default), ignoring any TTY-driven interactive
+		// resolution.
+		if file != "" {
+			if err := validateFilePath(file); err != nil {
+				return err
+			}
+			isInteractive = false
+			format, err = output.ParseFormat("yaml")
+			if err != nil {
+				return err
+			}
 		}
 
 		depth, err := cmd.Flags().GetUint("depth")
@@ -115,24 +130,42 @@ func fetchPolicyCommandRunner(
 			return errors.New("limit must be less than or equal to 100000")
 		}
 
-		// validate file arg
-		if file != "" {
-			if err := validateFilePath(file); err != nil {
-				return err
-			}
-		}
-
 		conjurClient, err := clientFactory(cmd)
 		if err != nil {
 			return err
 		}
+
+		// Interactive default: ask the server for JSON so it can be parsed
+		// into a Go value for the tree view (or, for an unexpected response
+		// shape, the generic detail view), since raw yaml/json bytes aren't
+		// a renderable shape for the interactive layer.
+		if isInteractive {
+			data, err := fetchPolicy(conjurClient, branch, true, depth, limit)
+			if err != nil {
+				return err
+			}
+			var parsed any
+			if err := json.Unmarshal(data, &parsed); err != nil {
+				return err
+			}
+			// A policy document's top level is always an array of
+			// statements (host/variable/permit/nested policy branches/...);
+			// that shape reads far better as a collapsible tree than as
+			// the generic table/detail view's flattened dotted paths.
+			if statements, ok := parsed.([]any); ok {
+				return output.RunPolicyTree(cmd, statements)
+			}
+			return output.Emit(cmd, parsed)
+		}
+
+		returnJSON := format.Type == output.FormatJSON
 
 		data, err := fetchPolicy(conjurClient, branch, returnJSON, depth, limit)
 		if err != nil {
 			return err
 		}
 
-		if output == "json" {
+		if returnJSON {
 			if prettyData, err := utils.PrettyPrintJSON(data); err == nil {
 				data = prettyData
 			}
@@ -141,9 +174,7 @@ func fetchPolicyCommandRunner(
 		if file == "" {
 			cmd.Println(string(data))
 		} else {
-			// Write data to a file
-			err := os.WriteFile(file, data, 0644)
-			if err != nil {
+			if err := os.WriteFile(file, data, 0644); err != nil {
 				return err
 			}
 			cmd.Println("Policy has been fetched and saved to " + file)
@@ -254,7 +285,10 @@ func newPolicyLoadCommand(clientFactory policyClientFactoryFunc, config conjurap
 Examples:
 - conjur policy load -b staging -f /policy/staging.yml`,
 		SilenceUsage: true,
-		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePost),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "branch", "file")
+		},
+		RunE: loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePost),
 	}
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
 	if !config.IsSaaS() {
@@ -273,14 +307,16 @@ func newPolicyFetchCommand(clientFactory policyClientFactoryFunc) *cobra.Command
 		Long: `Fetch effective policy.
 
 Examples:
-- conjur policy fetch -b staging -o json`,
+- conjur policy fetch -b staging --output json`,
 		SilenceUsage: true,
-		RunE:         fetchPolicyCommandRunner(clientFactory),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "branch")
+		},
+		RunE: fetchPolicyCommandRunner(clientFactory),
 	}
 
 	cmd.PersistentFlags().UintP("depth", "D", 64, "The max depth of fetched policy")
 	cmd.PersistentFlags().UintP("limit", "l", 100000, "The max size of the output")
-	cmd.PersistentFlags().StringP("output", "o", "yaml", "The output format")
 	cmd.PersistentFlags().StringP("file", "f", "", "The file to save output to")
 
 	return cmd
@@ -295,7 +331,10 @@ func newPolicyUpdateCommand(clientFactory policyClientFactoryFunc, config conjur
 Examples:
 - conjur policy update -b staging -f /policy/staging.yml`,
 		SilenceUsage: true,
-		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePatch),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "branch", "file")
+		},
+		RunE: loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePatch),
 	}
 
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")
@@ -317,7 +356,10 @@ func newPolicyReplaceCommand(clientFactory policyClientFactoryFunc, config conju
 Examples:
 - conjur policy replace -b staging -f /policy/staging.yml`,
 		SilenceUsage: true,
-		RunE:         loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePut),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "branch", "file")
+		},
+		RunE: loadPolicyCommandRunner(clientFactory, conjurapi.PolicyModePut),
 	}
 
 	cmd.PersistentFlags().StringP("file", "f", "", "(Required) The policy file to load")

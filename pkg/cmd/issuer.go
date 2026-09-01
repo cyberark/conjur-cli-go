@@ -6,7 +6,7 @@ import (
 
 	api "github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
-	"github.com/cyberark/conjur-cli-go/pkg/utils"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/spf13/cobra"
 )
 
@@ -52,6 +52,9 @@ func newCreateIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 
 Examples:
  - conjur issuer create --id my-issuer --max-ttl 3000 --type aws --data '{"access_key_id": "my_key_id", "secret_access_key": "my_key_secret"}'`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id", "type", "max-ttl", "data")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
@@ -94,14 +97,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 
@@ -150,6 +146,9 @@ func newDeleteIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 		Long: `Delete an issuer
 Examples:
  - conjur issuer delete --id my-issuer`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
@@ -171,9 +170,10 @@ Examples:
 				return err
 			}
 
-			cmd.Printf("The issuer '%s' was deleted\n", id)
-
-			return nil
+			return output.Plain(cmd, map[string]any{"id": id, "status": "deleted"}, func() error {
+				cmd.Printf("The issuer '%s' was deleted\n", id)
+				return nil
+			})
 		},
 	}
 
@@ -203,6 +203,9 @@ func newGetIssuerCmd(clientFactory issuerClientFactoryFunc) *cobra.Command {
 		Long: `Retrieve information about an issuer
 Examples:
  - conjur issuer get --id my-issuer`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
@@ -219,14 +222,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 
@@ -259,14 +255,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 
@@ -282,6 +271,9 @@ You can update the issuer's maximum validity (max-ttl) and/or the data argument'
 Examples:
  - conjur issuer update --id my-issuer --data '{"access_key_id": "new_key_id", "secret_access_key": "new_key_secret"}'
  - conjur issuer update --id my-issuer --max-ttl 5000`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := getStringFlagFunc(cmd, "id")
 			if err != nil {
@@ -324,14 +316,7 @@ Examples:
 				return err
 			}
 
-			prettyResult, err := utils.PrettyPrintToJSON(result)
-			if err != nil {
-				return err
-			}
-
-			cmd.Println(prettyResult)
-
-			return nil
+			return output.PlainJSONOrUnix(cmd, result)
 		},
 	}
 

@@ -12,11 +12,38 @@
 
   FLAGS
 
+    --columns                 Shorthand for --output custom-columns=...; comma-separated field n
+ames read from each result's top-level JSON keys, e.g. --columns=id,kind. For nested paths, use
+--output custom-columns=NAME:.path
     -d --debug                Debug logging enabled
     -h --help                 Help for host
+    --interactive             Shorthand for --output interactive
+    --json                    Shorthand for --output json
+    -o --output               Output format: json, yaml, plain, table, interactive, custom-colum
+ns=..., go-template=...
+    --plain                   Shorthand for --output plain
+    --table                   Shorthand for --output table
+    --template                Shorthand for --output go-template=...
     --timeout                 Http timeout duration, between 1s and 10m (1m0s)
+    --yaml                    Shorthand for --output yaml
 
 >
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

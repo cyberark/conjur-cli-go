@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -28,6 +29,9 @@ Examples:
 - conjur authenticator enable -i authn-iam/prod
 - conjur authenticator enable --id authn-jwt/myVendor`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ID, err := cmd.Flags().GetString("id")
 			if err != nil {
@@ -49,8 +53,10 @@ Examples:
 				return err
 			}
 
-			cmd.Printf("Authenticator %s is enabled\n", ID)
-			return nil
+			return output.Plain(cmd, map[string]any{"authenticator": ID, "status": "enabled"}, func() error {
+				cmd.Printf("Authenticator %s is enabled\n", ID)
+				return nil
+			})
 		},
 	}
 
@@ -68,6 +74,9 @@ Examples:
 - conjur authenticator disable -i authn-iam/prod
 - conjur authenticator disable --id authn-jwt/myVendor`,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return promptForMissingRequiredFlags(cmd, "id")
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ID, err := cmd.Flags().GetString("id")
 			if err != nil {
@@ -89,8 +98,10 @@ Examples:
 				return err
 			}
 
-			cmd.Printf("Authenticator %s is disabled\n", ID)
-			return nil
+			return output.Plain(cmd, map[string]any{"authenticator": ID, "status": "disabled"}, func() error {
+				cmd.Printf("Authenticator %s is disabled\n", ID)
+				return nil
+			})
 		},
 	}
 

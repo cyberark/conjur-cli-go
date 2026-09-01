@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"math/big"
@@ -15,6 +16,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,6 +25,7 @@ import (
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type mockInitClient struct {
@@ -77,6 +80,19 @@ environment: self-hosted
 			assert.Contains(t, stdout, "Wrote configuration to "+conjurrcInTmpDir)
 			// Shouldn't write certificate for HTTP url
 			assert.NotContains(t, stdout, "Wrote certificate to")
+		},
+	},
+	{
+		name: "writes conjurrc with output json",
+		args: []string{"init", "enterprise", "-u=http://host", "-a=test-account", "-i", "--output", "json"},
+		assert: func(t *testing.T, conjurrcInTmpDir string, stdout string) {
+			jsonStart := strings.Index(stdout, "{")
+			require.GreaterOrEqual(t, jsonStart, 0, "expected JSON object in stdout: %q", stdout)
+			var result map[string]any
+			require.NoError(t, json.Unmarshal([]byte(stdout[jsonStart:]), &result))
+			assert.Equal(t, "initialized", result["status"])
+			assert.Equal(t, conjurrcInTmpDir, result["conjurrc_path"])
+			assert.Nil(t, result["cert_path"])
 		},
 	},
 	{

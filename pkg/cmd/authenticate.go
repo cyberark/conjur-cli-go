@@ -2,8 +2,11 @@ package cmd
 
 import (
 	"encoding/base64"
+	"encoding/json"
+	"fmt"
 
 	"github.com/cyberark/conjur-cli-go/pkg/clients"
+	"github.com/cyberark/conjur-cli-go/pkg/output"
 	"github.com/cyberark/conjur-cli-go/pkg/utils"
 
 	"github.com/spf13/cobra"
@@ -43,18 +46,27 @@ func newAuthenticateCommand(clientFactory authenticateClientFactoryFunc) *cobra.
 			}
 
 			if formatAsHeader {
+				if output.IsExplicit(cmd) {
+					return fmt.Errorf("--output cannot be combined with --header: the header is a single opaque string, not structured data")
+				}
 				// Base64 encode the result and format as an HTTP Authorization header for the -H option
 				cmd.Println("Authorization: Token token=\"" + base64.StdEncoding.EncodeToString(data) + "\"")
 				return nil
 			}
 
-			prettyData, err := utils.PrettyPrintJSON(data)
-			if err != nil {
+			var tokenData any
+			if err := json.Unmarshal(data, &tokenData); err != nil {
 				return err
 			}
 
-			cmd.Println(string(prettyData))
-			return nil
+			return output.Plain(cmd, tokenData, func() error {
+				prettyData, err := utils.PrettyPrintJSON(data)
+				if err != nil {
+					return err
+				}
+				cmd.Println(string(prettyData))
+				return nil
+			})
 		},
 	}
 
