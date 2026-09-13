@@ -37,7 +37,7 @@ services:
 
   # TODO: integration tests should be carried out against release asset binary (not the one created by make install)!
   cli:
-    image: golang:1.26
+    image: golang:1.27
     environment:
       - GOFIPS140=latest
       - OKTA_CLIENT_ID=$OKTA_CLIENT_ID
