@@ -6,10 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [9.3.1] - 2026-09-14
+
 ### Added
 - Add a global `--output` flag (`json`, `yaml`, `plain`, `custom-columns=...`, `go-template=...`) supported
-  across the CLI. When no `--output` is given and stdout is a terminal, results are rendered in an
-  interactive table/detail view instead of plain text.
+  across the CLI. When no `--output` is given output format is preserved with older versions.
 - `list` now auto-paginates: requests for more resources than the server's per-request limit are
   fetched transparently in multiple, concurrently-issued requests (up to 3 in flight), reassembled in
   original order. `--limit -1` fetches all matching resources regardless of count.
@@ -20,21 +21,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - `authn-ldap groups list` / `authn-ldap users list` with `--output json` now print a bare JSON array
   instead of `{"keys": [...]}`.
-- `list` without an explicit `--limit` now applies an implicit cap of 10x the server's per-request page size
-  (10000 by default; 1000 per request) instead of a single request whose size was determined entirely by
-  the server; a warning is printed to stderr if this cap is reached. Pass `--limit -1` for unlimited results.
 - `list --limit 0` now explicitly returns no resources without contacting the server, instead of behaving
   identically to omitting `--limit`.
 
-### Removed
-- Remove `resource exists --json` and `role exists --json` in favor of the new global `--output json` flag.
-- Remove `authn-ldap`'s local `-o`/`--output table|json` flag in favor of the new global `--output` flag.
-- Remove `policy fetch`'s local `-o` shorthand in favor of the new global `--output` flag.
-
-## [9.3.1] - 2026-08-21
-
 ### Security
-- Bump Go to 1.26.7
+- Bump Go to 1.27.1
 - Bump `golang.org/x/text` to v0.39.0 to resolve CVE-2026-56852
 
 ## [9.3.0] - 2026-08-15
