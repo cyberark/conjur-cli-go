@@ -1,5 +1,8 @@
 #!/usr/bin/env groovy
-@Library("product-pipelines-shared-library") _
+@Library([
+  "product-pipelines-shared-library",
+  "conjur-enterprise-sharedlib"
+]) _
 
 def productName = 'Conjur CLI'
 def productTypeName = 'Conjur Enterprise'
@@ -26,7 +29,11 @@ if (params.MODE == "PROMOTE") {
     env.INFRAPOOL_DD_PRODUCT_TYPE_NAME = "${productTypeName}"
 
     // Scan the image before promoting
-    runSecurityScans(INFRAPOOL_EXECUTORV2_AGENT_0,
+    // NOTE: no-handle form per migration-patterns.md#8 — promote() allocates its own
+    // ExecutorV2 with no local Snyk output to sync, so the Snyk->DefectDojo sync
+    // silently no-ops here regardless of handle. Signature update only, not an
+    // execution rewrite of the promote-closure agentSh/agentPut/agentGet calls below.
+    runSecurityScans(
       image: "registry.tld/conjur-cli:${sourceVersion}-${gitCommit(INFRAPOOL_EXECUTORV2_AGENT_0)}",
       buildMode: params.MODE,
       branch: env.BRANCH_NAME,
@@ -62,7 +69,7 @@ if (params.MODE == "PROMOTE") {
 }
 
 pipeline {
-  agent { label 'conjur-enterprise-common-agent' }
+  agent { label 'conjur-enterprise-AmznDocker' }
 
   options {
     timestamps()
@@ -106,11 +113,10 @@ pipeline {
       }
     }
 
-    stage('Get InfraPool ExecutorV2 Agent') {
+    stage('Mark Workspace as Safe Git Directory') {
       steps {
         script {
-          // Request ExecutorV2 agents for 1 hour(s)
-          INFRAPOOL_EXECUTORV2_AGENT_0 = getInfraPoolAgent.connected(type: "ExecutorV2", quantity: 1, duration: 1)[0]
+          sh "git config --global --add safe.directory $WORKSPACE"
         }
       }
     }
@@ -118,7 +124,7 @@ pipeline {
     // Generates a VERSION file based on the current build number and latest version in CHANGELOG.md
     stage('Validate changelog and set version') {
       steps {
-        updateVersion(INFRAPOOL_EXECUTORV2_AGENT_0, "CHANGELOG.md", "${BUILD_NUMBER}")
+        updateVersion("CHANGELOG.md", "${BUILD_NUMBER}")
       }
     }
 
@@ -126,11 +132,6 @@ pipeline {
       steps {
         script {
           updatePrivateGoDependencies("${WORKSPACE}/go.mod")
-          // Copy the vendor directory onto infrapool
-          INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "vendor", to: "${WORKSPACE}"
-          INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "go.*", to: "${WORKSPACE}"
-          // Add GOMODCACHE directory to infrapool allowing automated release to generate SBOMs
-          INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "/root/go", to: "/var/lib/jenkins/"
         }
       }
     }
@@ -140,15 +141,13 @@ pipeline {
         stage('Run unit tests') {
           steps {
             script {
-              INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './bin/test_unit'
+              sh './bin/test_unit'
             }
           }
           post {
             always {
               script {
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './bin/coverage'
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentStash name: 'xml-out', includes: '*.xml'
-                unstash 'xml-out'
+                sh './bin/coverage'
                 junit 'junit.xml'
 
                 recordCoverage(
@@ -186,24 +185,21 @@ pipeline {
         stage('Build release artifacts') {
           steps {
             script {
-              INFRAPOOL_EXECUTORV2_AGENT_0.agentDir('./pristine-checkout') {
+              dir('./pristine-checkout') {
                 // Go releaser requires a pristine checkout
                 checkout scm
 
-                // Copy the checkout content onto infrapool
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentPut from: "./", to: "."
-
                 // Copy VERSION info into prisitine folder
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "cp ../VERSION ./VERSION"
+                sh "cp ../VERSION ./VERSION"
 
                 // Create release artifacts without releasing to Github
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "./bin/build_release --skip=validate --clean"
+                sh "./bin/build_release --skip=validate --clean"
 
                 // Build container images
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "./bin/build_container_images"
+                sh "./bin/build_container_images"
 
                 // Archive release artifacts
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts(
+                archiveArtifacts(
                   artifacts: [
                     'dist/conjur',
                     'dist/goreleaser/binaries/**',
@@ -229,9 +225,9 @@ pipeline {
           steps {
             script {
               try {
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './ci/test_vhs'
+                sh './ci/test_vhs'
               } finally {
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts artifacts: 'vhs/output/*'
+                archiveArtifacts artifacts: 'vhs/output/*'
               }
             }
           }
@@ -244,7 +240,7 @@ pipeline {
     stage('Push images to internal registry') {
       steps {
         script {
-          INFRAPOOL_EXECUTORV2_AGENT_0.agentSh './bin/publish_container_images --internal'
+          sh './bin/publish_container_images --internal'
         }
       }
     }
@@ -265,11 +261,14 @@ pipeline {
             ])
             {
               script {
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentDir('ci') {
+                dir('ci') {
                   try {
-                    INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'summon -f ./secrets.yml -e ci ./test_integration'
+                    sh 'summon -f ./secrets.yml -e ci ./test_integration'
                   } finally {
-                    INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts artifacts: 'ci/cleanup.log'
+                    // Relative to dir('ci') above, unlike the removed infrapool
+                    // handle's agentArchiveArtifacts, which resolved from the
+                    // orchestrator workspace root (hence the old 'ci/' prefix).
+                    archiveArtifacts artifacts: 'cleanup.log'
                   }
                 }
               }
@@ -280,8 +279,8 @@ pipeline {
         stage("Scan main Docker image") {
           steps {
             script {
-              runSecurityScans(INFRAPOOL_EXECUTORV2_AGENT_0,
-                image: "registry.tld/${containerImageWithTag(INFRAPOOL_EXECUTORV2_AGENT_0)}",
+              runSecurityScans(
+                image: "registry.tld/${containerImageWithTag()}",
                 buildMode: params.MODE,
                 branch: env.BRANCH_NAME,
                 arch: 'linux/amd64'
@@ -293,9 +292,9 @@ pipeline {
         stage('Scan with govulncheck') {
           steps {
             script {
-              INFRAPOOL_EXECUTORV2_AGENT_0.agentSh 'go install golang.org/x/vuln/cmd/govulncheck@latest'
+              sh 'go install golang.org/x/vuln/cmd/govulncheck@latest'
               catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
-                INFRAPOOL_EXECUTORV2_AGENT_0.agentSh '$(go env GOPATH)/bin/govulncheck -mode=binary ./pristine-checkout/dist/goreleaser/binaries/conjur_linux_amd64_v1'
+                sh '$(go env GOPATH)/bin/govulncheck -mode=binary ./pristine-checkout/dist/goreleaser/binaries/conjur_linux_amd64_v1'
               }
             }
           }
@@ -348,27 +347,19 @@ pipeline {
       }
       steps {
         script {
-          release(INFRAPOOL_EXECUTORV2_AGENT_0) { billOfMaterialsDirectory, assetDirectory, toolsDirectory ->
+          release { billOfMaterialsDirectory, assetDirectory, toolsDirectory ->
             // Publish release artifacts to all the appropriate locations
             // Copy any artifacts to assetDirectory to attach them to the Github release
 
             // Copy assets to be published in Github release.
-            INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "${toolsDirectory}/bin/copy_goreleaser_artifacts ${assetDirectory}"
+            sh "${toolsDirectory}/bin/copy_goreleaser_artifacts ${assetDirectory}"
 
             // Create Go application SBOM using the go.mod version for the golang container image
-            INFRAPOOL_EXECUTORV2_AGENT_0.agentSh """export PATH="${toolsDirectory}/bin:${PATH}" && go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
+            sh """export PATH="${toolsDirectory}/bin:${PATH}" && go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --main "cmd/conjur/" --output "${billOfMaterialsDirectory}/go-app-bom.json" """
             // Create Go module SBOM
-            INFRAPOOL_EXECUTORV2_AGENT_0.agentSh """export PATH="${toolsDirectory}/bin:${PATH}" && go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --output "${billOfMaterialsDirectory}/go-mod-bom.json" """
+            sh """export PATH="${toolsDirectory}/bin:${PATH}" && go-bom --tools "${toolsDirectory}" --go-mod ./go.mod --image "golang" --output "${billOfMaterialsDirectory}/go-mod-bom.json" """
           }
         }
-      }
-    }
-  }
-
-  post {
-    always {
-      script {
-        releaseInfraPoolAgent(".infrapool/release_agents")
       }
     }
   }
@@ -381,8 +372,8 @@ def gitCommit(infrapool) {
   )
 }
 
-def containerImageWithTag(infrapool) {
-  infrapool.agentSh(
+def containerImageWithTag() {
+  sh(
     returnStdout: true,
     script: 'source ./bin/build_utils && echo "conjur-cli:$(project_version_with_commit)"'
   )
